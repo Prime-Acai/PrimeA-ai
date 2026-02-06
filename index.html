@@ -125,10 +125,68 @@
         background-color: #f8fafc;
         color: #94a3b8;
     }
+
+    /* MARCA D'ÁGUA */
+    .watermark-footer {
+      position: fixed;
+      left: 24px;
+      bottom: 110px; /* Ajustado para não conflitar com barra inferior */
+      z-index: 40;
+      pointer-events: none;
+      display: flex;
+      align-items: center;
+      animation: fadeIn 1s ease-out;
+    }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    .watermark-footer .wm-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 14px;
+      border-radius: 12px;
+      background: rgba(255, 255, 255, 0.85);
+      border: 1px solid rgba(255, 255, 255, 0.6);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 10px 15px -3px rgba(0, 0, 0, 0.05);
+    }
+    .watermark-footer .wm-icon-box {
+      width: 16px;
+      height: 16px;
+      background: linear-gradient(135deg, #2563eb, #60a5fa);
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .watermark-footer .wm-icon-box svg {
+      width: 10px;
+      height: 10px;
+      color: white;
+      stroke-width: 3px;
+    }
+    .watermark-footer .wm-text {
+      font-family: "Outfit", sans-serif;
+      font-weight: 700;
+      font-size: 10px;
+      color: #475569;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
   </style>
 </head>
 
 <body class="antialiased text-slate-800 bg-slate-50 overflow-x-hidden">
+
+  <!-- MARCA D'ÁGUA -->
+  <div class="watermark-footer" aria-hidden="true">
+    <div class="wm-pill">
+      <div class="wm-icon-box">
+        <i data-lucide="code-2"></i>
+      </div>
+      <span class="wm-text">Ferreira Web Design</span>
+    </div>
+  </div>
 
   <!-- SPLASH SCREEN -->
   <div id="splash" class="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-white transition-opacity duration-500">
@@ -354,19 +412,21 @@
             <div class="w-14 h-14 bg-brand-50 rounded-2xl flex items-center justify-center mx-auto mb-3 text-brand-600">
                 <i data-lucide="shield-check" class="w-7 h-7"></i>
             </div>
-            <h3 class="font-display font-bold text-xl text-slate-900">Gerenciar Loja</h3>
-            <p class="text-xs text-slate-400">Status atual: <span id="admin-current-status" class="font-bold text-brand-600">...</span></p>
+            <h3 class="font-display font-bold text-xl text-slate-900">Área do Dono</h3>
+            <p class="text-xs text-slate-400">Digite a senha definida no Firebase para alterar o status</p>
         </div>
         <div id="admin-login-view" class="space-y-3">
-            <input type="password" id="admin-pass" placeholder="Senha" class="w-full p-4 bg-slate-50 rounded-xl text-center text-lg font-bold tracking-widest outline-none focus:ring-2 focus:ring-brand-500">
-            <button onclick="window.checkAdminPass()" class="w-full py-3 bg-brand-900 text-white rounded-xl font-bold">Entrar</button>
+            <input type="password" id="admin-pass" placeholder="Senha do Admin" class="w-full p-4 bg-slate-50 rounded-xl text-center text-lg font-bold tracking-widest outline-none focus:ring-2 focus:ring-brand-500">
+            <button onclick="window.checkAdminPass()" id="admin-login-btn" class="w-full py-3 bg-brand-900 text-white rounded-xl font-bold">Entrar como Admin</button>
         </div>
         <div id="admin-controls-view" class="hidden space-y-3">
             <p class="text-center text-xs font-bold text-slate-500 mb-2 uppercase tracking-wider">Definir Status Global</p>
-            <button onclick="window.setStoreStatus('open')" class="w-full py-4 bg-green-50 text-green-600 border-2 border-green-100 rounded-xl font-black hover:bg-green-100 transition-colors">ABRIR LOJA AGORA</button>
-            <button onclick="window.setStoreStatus('closed')" class="w-full py-4 bg-red-50 text-red-600 border-2 border-red-100 rounded-xl font-black hover:bg-red-100 transition-colors">FECHAR LOJA AGORA</button>
+            <div class="grid grid-cols-2 gap-3">
+                <button onclick="window.setStoreStatus('open')" class="w-full py-4 bg-green-50 text-green-600 border-2 border-green-100 rounded-xl font-black hover:bg-green-100 transition-colors">ABRIR</button>
+                <button onclick="window.setStoreStatus('closed')" class="w-full py-4 bg-red-50 text-red-600 border-2 border-red-100 rounded-xl font-black hover:bg-red-100 transition-colors">FECHAR</button>
+            </div>
             <button onclick="window.setStoreStatus('auto')" class="w-full py-4 bg-slate-50 text-slate-600 border-2 border-slate-100 rounded-xl font-bold hover:bg-slate-100 transition-colors text-xs">Automático (Seguir Horários)</button>
-            <p class="text-[10px] text-center text-slate-400 mt-2">Ao clicar, o status muda para todos os clientes.</p>
+            <p class="text-[10px] text-center text-slate-400 mt-2">Ao clicar, o status muda para <strong>todos os clientes</strong>.</p>
         </div>
      </div>
   </div>
@@ -379,7 +439,7 @@
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-    import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+    import { getAuth, signInAnonymously, signInWithEmailAndPassword, signInWithCustomToken, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
     import { getFirestore, doc, onSnapshot, setDoc, collection } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
     // ✅ CONFIGURAÇÃO DO SEU PROJETO (copo-93658)
@@ -427,90 +487,120 @@
     let db, auth;
     let globalStatusDocRef = null;
 
-    // Inicialização do Firebase Robusta
+    // Inicialização do Firebase Segura
     const initFirebase = async () => {
         try {
-            // Tenta usar a config do ambiente (preview) ou a do usuário (exportado)
             const configToUse = (typeof __firebase_config !== 'undefined') ? JSON.parse(__firebase_config) : firebaseConfig;
             
             const app = initializeApp(configToUse);
             auth = getAuth(app);
             db = getFirestore(app);
             
-            // Autenticação é OBRIGATÓRIA para ler/escrever no Firestore na maioria dos casos
+            // Login Anônimo para Clientes (Só leitura)
             if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
                 await signInWithCustomToken(auth, __initial_auth_token);
             } else {
-                await signInAnonymously(auth);
+                await signInAnonymously(auth).catch(err => console.log("Cliente anônimo conectado"));
             }
 
             const appId = (typeof __app_id !== 'undefined') ? __app_id : 'default-app-id';
             
-            // Define o caminho do documento de status
             globalStatusDocRef = (typeof __firebase_config !== 'undefined') 
                 ? doc(db, 'artifacts', appId, 'public', 'data', 'loja', 'status') 
                 : doc(db, 'loja', 'status');
 
-            // Escuta mudanças em TEMPO REAL (Isso que faz atualizar para todos)
             onSnapshot(globalStatusDocRef, (docSnap) => {
                 if (docSnap.exists()) {
                     const data = docSnap.data();
                     if (data.mode) {
                         state.config.statusMode = data.mode;
-                        localStorage.setItem('acai_status_mode', data.mode); // Backup local
+                        localStorage.setItem('acai_status_mode', data.mode);
                         window.updateUI();
-                        console.log("Status recebido do servidor:", data.mode);
+                        console.log("Status recebido:", data.mode);
                     }
                 }
             }, (error) => {
-                console.warn("Erro ao ouvir status:", error.message);
+                console.warn("Aviso do Firebase:", error.message);
                 if (error.code === 'permission-denied') {
-                    console.error("ERRO DE PERMISSÃO: Configure as regras do Firestore para 'allow read, write: if true;'");
+                    // Fallback silencioso para modo local se regras não permitirem leitura
+                    console.log("Sem permissão de leitura. Usando modo local.");
+                    const savedLocal = localStorage.getItem('acai_status_mode');
+                    if (savedLocal) {
+                        state.config.statusMode = savedLocal;
+                        window.updateUI();
+                    }
                 }
             });
 
         } catch (e) {
-            console.error("Erro na conexão Firebase:", e);
+            console.error("Erro Firebase:", e);
         }
     };
 
     initFirebase();
 
-    // FUNÇÃO GLOBAL DE STATUS (AGORA AVISA SE FALHAR)
-    window.setStoreStatus = async (mode) => {
-        // Atualiza a interface imediatamente para o dono da loja não ficar esperando
-        state.config.statusMode = mode;
-        window.updateUI();
-        
+    // LOGIN DO ADMIN (REAL COM FIREBASE)
+    window.checkAdminPass = async () => {
+        const pass = document.getElementById('admin-pass').value;
+        const btn = document.getElementById('admin-login-btn');
+        const emailAdmin = "admin@prime.com"; // E-mail fixo para facilitar
+
+        if(!pass) return window.toast("Digite a senha", "error");
+
+        btn.innerText = "Verificando...";
+        btn.disabled = true;
+
         try {
+            // Tenta login real no Firebase
+            await signInWithEmailAndPassword(auth, emailAdmin, pass);
+            
+            // Se passar, libera os controles
+            window.toast("Admin Conectado!", "success");
+            document.getElementById('admin-login-view').classList.add('hidden');
+            document.getElementById('admin-controls-view').classList.remove('hidden');
+        } catch (error) {
+            console.error(error);
+            window.toast("Senha incorreta ou erro de conexão", "error");
+            btn.innerText = "Entrar como Admin";
+            btn.disabled = false;
+        }
+    };
+
+    // ALTERAR STATUS (AGORA SEGURO)
+    window.setStoreStatus = async (mode) => {
+        try {
+            // Garante que é admin antes de tentar escrever
+            if (!auth.currentUser || auth.currentUser.isAnonymous) {
+                return window.toast("Você precisa logar como Admin", "error");
+            }
+
             if (globalStatusDocRef) {
                 await setDoc(globalStatusDocRef, { mode: mode }, { merge: true });
-                window.toast(`Loja atualizada para TODOS: ${mode.toUpperCase()}`);
-                localStorage.setItem('acai_status_mode', mode);
+                
+                // Atualiza localmente também
+                state.config.statusMode = mode;
+                window.updateUI();
+                
+                window.toast(`Loja atualizada: ${mode.toUpperCase()}`);
+                document.getElementById('admin-login-modal').classList.add('hidden');
             } else {
-                throw new Error("Conexão com Banco de Dados não iniciada.");
+                throw new Error("Banco de dados não inicializado.");
             }
         } catch (e) {
-            console.error("Falha ao salvar no banco:", e);
-            if (e.code === 'permission-denied') {
-                alert("ERRO: O Firebase negou a permissão.\n\nVocê precisa ir no Console do Firebase > Firestore Database > Rules e liberar o acesso.");
-                window.toast("Erro de Permissão (Veja o Alerta)", "error");
+            console.error("Erro ao salvar:", e);
+            if(e.code === 'permission-denied') {
+                alert("ERRO DE PERMISSÃO: Verifique as regras no Firebase Console.");
             } else {
-                window.toast("Erro de Conexão. Status salvo APENAS AQUI.", "warning");
-                localStorage.setItem('acai_status_mode', mode);
+                window.toast("Erro ao salvar no banco", "error");
             }
         }
-        
-        document.getElementById('admin-login-modal').classList.add('hidden');
     };
 
     // UTIL
     window.toast = (m, t='success') => {
       const el = document.getElementById('toast');
       document.getElementById('toast-msg').innerText = m;
-      // Muda cor do ícone baseado no tipo
       el.querySelector('div').className = `w-2 h-2 rounded-full animate-pulse ${t === 'error' ? 'bg-red-500' : (t === 'warning' ? 'bg-yellow-500' : 'bg-green-400')}`;
-      
       el.classList.remove('-translate-y-20', 'opacity-0');
       el.classList.add('translate-y-0', 'opacity-100');
       setTimeout(() => {
@@ -542,23 +632,15 @@
     // --- ADMIN ---
     window.openAdminModal = () => {
         document.getElementById('admin-login-modal').classList.remove('hidden');
-        document.getElementById('admin-login-view').classList.remove('hidden');
-        document.getElementById('admin-controls-view').classList.add('hidden');
-        document.getElementById('admin-pass').value = '';
-        
-        // Mostra status atual
-        const labels = { 'open': 'ABERTA', 'closed': 'FECHADA', 'auto': 'AUTOMÁTICO' };
-        document.getElementById('admin-current-status').innerText = labels[state.config.statusMode] || '...';
-    };
-
-    window.checkAdminPass = () => {
-        const pass = document.getElementById('admin-pass').value;
-        if(pass === '1234') { 
-            document.getElementById('admin-login-view').classList.add('hidden');
-            document.getElementById('admin-controls-view').classList.remove('hidden');
+        // Se já estiver logado como admin (não anônimo), vai direto para controles
+        if(auth.currentUser && !auth.currentUser.isAnonymous) {
+             document.getElementById('admin-login-view').classList.add('hidden');
+             document.getElementById('admin-controls-view').classList.remove('hidden');
         } else {
-            window.toast("Senha incorreta", "error");
+             document.getElementById('admin-login-view').classList.remove('hidden');
+             document.getElementById('admin-controls-view').classList.add('hidden');
         }
+        document.getElementById('admin-pass').value = '';
     };
 
     // --- CARRINHO & PEDIDOS ---
