@@ -206,8 +206,9 @@
     <header class="sticky top-0 z-40 glass shadow-sm w-full safe-pt">
       <div class="px-5 h-[80px] flex items-center justify-between max-w-lg mx-auto">
         <div class="flex items-center gap-3">
-          <div class="relative">
-            <div class="w-12 h-12 rounded-full border-2 border-white shadow-md overflow-hidden bg-white">
+          <!-- LOGO COMO BOTÃO DE ADMIN (COM SENHA) -->
+          <div class="relative cursor-pointer group" onclick="window.openAdminModal()">
+            <div class="w-12 h-12 rounded-full border-2 border-white shadow-md overflow-hidden bg-white transition-transform group-active:scale-95">
               <img src="prime_acai_logo_circle_tight_2048_enhanced_v2.jpg" class="w-full h-full object-cover" alt="Logo">
             </div>
             <div id="status-indicator" class="absolute bottom-0 right-0 w-3.5 h-3.5 bg-slate-300 border-2 border-white rounded-full transition-colors duration-500"></div>
@@ -221,10 +222,12 @@
           </div>
         </div>
 
-        <button onclick="window.toggleCart(true)" class="relative p-3 rounded-2xl bg-white border border-slate-100 shadow-sm active:scale-90 text-brand-600 transition-all">
-          <i data-lucide="shopping-bag" class="w-6 h-6"></i>
-          <span id="cart-count" class="absolute -top-1 -right-1 bg-brand-600 text-white text-[9px] font-bold w-5 h-5 flex items-center justify-center rounded-full border-2 border-white transform scale-0 transition-transform shadow-sm">0</span>
-        </button>
+        <div class="flex items-center gap-2">
+            <button onclick="window.toggleCart(true)" class="relative p-3 rounded-2xl bg-white border border-slate-100 shadow-sm active:scale-90 text-brand-600 transition-all">
+              <i data-lucide="shopping-bag" class="w-6 h-6"></i>
+              <span id="cart-count" class="absolute -top-1 -right-1 bg-brand-600 text-white text-[9px] font-bold w-5 h-5 flex items-center justify-center rounded-full border-2 border-white transform scale-0 transition-transform shadow-sm">0</span>
+            </button>
+        </div>
       </div>
     </header>
 
@@ -279,11 +282,6 @@
     <!-- BARRA INFERIOR -->
     <div class="fixed bottom-0 left-0 right-0 z-30 p-4 bg-gradient-to-t from-white via-white to-transparent pt-10 pointer-events-none safe-pb">
        <div class="max-w-lg mx-auto pointer-events-auto relative">
-          <!-- Botão Admin (Cadeado Escondido) -->
-          <button onclick="window.openAdminModal()" class="absolute -top-8 left-1/2 -translate-x-1/2 text-slate-300 hover:text-brand-500 p-2">
-             <i data-lucide="lock" class="w-4 h-4 opacity-50"></i>
-          </button>
-
           <button onclick="window.toggleCart(true)" class="w-full py-4 bg-slate-900 text-white rounded-2xl shadow-xl flex items-center justify-between px-6 active:scale-95 transition-all group">
             <span class="text-xs font-black uppercase tracking-widest">Ver Sacola</span>
             <div class="flex items-center gap-3">
@@ -340,7 +338,7 @@
           </select>
 
           <div id="pix-area" class="hidden bg-brand-50 p-5 rounded-3xl border border-brand-100 text-center animate-slide-up">
-            <p class="text-[10px] font-black text-brand-900 uppercase mb-1 tracking-widest">Titular: Gabriel Santana Morais</p>
+            <p class="text-[10px] font-black text-brand-900 uppercase mb-1 tracking-widest">Titular: Paulo Cunha da Silva</p>
             <p class="text-[10px] font-black text-brand-900 uppercase mb-3 tracking-widest">Chave Pix</p>
             <div class="flex gap-2 mb-4">
               <input id="pix-key" readonly class="flex-1 text-[10px] text-center p-3 rounded-xl bg-white border border-brand-100 text-slate-500 outline-none font-mono">
@@ -413,7 +411,7 @@
                 <i data-lucide="shield-check" class="w-7 h-7"></i>
             </div>
             <h3 class="font-display font-bold text-xl text-slate-900">Área do Dono</h3>
-            <p class="text-xs text-slate-400">Digite a senha definida no Firebase para alterar o status</p>
+            <p class="text-xs text-slate-400">Digite a senha para gerenciar a loja</p>
         </div>
         <div id="admin-login-view" class="space-y-3">
             <input type="password" id="admin-pass" placeholder="Senha do Admin" class="w-full p-4 bg-slate-50 rounded-xl text-center text-lg font-bold tracking-widest outline-none focus:ring-2 focus:ring-brand-500">
@@ -426,6 +424,9 @@
                 <button onclick="window.setStoreStatus('closed')" class="w-full py-4 bg-red-50 text-red-600 border-2 border-red-100 rounded-xl font-black hover:bg-red-100 transition-colors">FECHAR</button>
             </div>
             <button onclick="window.setStoreStatus('auto')" class="w-full py-4 bg-slate-50 text-slate-600 border-2 border-slate-100 rounded-xl font-bold hover:bg-slate-100 transition-colors text-xs">Automático (Seguir Horários)</button>
+            
+            <button onclick="window.adminLogout()" class="w-full py-3 mt-4 bg-slate-100 text-slate-500 rounded-xl font-bold text-xs hover:bg-slate-200 transition-colors">Sair da Área Admin</button>
+            
             <p class="text-[10px] text-center text-slate-400 mt-2">Ao clicar, o status muda para <strong>todos os clientes</strong>.</p>
         </div>
      </div>
@@ -439,8 +440,11 @@
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-    import { getAuth, signInAnonymously, signInWithEmailAndPassword, signInWithCustomToken, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+    import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
     import { getFirestore, doc, onSnapshot, setDoc, collection } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+    // 🔐 SUA SENHA DE ADMIN (Edite aqui se quiser mudar)
+    const SENHA_DO_ADMIN = "MudaLoja2026";
 
     // ✅ CONFIGURAÇÃO DO SEU PROJETO (copo-93658)
     const firebaseConfig = {
@@ -474,7 +478,7 @@
         sizes: DEFAULT_ITEMS,
         accompaniments: DEFAULT_ACCOMPANIMENTS,
         pixKey: "89988171689",
-        pixName: "Gabriel Santana Morais",
+        pixName: "Paulo Cunha da Silva",
         zones: []
       },
       deliveryType: "Retirada",
@@ -485,8 +489,10 @@
 
     let db, auth;
     let globalStatusDocRef = null;
+    // Variável para controlar login local (já que removemos o login complexo do firebase)
+    let isAdminLoggedIn = false;
 
-    // Inicialização do Firebase Segura
+    // Inicialização do Firebase (Simples e Anônima para todos)
     const initFirebase = async () => {
         try {
             const configToUse = (typeof __firebase_config !== 'undefined') ? JSON.parse(__firebase_config) : firebaseConfig;
@@ -495,12 +501,8 @@
             auth = getAuth(app);
             db = getFirestore(app);
             
-            // Login Anônimo para Clientes (Só leitura)
-            if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-                await signInWithCustomToken(auth, __initial_auth_token);
-            } else {
-                await signInAnonymously(auth).catch(err => console.log("Cliente anônimo conectado"));
-            }
+            // Login Anônimo OBRIGATÓRIO
+            await signInAnonymously(auth).catch(err => console.log("Conectado anonimamente"));
 
             const appId = (typeof __app_id !== 'undefined') ? __app_id : 'default-app-id';
             
@@ -521,7 +523,9 @@
             }, (error) => {
                 console.warn("Aviso do Firebase:", error.message);
                 if (error.code === 'permission-denied') {
-                    console.log("Sem permissão de leitura. Usando modo local.");
+                    // Se der erro de permissão, é porque as regras não estão públicas.
+                    // O app vai continuar funcionando em modo local.
+                    console.log("Modo local (sem permissão de leitura global).");
                     const savedLocal = localStorage.getItem('acai_status_mode');
                     if (savedLocal) {
                         state.config.statusMode = savedLocal;
@@ -537,61 +541,57 @@
 
     initFirebase();
 
-    // LOGIN DO ADMIN (REAL COM FIREBASE)
-    window.checkAdminPass = async () => {
+    // LOGIN DO ADMIN (SIMPLIFICADO - SENHA NO CÓDIGO)
+    window.checkAdminPass = () => {
         const pass = document.getElementById('admin-pass').value;
         const btn = document.getElementById('admin-login-btn');
-        const emailAdmin = "admin@prime.com"; // E-mail fixo para facilitar
 
         if(!pass) return window.toast("Digite a senha", "error");
 
-        btn.innerText = "Verificando...";
-        btn.disabled = true;
-
-        try {
-            // Tenta login real no Firebase
-            await signInWithEmailAndPassword(auth, emailAdmin, pass);
-            
-            // Se passar, libera os controles
+        if (pass === SENHA_DO_ADMIN) {
+            isAdminLoggedIn = true;
             window.toast("Admin Conectado!", "success");
             document.getElementById('admin-login-view').classList.add('hidden');
             document.getElementById('admin-controls-view').classList.remove('hidden');
-        } catch (error) {
-            console.error(error);
-            window.toast("Senha incorreta ou erro de conexão", "error");
-            btn.innerText = "Entrar como Admin";
-            btn.disabled = false;
+        } else {
+            window.toast("Senha incorreta", "error");
         }
     };
 
-    // ALTERAR STATUS (AGORA SEGURO)
-    window.setStoreStatus = async (mode) => {
-        try {
-            // Garante que é admin antes de tentar escrever
-            if (!auth.currentUser || auth.currentUser.isAnonymous) {
-                return window.toast("Você precisa logar como Admin", "error");
-            }
+    window.adminLogout = () => {
+        isAdminLoggedIn = false;
+        document.getElementById('admin-pass').value = '';
+        document.getElementById('admin-controls-view').classList.add('hidden');
+        document.getElementById('admin-login-view').classList.remove('hidden');
+        document.getElementById('admin-login-modal').classList.add('hidden');
+        window.toast("Você saiu da área admin");
+    };
 
+    // ALTERAR STATUS
+    window.setStoreStatus = async (mode) => {
+        if (!isAdminLoggedIn) return window.toast("Faça login novamente", "error");
+
+        try {
+            // Tenta salvar no Firebase
             if (globalStatusDocRef) {
                 await setDoc(globalStatusDocRef, { mode: mode }, { merge: true });
-                
-                // Atualiza localmente também
-                state.config.statusMode = mode;
-                window.updateUI();
-                
                 window.toast(`Loja atualizada: ${mode.toUpperCase()}`);
-                document.getElementById('admin-login-modal').classList.add('hidden');
-            } else {
-                throw new Error("Banco de dados não inicializado.");
             }
         } catch (e) {
             console.error("Erro ao salvar:", e);
             if(e.code === 'permission-denied') {
-                alert("ERRO DE PERMISSÃO: Verifique as regras no Firebase Console.");
-            } else {
-                window.toast("Erro ao salvar no banco", "error");
-            }
+                alert("AVISO: Para o botão funcionar, vá no Firebase > Rules e coloque 'allow read, write: if true;'");
+            } 
+            // Salva localmente como fallback
+            window.toast("Salvo localmente (Verifique Firebase)", "warning");
         }
+        
+        // Atualiza localmente sempre para garantir feedback rápido
+        state.config.statusMode = mode;
+        localStorage.setItem('acai_status_mode', mode);
+        window.updateUI();
+        
+        document.getElementById('admin-login-modal').classList.add('hidden');
     };
 
     // UTIL
@@ -630,15 +630,13 @@
     // --- ADMIN ---
     window.openAdminModal = () => {
         document.getElementById('admin-login-modal').classList.remove('hidden');
-        // Se já estiver logado como admin (não anônimo), vai direto para controles
-        if(auth.currentUser && !auth.currentUser.isAnonymous) {
+        if(isAdminLoggedIn) {
              document.getElementById('admin-login-view').classList.add('hidden');
              document.getElementById('admin-controls-view').classList.remove('hidden');
         } else {
              document.getElementById('admin-login-view').classList.remove('hidden');
              document.getElementById('admin-controls-view').classList.add('hidden');
         }
-        document.getElementById('admin-pass').value = '';
     };
 
     // --- CARRINHO & PEDIDOS ---
