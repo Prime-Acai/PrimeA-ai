@@ -130,7 +130,7 @@
     .watermark-footer {
       position: fixed;
       left: 24px;
-      bottom: 110px; /* Ajustado para não conflitar com barra inferior */
+      bottom: 110px;
       z-index: 40;
       pointer-events: none;
       display: flex;
@@ -475,7 +475,6 @@
         accompaniments: DEFAULT_ACCOMPANIMENTS,
         pixKey: "89988171689",
         pixName: "Gabriel Santana Morais",
-        googleScriptUrl: "https://script.google.com/macros/s/AKfycbwtHwhszybzs3OzYOUCY-cHaAi-bCSuvyuViM1mHmEkSYkfHvQvpFmhQLCXXV_ASeAA/exec",
         zones: []
       },
       deliveryType: "Retirada",
@@ -522,7 +521,6 @@
             }, (error) => {
                 console.warn("Aviso do Firebase:", error.message);
                 if (error.code === 'permission-denied') {
-                    // Fallback silencioso para modo local se regras não permitirem leitura
                     console.log("Sem permissão de leitura. Usando modo local.");
                     const savedLocal = localStorage.getItem('acai_status_mode');
                     if (savedLocal) {
@@ -986,15 +984,7 @@
       if (method === 'Pix') paymentStatusFull += " (Confirmado no Site ✅)";
       const itemsStr = state.cart.map(i => `${i.qty}x ${i.name}`).join(", ");
       
-      if (state.config.googleScriptUrl) {
-        const data = {
-          data: new Date().toLocaleString('pt-BR'),
-          cliente: name, telefone: phone, valor: totalFinal,
-          pagamento: paymentStatusFull, endereco: deliveryDetailsStorage,
-          itens: itemsStr, obs: obsGeneral
-        };
-        fetch(state.config.googleScriptUrl, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'text/plain' }, body: JSON.stringify(data) }).catch(()=>{});
-      }
+      // Removed Google Script block
 
       let msg = `🥤 *NOVO PEDIDO - PRIME AÇAÍ*\n\n`;
       msg += `👤 *Cliente:* ${name}\n`;
