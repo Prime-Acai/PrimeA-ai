@@ -228,7 +228,7 @@
 
     <!-- MOBILE HEADER -->
     <header
-        class="mobile-header fixed top-0 left-0 right-0 h-16 bg-white border-b border-slate-100 flex items-center justify-between px-6 z-80 lg:hidden">
+        class="mobile-header fixed top-0 left-0 right-0 h-16 bg-white border-b border-slate-100 flex items-center justify-between px-6 z-[80] lg:hidden">
         <div class="flex items-center gap-2">
             <div class="w-8 h-8 bg-brand-600 rounded-lg flex items-center justify-center text-white">
                 <i data-lucide="layout-dashboard" class="w-4 h-4"></i>
@@ -587,7 +587,9 @@
         onAuthStateChanged(auth, async (user) => {
             if (user) {
                 document.getElementById('login-overlay').classList.add('hidden');
-                document.getElementById('sidebar').classList.remove('hidden');
+                if (window.innerWidth >= 1024) {
+                    document.getElementById('sidebar').classList.remove('hidden');
+                }
                 document.getElementById('main-content').classList.remove('hidden');
                 initAdmin();
             } else {
@@ -618,7 +620,7 @@
             const isOpen = mode === 'open';
 
             if (badge) {
-                badge.innerHTML = `<div class="w-2.5 h-2.5 rounded-full ${isOpen ? 'bg-green-500 shadow-[0_0_10px_rgba(34,197,94,0.6)] animate-pulse' : 'bg-red-500'}"></div> ${mode === 'auto' ? 'Horário Automático' : (isOpen ? 'Loja Aberta' : 'Loja Feada')}`;
+                badge.innerHTML = `<div class="w-2.5 h-2.5 rounded-full ${isOpen ? 'bg-green-500 shadow-[0_0_10px_rgba(34,197,94,0.6)] animate-pulse' : 'bg-red-500'}"></div> ${mode === 'auto' ? 'Horário Automático' : (isOpen ? 'Loja Aberta' : 'Loja Fechada')}`;
                 badge.className = `px-5 py-3 rounded-full border-2 font-black text-[11px] uppercase tracking-widest flex items-center gap-3 shadow-sm ${isOpen ? 'border-green-100 text-green-600 bg-green-50' : (mode === 'auto' ? 'border-slate-100 text-slate-400 bg-slate-50' : 'border-red-100 text-red-600 bg-red-50')}`;
             }
 
