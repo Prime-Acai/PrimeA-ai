@@ -613,10 +613,17 @@
     // Promise que resolve quando o Firebase estiver pronto
     let firebaseReadyResolve;
     let firebaseReady = new Promise(r => { firebaseReadyResolve = r; });
+    let firebaseConnected = false;
 
     // Inicialização do Firebase (Simples e Anônima para todos)
     const initFirebase = async () => {
       try {
+        if (typeof firebase === 'undefined') {
+          console.error("Firebase SDK não carregou");
+          firebaseReadyResolve();
+          return;
+        }
+
         const configToUse = (typeof __firebase_config !== 'undefined') ? JSON.parse(__firebase_config) : firebaseConfig;
 
         const app = firebase.initializeApp(configToUse);
@@ -624,7 +631,13 @@
         db = firebase.firestore();
 
         // Login Anônimo OBRIGATÓRIO
-        await auth.signInAnonymously().catch(err => console.log("Conectado anonimamente"));
+        try {
+          await auth.signInAnonymously();
+          console.log("✅ Firebase conectado com autenticação anônima");
+        } catch (authErr) {
+          console.error("❌ Erro na autenticação anônima:", authErr);
+          // Continua mesmo sem auth - algumas operações podem funcionar
+        }
 
         const appId = (typeof __app_id !== 'undefined') ? __app_id : 'default-app-id';
 
@@ -653,8 +666,11 @@
           }
         });
 
+        firebaseConnected = true;
+        console.log("✅ Firebase pronto!");
+
       } catch (e) {
-        console.error("Erro Firebase:", e);
+        console.error("❌ Erro Firebase:", e);
       }
       firebaseReadyResolve();
     };
@@ -1109,7 +1125,7 @@
       // Aguarda Firebase ficar pronto (máx 5s) antes de salvar
       try {
         await Promise.race([firebaseReady, new Promise(r => setTimeout(r, 5000))]);
-        if (db) {
+        if (db && firebaseConnected) {
           await db.collection('pedidos').add({
             cliente: name,
             telefone: phone,
@@ -1121,12 +1137,14 @@
             status: 'novo',
             delivery: "Retirada"
           });
-          console.log("Pedido salvo no Firebase!");
+          console.log("✅ Pedido salvo no Firebase!");
         } else {
-          console.warn("Firebase não conectado - pedido enviado só pelo WhatsApp");
+          console.warn("Firebase não conectado - db:", !!db, "connected:", firebaseConnected);
+          window.toast("Pedido NÃO salvo no sistema (sem conexão Firebase)", "warning");
         }
       } catch (e) {
-        console.warn("Erro ao salvar no Firebase:", e);
+        console.error("Erro ao salvar no Firebase:", e);
+        window.toast("Erro Firebase: " + e.message, "error");
       }
 
       // Envia pelo WhatsApp SEMPRE (mesmo se Firebase falhar)
