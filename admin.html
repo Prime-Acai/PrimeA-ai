@@ -283,7 +283,7 @@
                     <div class="w-14 h-14 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center mb-6">
                         <i data-lucide="receipt" class="w-7 h-7"></i>
                     </div>
-                    <h3 class="text-slate-400 text-xs font-black uppercase tracking-widest mb-1">Pedidos Hoje</h3>
+                    <h3 class="text-slate-400 text-xs font-black uppercase tracking-widest mb-1">Total de Pedidos</h3>
                     <p id="stats-orders" class="text-4xl font-display font-black text-slate-900">0</p>
                 </div>
                 <div
@@ -291,7 +291,7 @@
                     <div class="w-14 h-14 bg-green-50 text-green-600 rounded-2xl flex items-center justify-center mb-6">
                         <i data-lucide="dollar-sign" class="w-7 h-7"></i>
                     </div>
-                    <h3 class="text-slate-400 text-xs font-black uppercase tracking-widest mb-1">Faturamento</h3>
+                    <h3 class="text-slate-400 text-xs font-black uppercase tracking-widest mb-1">Faturamento Total</h3>
                     <p id="stats-revenue" class="text-4xl font-display font-black text-slate-900">R$ 0,00</p>
                 </div>
                 <!-- Store Controls -->
@@ -611,7 +611,7 @@
             onSnapshot(doc(db, 'loja', 'config'), (snap) => { if (snap.exists()) { state.config = snap.data(); renderAll(); } });
             onSnapshot(doc(db, 'loja', 'status'), (snap) => { if (snap.exists()) updateStatusBadge(snap.data().mode); });
             const qOrders = query(collection(db, 'pedidos'), orderBy('data', 'desc'), limit(100));
-            onSnapshot(qOrders, (snap) => { state.pedidos = snap.docs.map(d => ({ id: d.id, ...d.data() })); renderPedidos(); });
+            onSnapshot(qOrders, (snap) => { state.pedidos = snap.docs.map(d => ({ id: d.id, ...d.data() })); renderPedidos(); renderStats(); });
         }
 
         function updateStatusBadge(mode) {
@@ -657,11 +657,10 @@
         }
 
         function renderStats() {
-            const todayStr = new Date().toLocaleDateString();
-            const todayPedidos = state.pedidos.filter(p => new Date(p.data).toLocaleDateString() === todayStr);
-            const revenue = todayPedidos.reduce((acc, p) => acc + p.total, 0);
-            document.getElementById('stats-orders').innerText = todayPedidos.length;
-            document.getElementById('stats-revenue').innerText = `R$ ${revenue.toFixed(2).replace('.', ',')}`;
+            const totalPedidos = state.pedidos.length;
+            const totalRevenue = state.pedidos.reduce((acc, p) => acc + (p.total || 0), 0);
+            document.getElementById('stats-orders').innerText = totalPedidos;
+            document.getElementById('stats-revenue').innerText = `R$ ${totalRevenue.toFixed(2).replace('.', ',')}`;
         }
 
         function renderPedidos() {
@@ -685,6 +684,9 @@
                          </div>
                          <button onclick="viewOrderDetails('${p.id}')" class="p-4 bg-white border border-slate-100 rounded-2xl hover:border-brand-500 hover:text-brand-500 hover:shadow-lg active:scale-95 transition-all outline-none">
                               <i data-lucide="eye" class="w-5 h-5"></i>
+                         </button>
+                         <button onclick="deleteOrder('${p.id}')" class="p-4 bg-white border border-slate-100 rounded-2xl hover:border-red-500 hover:text-red-500 hover:shadow-lg active:scale-95 transition-all outline-none">
+                              <i data-lucide="trash-2" class="w-5 h-5"></i>
                          </button>
                     </div>
                 </div>
@@ -744,6 +746,17 @@
         }
 
         window.closeOrderModal = () => document.getElementById('modal-order').classList.add('hidden');
+
+        window.deleteOrder = async (id) => {
+            if (!confirm('Tem certeza que deseja APAGAR este pedido?')) return;
+            try {
+                await deleteDoc(doc(db, 'pedidos', id));
+                toast('Pedido removido!');
+            } catch (e) {
+                console.error('Erro ao deletar:', e);
+                toast('Erro ao remover pedido', 'error');
+            }
+        };
 
         // --- PRODUCT & ACCOMP LOGIC ---
         function renderProducts() {
