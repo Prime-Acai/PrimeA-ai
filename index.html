@@ -20,6 +20,11 @@
     href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Outfit:wght@400;500;700&display=swap"
     rel="stylesheet">
 
+  <!-- Firebase Compat SDK (funciona sem ES Modules / file:// protocol) -->
+  <script src="https://www.gstatic.com/firebasejs/11.6.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/11.6.1/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore-compat.js"></script>
+
   <script>
     tailwind.config = {
       theme: {
@@ -546,10 +551,7 @@
     <span class="text-xs font-bold tracking-wide" id="toast-msg">Sucesso</span>
   </div>
 
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-    import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-    import { getFirestore, doc, onSnapshot, setDoc, collection, addDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+  <script>
 
     // 🔐 SUA SENHA DE ADMIN (Edite aqui se quiser mudar)
     const SENHA_DO_ADMIN = "MudaLoja2026";
@@ -605,21 +607,21 @@
       try {
         const configToUse = (typeof __firebase_config !== 'undefined') ? JSON.parse(__firebase_config) : firebaseConfig;
 
-        const app = initializeApp(configToUse);
-        auth = getAuth(app);
-        db = getFirestore(app);
+        const app = firebase.initializeApp(configToUse);
+        auth = firebase.auth();
+        db = firebase.firestore();
 
         // Login Anônimo OBRIGATÓRIO
-        await signInAnonymously(auth).catch(err => console.log("Conectado anonimamente"));
+        await auth.signInAnonymously().catch(err => console.log("Conectado anonimamente"));
 
         const appId = (typeof __app_id !== 'undefined') ? __app_id : 'default-app-id';
 
         globalStatusDocRef = (typeof __firebase_config !== 'undefined')
-          ? doc(db, 'artifacts', appId, 'public', 'data', 'loja', 'status')
-          : doc(db, 'loja', 'status');
+          ? db.doc(`artifacts/${appId}/public/data/loja/status`)
+          : db.doc('loja/status');
 
-        onSnapshot(globalStatusDocRef, (docSnap) => {
-          if (docSnap.exists()) {
+        globalStatusDocRef.onSnapshot((docSnap) => {
+          if (docSnap.exists) {
             const data = docSnap.data();
             if (data.mode) {
               state.config.statusMode = data.mode;
@@ -631,8 +633,8 @@
         });
 
         // ➕ ESCUTAR CONFIGURAÇÕES (ADMIN)
-        onSnapshot(doc(db, 'loja', 'config'), (snap) => {
-          if (snap.exists()) {
+        db.doc('loja/config').onSnapshot((snap) => {
+          if (snap.exists) {
             state.config = { ...state.config, ...snap.data() };
             window.renderMenu();
             window.updateUI();
@@ -679,7 +681,7 @@
       try {
         // Tenta salvar no Firebase
         if (globalStatusDocRef) {
-          await setDoc(globalStatusDocRef, { mode: mode }, { merge: true });
+          await globalStatusDocRef.set({ mode: mode }, { merge: true });
           window.toast(`Loja atualizada: ${mode.toUpperCase()}`);
         }
       } catch (e) {
@@ -1077,7 +1079,7 @@
 
       try {
         // 📝 SALVAR NO FIREBASE
-        await addDoc(collection(db, 'pedidos'), {
+        await db.collection('pedidos').add({
           cliente: name,
           telefone: phone,
           pagamento: method,
