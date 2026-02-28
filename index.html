@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="pt-BR">
 
 <head>
@@ -274,7 +274,8 @@
             </div>
           </div>
           <div>
-            <h1 class="font-display font-extrabold text-lg leading-tight text-slate-900 tracking-tight">Prime Açaí</h1>
+            <h1 class="font-display font-extrabold text-lg leading-tight text-slate-900 tracking-tight">Prime Açaí
+            </h1>
             <div class="flex items-center gap-1">
               <span id="status-dot" class="w-1.5 h-1.5 rounded-full bg-slate-300"></span>
               <p id="status-text" class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Verificando...
@@ -562,7 +563,7 @@
 
   <script>
 
-    // 🔐 SUA SENHA DE ADMIN (Edite aqui se quiser mudar)
+    // 🔍 SUA SENHA DE ADMIN (Edite aqui se quiser mudar)
     const SENHA_DO_ADMIN = "MudaLoja2026";
 
     // ✅ CONFIGURAÇÃO DO SEU PROJETO (copo-93658)
@@ -988,7 +989,7 @@
             <div class="flex justify-between items-center">
               <div>
                 <h3 class="font-bold text-slate-800 text-base leading-tight">${item.name}</h3>
-                <p class="text-[11px] text-slate-400 mt-0.5 leading-tight">${item.description}</p>
+                <p class="text-[11px] text-slate-400 mt-0.5 leading-tight">${item.desc || item.description || ''}</p>
               </div>
               <div class="w-8 h-8 flex items-center justify-center shrink-0 ml-2 rounded-full bg-slate-50 text-brand-500"><i data-lucide="plus" class="w-5 h-5"></i></div>
             </div>
@@ -1110,10 +1111,10 @@
       let paymentStatusFull = method;
       if (method === 'Pix') paymentStatusFull += " (Confirmado no Site ✅)";
 
-      let msg = `🥤 *NOVO PEDIDO - PRIME AÇAÍ*\n\n`;
+      let msg = `🥣 *NOVO PEDIDO - PRIME AÇAÍ*\n\n`;
       msg += `👤 *Cliente:* ${name}\n`;
       msg += `💳 *Pag:* ${paymentStatusFull}\n`;
-      msg += `🏃 *Retirada na Loja*\n`;
+      msg += `🚶 *Retirada na Loja*\n`;
       msg += `\n*ITENS DO PEDIDO:*\n`;
       state.cart.forEach(i => {
         msg += `▪️ ${i.qty}x ${i.name}\n`;
