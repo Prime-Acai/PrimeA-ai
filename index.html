@@ -592,7 +592,7 @@
       cart: [],
       config: {
         storeName: "Prime Açaí",
-        phone: "5589988171689",
+        phone: "5579996040320",
         statusMode: "auto",
         openingHours: { start: 16, end: 23 },
         accompaniments: { frutas: [], adicionais: [], coberturas: [] }, // Initialize with empty arrays
@@ -600,8 +600,9 @@
         pixName: "Paulo Cunha da Silva",
         zones: []
       },
-      products: [], // New top-level array for products
-      coberturas: [], // New top-level array for coberturas
+      products: [],
+      cremes: [],
+      coberturas: [],
       deliveryType: "Retirada",
       paymentVerified: false,
       currentCopo: null,
@@ -659,14 +660,6 @@
           }
         });
 
-        // ➕ ESCUTAR CONFIGURAÇÕES (ADMIN)
-        db.doc('loja/config').onSnapshot((snap) => {
-          if (snap.exists) {
-            state.config = { ...state.config, ...snap.data() };
-            window.updateUI();
-          }
-        });
-
         // 🍨 ESCUTAR PRODUTOS E COBERTURAS (COLEÇÕES SEPARADAS)
         db.collection('produtos').onSnapshot((snap) => {
           state.products = snap.docs.map(d => ({ docId: d.id, ...d.data() }));
@@ -674,19 +667,28 @@
         });
 
         db.collection('coberturas_lista').onSnapshot((snap) => {
-          state.coberturas = snap.docs.map(d => ({ docId: d.id, ...d.data() }));
-          if (state.config && state.config.accompaniments) {
-            state.config.accompaniments.coberturas = state.coberturas;
-          }
+          state.cremes = snap.docs.map(d => ({ docId: d.id, ...d.data() }));
         });
 
-        // Fallback para outros tipos de acompanhamento se ainda existirem no doc global
+        db.collection('coberturas_info').onSnapshot((snap) => {
+          state.coberturas = snap.docs.map(d => ({ docId: d.id, ...d.data() }));
+        });
+
+        // ➕ ESCUTAR CONFIGURAÇÕES GLOBAIS
         db.doc('loja/config').onSnapshot((snap) => {
-          if (snap.exists && snap.data().accompaniments) {
-            const acc = snap.data().accompaniments;
+          if (snap.exists) {
+            const data = snap.data();
+            // Mesclar config sem perder referências das coleções novas
+            state.config = { ...state.config, ...data };
+
+            // Garantir que os acompanhamentos legados e novos estejam sincronizados
             if (!state.config.accompaniments) state.config.accompaniments = { frutas: [], adicionais: [], coberturas: [] };
-            if (acc.frutas) state.config.accompaniments.frutas = acc.frutas;
-            if (acc.adicionais) state.config.accompaniments.adicionais = acc.adicionais;
+            if (data.accompaniments) {
+              if (data.accompaniments.frutas) state.config.accompaniments.frutas = data.accompaniments.frutas;
+              if (data.accompaniments.adicionais) state.config.accompaniments.adicionais = data.accompaniments.adicionais;
+            }
+
+            window.updateUI();
           }
         });
 
@@ -904,6 +906,7 @@
       if (limits.adicional) limitsContainer.innerHTML += `<span class="${badgeClass}">${limits.adicional} Complementos</span>`;
       if (limits.fruta) limitsContainer.innerHTML += `<span class="${badgeClass}">${limits.fruta} ${limits.fruta > 1 ? 'Frutas' : 'Fruta'}</span>`;
       if (limits.cobertura) limitsContainer.innerHTML += `<span class="${badgeClass}">${limits.cobertura} ${limits.cobertura > 1 ? 'Cremes' : 'Creme'}</span>`;
+      if (limits.cobertura_real) limitsContainer.innerHTML += `<span class="${badgeClass}">${limits.cobertura_real} ${limits.cobertura_real > 1 ? 'Coberturas' : 'Cobertura'}</span>`;
 
       document.getElementById('copo-qty-display').innerText = "1";
       document.getElementById('copo-total-price').innerText = `R$ ${item.price.toFixed(2).replace('.', ',')}`;
@@ -935,7 +938,8 @@
 
       container.innerHTML += renderSection("Frutas", state.config.accompaniments.frutas, "fruta");
       container.innerHTML += renderSection("Complementos (Adicionais)", state.config.accompaniments.adicionais, "adicional");
-      container.innerHTML += renderSection("Cremes", state.config.accompaniments.coberturas, "cobertura");
+      container.innerHTML += renderSection("Cremes", state.cremes, "cobertura");
+      container.innerHTML += renderSection("Coberturas (Caldas)", state.coberturas, "cobertura_real");
 
       document.getElementById('copo-modal').classList.remove('hidden');
       window.refreshIcons();
@@ -948,7 +952,8 @@
 
     window.checkCopoLimits = (checkbox) => {
       const type = checkbox.dataset.type;
-      const limit = state.currentCopo.limits[type] || 99;
+      const rawLimit = state.currentCopo.limits[type];
+      const limit = (rawLimit === undefined || rawLimit === null) ? 99 : parseInt(rawLimit);
       const allCheckboxesOfType = document.querySelectorAll(`.limit-specific[data-type="${type}"]`);
       const checkedCount = Array.from(allCheckboxesOfType).filter(cb => cb.checked).length;
       if (checkedCount >= limit) {
@@ -971,9 +976,28 @@
     window.addCopoToCart = () => {
       if (!state.currentCopo) return;
       const checkboxes = document.querySelectorAll('.option-checkbox:checked');
-      const selectedOptions = Array.from(checkboxes).map(cb => cb.value);
-      if (selectedOptions.length === 0) { if (!confirm("Tem certeza que quer o copo sem acompanhamentos?")) return; }
-      let obsText = selectedOptions.length > 0 ? `Montagem: ${selectedOptions.join(', ')}` : "Sem acompanhamentos";
+      if (checkboxes.length === 0) { if (!confirm("Tem certeza que quer o copo sem acompanhamentos?")) return; }
+
+      const groups = {
+        fruta: [],
+        adicional: [],
+        cobertura: [],
+        cobertura_real: []
+      };
+
+      checkboxes.forEach(cb => {
+        const type = cb.dataset.type;
+        if (groups[type]) groups[type].push(cb.value);
+      });
+
+      let sections = [];
+      if (groups.fruta.length > 0) sections.push(`Frutas: ${groups.fruta.join(', ')}`);
+      if (groups.adicional.length > 0) sections.push(`Adicionais: ${groups.adicional.join(', ')}`);
+      if (groups.cobertura.length > 0) sections.push(`Cremes: ${groups.cobertura.join(', ')}`);
+      if (groups.cobertura_real.length > 0) sections.push(`Coberturas: ${groups.cobertura_real.join(', ')}`);
+
+      let obsText = sections.length > 0 ? sections.join(' | ') : "Sem acompanhamentos";
+
       state.cart.push({
         id: Date.now() + Math.random(),
         name: state.currentCopo.name,
@@ -1176,7 +1200,7 @@
       }
 
       // Envia pelo WhatsApp SEMPRE (mesmo se Firebase falhar)
-      const phoneNum = state.config.phone ? state.config.phone.replace(/\D/g, '') : "5589988171689";
+      const phoneNum = state.config.phone ? state.config.phone.replace(/\D/g, '') : "5579996040320";
       window.location.href = `https://api.whatsapp.com/send?phone=${phoneNum}&text=${encodeURIComponent(msg)}`;
 
       state.cart = [];
