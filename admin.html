@@ -889,7 +889,7 @@
 
         function renderCoberturas() {
             const grid = document.getElementById('coberturas-grid');
-            if (!grid || !state.config.accompaniments) return;
+            if (!grid || !state.config || !state.config.accompaniments) return;
             const coberturas = state.config.accompaniments.coberturas || [];
             if (coberturas.length === 0) {
                 grid.innerHTML = `<div class="col-span-full p-20 text-center text-slate-300 font-bold uppercase tracking-widest text-[10px]">Nenhuma cobertura cadastrada. Clique em "+ Nova Cobertura" para adicionar.</div>`;
@@ -918,9 +918,12 @@
         }
 
         function renderAccompaniments() {
+            if (!state.config || !state.config.accompaniments) return;
             ['frutas', 'adicionais', 'coberturas'].forEach(cat => {
                 const list = document.getElementById(`list-${cat}`);
-                list.innerHTML = state.config.accompaniments[cat].map((item, idx) => `
+                if (!list) return;
+                const items = state.config.accompaniments[cat] || [];
+                list.innerHTML = items.map((item, idx) => `
                     <div class="group flex items-center justify-between p-4 bg-slate-50 rounded-2xl hover:bg-white hover:shadow-md border border-transparent hover:border-slate-100 transition-all">
                         <span class="text-sm font-black ${item.available ? 'text-slate-700' : 'text-slate-300 line-through'}">${item.name}</span>
                         <div class="flex items-center gap-1 opacity-0 group-hover:opacity-100 hover:scale-105 transition-all">
@@ -1006,12 +1009,27 @@
             if (!file) return;
             const reader = new FileReader();
             reader.onload = (e) => {
-                const base64 = e.target.result;
-                document.getElementById('prod-image').value = base64;
-                document.getElementById('prod-image-preview-img').src = base64;
-                document.getElementById('prod-image-preview-img').classList.remove('hidden');
-                document.getElementById('prod-image-placeholder').classList.add('hidden');
-                document.getElementById('prod-image-remove').classList.remove('hidden');
+                const img = new Image();
+                img.onload = () => {
+                    // Redimensionar para no máximo 400px
+                    const canvas = document.createElement('canvas');
+                    const ctx = canvas.getContext('2d');
+                    let width = img.width;
+                    let height = img.height;
+                    const max = 400;
+                    if (width > height) { if (width > max) { height *= max / width; width = max; } }
+                    else { if (height > max) { width *= max / height; height = max; } }
+                    canvas.width = width; canvas.height = height;
+                    ctx.drawImage(img, 0, 0, width, height);
+                    const base64 = canvas.toDataURL('image/jpeg', 0.7); // 70% qualidade jpeg
+
+                    document.getElementById('prod-image').value = base64;
+                    document.getElementById('prod-image-preview-img').src = base64;
+                    document.getElementById('prod-image-preview-img').classList.remove('hidden');
+                    document.getElementById('prod-image-placeholder').classList.add('hidden');
+                    document.getElementById('prod-image-remove').classList.remove('hidden');
+                };
+                img.src = e.target.result;
             };
             reader.readAsDataURL(file);
         };
@@ -1028,24 +1046,38 @@
         window.closeProductModal = () => document.getElementById('modal-product').classList.add('hidden');
 
         window.saveProduct = async () => {
-            const idx = document.getElementById('prod-id').value;
-            const sizes = [...state.config.sizes];
-            const product = {
-                id: idx !== '' ? sizes[idx].id : 'size-' + Date.now(),
-                name: document.getElementById('prod-name').value,
-                price: parseFloat(document.getElementById('prod-price').value),
-                desc: document.getElementById('prod-desc').value,
-                image: document.getElementById('prod-image').value.trim(),
-                available: idx !== '' ? sizes[idx].available : true,
-                limits: {
-                    fruta: parseInt(document.getElementById('prod-lim-fruta').value),
-                    adicional: parseInt(document.getElementById('prod-lim-adicional').value),
-                    cobertura: parseInt(document.getElementById('prod-lim-cobertura').value)
-                }
-            };
-            if (idx !== '') sizes[idx] = product; else sizes.push(product);
-            await updateDoc(doc(db, 'loja', 'config'), { sizes });
-            closeProductModal(); toast("Copo Salvo!");
+            try {
+                const idx = document.getElementById('prod-id').value;
+                const sizes = [...(state.config.sizes || [])];
+
+                const name = document.getElementById('prod-name').value.trim();
+                if (!name) return toast("Digite o nome do produto", "error");
+
+                const price = parseFloat(document.getElementById('prod-price').value) || 0;
+                const fruta = parseInt(document.getElementById('prod-lim-fruta').value) || 0;
+                const adicional = parseInt(document.getElementById('prod-lim-adicional').value) || 0;
+                const cobertura = parseInt(document.getElementById('prod-lim-cobertura').value) || 0;
+
+                const product = {
+                    id: idx !== '' ? sizes[idx].id : 'size-' + Date.now(),
+                    name: name,
+                    price: price,
+                    desc: document.getElementById('prod-desc').value,
+                    image: document.getElementById('prod-image').value.trim(),
+                    available: idx !== '' ? sizes[idx].available : true,
+                    limits: { fruta, adicional, cobertura }
+                };
+
+                if (idx !== '') sizes[idx] = product; else sizes.push(product);
+
+                console.log("Salvando produto...", product);
+                await updateDoc(doc(db, 'loja', 'config'), { sizes });
+                closeProductModal();
+                toast("Copo Salvo!");
+            } catch (e) {
+                console.error("Erro ao salvar produto:", e);
+                toast("Erro ao salvar: " + e.message, "error");
+            }
         };
 
         window.editProduct = (idx) => openProductModal(idx);
@@ -1096,12 +1128,26 @@
             if (!file) return;
             const reader = new FileReader();
             reader.onload = (e) => {
-                const base64 = e.target.result;
-                document.getElementById('cob-image').value = base64;
-                document.getElementById('cob-image-preview-img').src = base64;
-                document.getElementById('cob-image-preview-img').classList.remove('hidden');
-                document.getElementById('cob-image-placeholder').classList.add('hidden');
-                document.getElementById('cob-image-remove').classList.remove('hidden');
+                const img = new Image();
+                img.onload = () => {
+                    const canvas = document.createElement('canvas');
+                    const ctx = canvas.getContext('2d');
+                    let width = img.width;
+                    let height = img.height;
+                    const max = 400;
+                    if (width > height) { if (width > max) { height *= max / width; width = max; } }
+                    else { if (height > max) { width *= max / height; height = max; } }
+                    canvas.width = width; canvas.height = height;
+                    ctx.drawImage(img, 0, 0, width, height);
+                    const base64 = canvas.toDataURL('image/jpeg', 0.7);
+
+                    document.getElementById('cob-image').value = base64;
+                    document.getElementById('cob-image-preview-img').src = base64;
+                    document.getElementById('cob-image-preview-img').classList.remove('hidden');
+                    document.getElementById('cob-image-placeholder').classList.add('hidden');
+                    document.getElementById('cob-image-remove').classList.remove('hidden');
+                };
+                img.src = e.target.result;
             };
             reader.readAsDataURL(file);
         };
@@ -1116,19 +1162,27 @@
         };
 
         window.saveCobertura = async () => {
-            const name = document.getElementById('cob-name').value.trim();
-            if (!name) return toast('Digite o nome da cobertura', 'error');
-            const image = document.getElementById('cob-image').value;
-            const idx = document.getElementById('cob-idx').value;
-            const coberturas = [...(state.config.accompaniments.coberturas || [])];
-            if (idx !== '') {
-                coberturas[parseInt(idx)] = { ...coberturas[parseInt(idx)], name, image };
-            } else {
-                coberturas.push({ name, image, available: true });
+            try {
+                const name = document.getElementById('cob-name').value.trim();
+                if (!name) return toast('Digite o nome da cobertura', 'error');
+                const image = document.getElementById('cob-image').value;
+                const idx = document.getElementById('cob-idx').value;
+                const coberturas = [...(state.config.accompaniments.coberturas || [])];
+
+                if (idx !== '') {
+                    coberturas[parseInt(idx)] = { ...coberturas[parseInt(idx)], name, image };
+                } else {
+                    coberturas.push({ name, image, available: true });
+                }
+
+                console.log("Salvando cobertura...", name);
+                await updateDoc(doc(db, 'loja', 'config'), { 'accompaniments.coberturas': coberturas });
+                closeCoberturaModal();
+                toast(idx !== '' ? 'Cobertura atualizada!' : 'Cobertura adicionada!');
+            } catch (e) {
+                console.error("Erro ao salvar cobertura:", e);
+                toast("Erro ao salvar: " + e.message, "error");
             }
-            await updateDoc(doc(db, 'loja', 'config'), { 'accompaniments.coberturas': coberturas });
-            closeCoberturaModal();
-            toast(idx !== '' ? 'Cobertura atualizada!' : 'Cobertura adicionada!');
         };
 
         window.toggleCobertura = async (idx) => {
