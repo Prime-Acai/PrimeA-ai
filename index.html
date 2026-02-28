@@ -675,13 +675,16 @@
 
         db.collection('coberturas_lista').onSnapshot((snap) => {
           state.coberturas = snap.docs.map(d => ({ docId: d.id, ...d.data() }));
-          state.config.accompaniments.coberturas = state.coberturas;
+          if (state.config && state.config.accompaniments) {
+            state.config.accompaniments.coberturas = state.coberturas;
+          }
         });
 
         // Fallback para outros tipos de acompanhamento se ainda existirem no doc global
         db.doc('loja/config').onSnapshot((snap) => {
           if (snap.exists && snap.data().accompaniments) {
             const acc = snap.data().accompaniments;
+            if (!state.config.accompaniments) state.config.accompaniments = { frutas: [], adicionais: [], coberturas: [] };
             if (acc.frutas) state.config.accompaniments.frutas = acc.frutas;
             if (acc.adicionais) state.config.accompaniments.adicionais = acc.adicionais;
           }
@@ -959,7 +962,8 @@
       state.copoQty = Math.max(1, state.copoQty + d);
       document.getElementById('copo-qty-display').innerText = state.copoQty;
       if (state.currentCopo) {
-        const total = state.currentCopo.price * state.copoQty;
+        const price = parseFloat(state.currentCopo.price) || 0;
+        const total = price * state.copoQty;
         document.getElementById('copo-total-price').innerText = `R$ ${total.toFixed(2).replace('.', ',')}`;
       }
     };
@@ -1016,7 +1020,7 @@
               </div>
               <div class="w-8 h-8 flex items-center justify-center shrink-0 ml-2 rounded-full bg-slate-50 text-brand-500"><i data-lucide="plus" class="w-5 h-5"></i></div>
             </div>
-            <div class="mt-2"><span class="font-display font-bold text-slate-900 bg-brand-50 px-2 py-1 rounded-lg text-sm">R$ ${item.price.toFixed(2).replace('.', ',')}</span></div>
+            <div class="mt-2 text-sm"><span class="font-display font-bold text-slate-900 bg-brand-50 px-2 py-1 rounded-lg">R$ ${(parseFloat(item.price) || 0).toFixed(2).replace('.', ',')}</span></div>
           </div>`;
         grid.appendChild(div);
       });

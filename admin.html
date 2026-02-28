@@ -718,20 +718,22 @@
             if (confData.sizes && confData.sizes.length > 0) {
                 console.log("Migrando produtos para nova coleção...");
                 for (const s of confData.sizes) {
-                    await setDoc(doc(db, 'produtos', s.id || ('prod-' + Date.now() + Math.random())), s);
+                    const sid = s.id || ('prod-' + Date.now() + Math.random());
+                    await setDoc(doc(db, 'produtos', sid), { ...s, id: sid });
                 }
                 // Limpa do doc global após migrar
                 await updateDoc(doc(db, 'loja', 'config'), { sizes: [] });
             }
-            if (confData.accompaniments) {
-                if (confData.accompaniments.coberturas && confData.accompaniments.coberturas.length > 0) {
-                    console.log("Migrando coberturas para nova coleção...");
-                    for (const c of confData.accompaniments.coberturas) {
-                        const cid = 'cob-' + Math.random().toString(36).substr(2, 9);
-                        await setDoc(doc(db, 'coberturas_lista', cid), c);
-                    }
+            if (confData.accompaniments && confData.accompaniments.coberturas && confData.accompaniments.coberturas.length > 0) {
+                console.log("Migrando coberturas para nova coleção...");
+                for (const c of confData.accompaniments.coberturas) {
+                    const cid = 'cob-' + Math.random().toString(36).substr(2, 9);
+                    await setDoc(doc(db, 'coberturas_lista', cid), c);
                 }
-                await updateDoc(doc(db, 'loja', 'config'), { accompaniments: null });
+                // Limpa apenas as coberturas do doc global, mantendo frutas e adicionais
+                await updateDoc(doc(db, 'loja', 'config'), {
+                    'accompaniments.coberturas': []
+                });
             }
 
             // Listeners
