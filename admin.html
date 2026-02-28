@@ -671,7 +671,7 @@
         const auth = getAuth(app);
         const db = getFirestore(app);
 
-        let state = { config: null, pedidos: [] };
+        let state = { config: null, pedidos: [], products: [], coberturas: [] };
 
         // --- AUTH LOGIC ---
         window.handleLogin = async () => {
@@ -711,8 +711,43 @@
                 return;
             } else { document.getElementById('bootstrap-modal').classList.add('hidden'); }
 
+            const confData = configSnap.data();
+            state.config = confData;
+
+            // MIGRATION LOGIC: Se houver 'sizes' ou 'accompaniments' no doc global, migrar para coleções
+            if (confData.sizes && confData.sizes.length > 0) {
+                console.log("Migrando produtos para nova coleção...");
+                for (const s of confData.sizes) {
+                    await setDoc(doc(db, 'produtos', s.id || ('prod-' + Date.now() + Math.random())), s);
+                }
+                // Limpa do doc global após migrar
+                await updateDoc(doc(db, 'loja', 'config'), { sizes: [] });
+            }
+            if (confData.accompaniments) {
+                if (confData.accompaniments.coberturas && confData.accompaniments.coberturas.length > 0) {
+                    console.log("Migrando coberturas para nova coleção...");
+                    for (const c of confData.accompaniments.coberturas) {
+                        const cid = 'cob-' + Math.random().toString(36).substr(2, 9);
+                        await setDoc(doc(db, 'coberturas_lista', cid), c);
+                    }
+                }
+                await updateDoc(doc(db, 'loja', 'config'), { accompaniments: null });
+            }
+
+            // Listeners
             onSnapshot(doc(db, 'loja', 'config'), (snap) => { if (snap.exists()) { state.config = snap.data(); renderAll(); } });
             onSnapshot(doc(db, 'loja', 'status'), (snap) => { if (snap.exists()) updateStatusBadge(snap.data().mode); });
+
+            // Listeners para novas coleções
+            onSnapshot(collection(db, 'produtos'), (snap) => {
+                state.products = snap.docs.map(d => ({ docId: d.id, ...d.data() }));
+                renderProducts();
+            });
+            onSnapshot(collection(db, 'coberturas_lista'), (snap) => {
+                state.coberturas = snap.docs.map(d => ({ docId: d.id, ...d.data() }));
+                renderCoberturas();
+            });
+
             const qOrders = query(collection(db, 'pedidos'), orderBy('data', 'desc'), limit(100));
             onSnapshot(qOrders, (snap) => { state.pedidos = snap.docs.map(d => ({ id: d.id, ...d.data() })); renderPedidos(); renderStats(); });
         }
@@ -864,7 +899,8 @@
         // --- PRODUCT & ACCOMP LOGIC ---
         function renderProducts() {
             const grid = document.getElementById('products-list-grid');
-            grid.innerHTML = state.config.sizes.map((s, idx) => `
+            if (!grid) return;
+            grid.innerHTML = (state.products || []).map((s, idx) => `
                 <div class="bg-white p-8 rounded-[3rem] border-2 ${s.available ? 'border-transparent' : 'border-red-50 grayscale scale-[0.98]'} shadow-sm flex flex-col justify-between hover:shadow-xl transition-all relative">
                     ${!s.available ? '<span class="absolute top-6 right-8 bg-red-500 text-white text-[9px] font-black uppercase tracking-widest px-3 py-1 rounded-full z-10 shadow-lg">Esgotado</span>' : ''}
                     <div>
@@ -880,8 +916,9 @@
                         </div>
                     </div>
                     <div class="flex gap-3 pt-4 border-t border-slate-50">
-                        <button onclick="toggleProductAvailability(${idx})" class="flex-1 py-4 text-[10px] font-black uppercase tracking-widest rounded-2xl active:scale-95 transition-all ${s.available ? 'bg-slate-900 text-white' : 'bg-green-500 text-white shadow-xl shadow-green-200'}">${s.available ? 'PAUSAR' : 'ATIVAR'}</button>
-                        <button onclick="editProduct(${idx})" class="p-4 bg-brand-50 text-brand-600 rounded-2xl hover:bg-brand-600 hover:text-white transition-all"><i data-lucide="edit-3" class="w-5 h-5"></i></button>
+                        <button onclick="toggleProductAvailability('${s.docId}')" class="flex-1 py-4 text-[10px] font-black uppercase tracking-widest rounded-2xl active:scale-95 transition-all ${s.available ? 'bg-slate-900 text-white' : 'bg-green-500 text-white shadow-xl shadow-green-200'}">${s.available ? 'PAUSAR' : 'ATIVAR'}</button>
+                        <button onclick="editProduct('${s.docId}')" class="p-4 bg-brand-50 text-brand-600 rounded-2xl hover:bg-brand-600 hover:text-white transition-all"><i data-lucide="edit-3" class="w-5 h-5"></i></button>
+                        <button onclick="deleteProduct('${s.docId}')" class="p-4 bg-red-50 text-red-500 rounded-2xl hover:bg-red-500 hover:text-white transition-all"><i data-lucide="trash-2" class="w-5 h-5"></i></button>
                     </div>
                 </div>
             `).join('');
@@ -889,8 +926,8 @@
 
         function renderCoberturas() {
             const grid = document.getElementById('coberturas-grid');
-            if (!grid || !state.config || !state.config.accompaniments) return;
-            const coberturas = state.config.accompaniments.coberturas || [];
+            if (!grid) return;
+            const coberturas = state.coberturas || [];
             if (coberturas.length === 0) {
                 grid.innerHTML = `<div class="col-span-full p-20 text-center text-slate-300 font-bold uppercase tracking-widest text-[10px]">Nenhuma cobertura cadastrada. Clique em "+ Nova Cobertura" para adicionar.</div>`;
                 return;
@@ -908,9 +945,9 @@
                         </div>
                     </div>
                     <div class="flex gap-3 pt-4 border-t border-slate-50">
-                        <button onclick="toggleCobertura(${idx})" class="flex-1 py-3 text-[10px] font-black uppercase tracking-widest rounded-2xl active:scale-95 transition-all ${item.available ? 'bg-slate-900 text-white' : 'bg-green-500 text-white'}">${item.available ? 'PAUSAR' : 'ATIVAR'}</button>
-                        <button onclick="editCobertura(${idx})" class="p-3 bg-brand-50 text-brand-600 rounded-2xl hover:bg-brand-600 hover:text-white transition-all"><i data-lucide="edit-3" class="w-4 h-4"></i></button>
-                        <button onclick="deleteCobertura(${idx})" class="p-3 bg-red-50 text-red-500 rounded-2xl hover:bg-red-500 hover:text-white transition-all"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+                        <button onclick="toggleCobertura('${item.docId}')" class="flex-1 py-3 text-[10px] font-black uppercase tracking-widest rounded-2xl active:scale-95 transition-all ${item.available ? 'bg-slate-900 text-white' : 'bg-green-500 text-white'}">${item.available ? 'PAUSAR' : 'ATIVAR'}</button>
+                        <button onclick="editCobertura('${item.docId}')" class="p-3 bg-brand-50 text-brand-600 rounded-2xl hover:bg-brand-600 hover:text-white transition-all"><i data-lucide="edit-3" class="w-4 h-4"></i></button>
+                        <button onclick="deleteCobertura('${item.docId}')" class="p-3 bg-red-50 text-red-500 rounded-2xl hover:bg-red-500 hover:text-white transition-all"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
                     </div>
                 </div>
             `).join('');
@@ -966,13 +1003,13 @@
             toast(`Status Atualizado: ${mode.toUpperCase()}`);
         };
 
-        window.toggleProductAvailability = async (idx) => {
-            const sizes = [...state.config.sizes];
-            sizes[idx].available = !sizes[idx].available;
-            await updateDoc(doc(db, 'loja', 'config'), { sizes });
+        window.toggleProductAvailability = async (docId) => {
+            const s = state.products.find(p => p.docId === docId);
+            if (!s) return;
+            await updateDoc(doc(db, 'produtos', docId), { available: !s.available });
         };
 
-        window.openProductModal = (idx = null) => {
+        window.openProductModal = (docId = null) => {
             const m = document.getElementById('modal-product');
             const f = document.getElementById('product-form');
             f.reset();
@@ -984,9 +1021,10 @@
             document.getElementById('prod-image-placeholder').classList.remove('hidden');
             document.getElementById('prod-image-remove').classList.add('hidden');
 
-            document.getElementById('prod-id').value = idx !== null ? idx : '';
-            if (idx !== null) {
-                const s = state.config.sizes[idx];
+            document.getElementById('prod-id').value = docId !== null ? docId : '';
+            if (docId !== null) {
+                const s = state.products.find(p => p.docId === docId);
+                if (!s) return;
                 document.getElementById('prod-name').value = s.name;
                 document.getElementById('prod-price').value = s.price;
                 document.getElementById('prod-desc').value = s.desc || '';
@@ -1047,8 +1085,7 @@
 
         window.saveProduct = async () => {
             try {
-                const idx = document.getElementById('prod-id').value;
-                const sizes = [...(state.config.sizes || [])];
+                const docId = document.getElementById('prod-id').value;
 
                 const name = document.getElementById('prod-name').value.trim();
                 if (!name) return toast("Digite o nome do produto", "error");
@@ -1059,19 +1096,22 @@
                 const cobertura = parseInt(document.getElementById('prod-lim-cobertura').value) || 0;
 
                 const product = {
-                    id: idx !== '' ? sizes[idx].id : 'size-' + Date.now(),
                     name: name,
                     price: price,
                     desc: document.getElementById('prod-desc').value,
                     image: document.getElementById('prod-image').value.trim(),
-                    available: idx !== '' ? sizes[idx].available : true,
+                    available: true,
                     limits: { fruta, adicional, cobertura }
                 };
 
-                if (idx !== '') sizes[idx] = product; else sizes.push(product);
-
                 console.log("Salvando produto...", product);
-                await updateDoc(doc(db, 'loja', 'config'), { sizes });
+                if (docId !== '') {
+                    await updateDoc(doc(db, 'produtos', docId), product);
+                } else {
+                    const newId = 'prod-' + Date.now();
+                    await setDoc(doc(db, 'produtos', newId), { ...product, id: newId });
+                }
+
                 closeProductModal();
                 toast("Copo Salvo!");
             } catch (e) {
@@ -1080,7 +1120,13 @@
             }
         };
 
-        window.editProduct = (idx) => openProductModal(idx);
+        window.editProduct = (docId) => openProductModal(docId);
+
+        window.deleteProduct = async (docId) => {
+            if (!confirm('Deseja apagar este produto permanentemente?')) return;
+            await deleteDoc(doc(db, 'produtos', docId));
+            toast('Produto removido!');
+        };
 
         window.addItemToCategory = async (cat) => {
             const name = prompt(`Nome do Novo ${cat.toUpperCase()}:`);
@@ -1093,25 +1139,30 @@
         // --- COBERTURAS STANDALONE ACTIONS ---
         window.addCobertura = () => openCoberturaModal(null);
 
-        window.editCobertura = (idx) => openCoberturaModal(idx);
+        window.editCobertura = (docId) => openCoberturaModal(docId);
 
-        window.openCoberturaModal = (idx) => {
+        window.openCoberturaModal = (docId) => {
             const m = document.getElementById('modal-cobertura');
-            document.getElementById('cob-idx').value = idx !== null ? idx : '';
-            document.getElementById('cob-name').value = idx !== null ? state.config.accompaniments.coberturas[idx].name : '';
-            document.getElementById('cob-image').value = '';
+            document.getElementById('cob-idx').value = docId !== null ? docId : '';
+
+            const nameEl = document.getElementById('cob-name');
+            const imgEl = document.getElementById('cob-image');
+            nameEl.value = '';
+            imgEl.value = '';
             document.getElementById('cob-image-file').value = '';
             document.getElementById('cob-image-preview-img').src = '';
             document.getElementById('cob-image-preview-img').classList.add('hidden');
             document.getElementById('cob-image-placeholder').classList.remove('hidden');
             document.getElementById('cob-image-remove').classList.add('hidden');
-            document.getElementById('cob-modal-title').innerText = idx !== null ? 'Editar Cobertura' : 'Nova Cobertura';
+            document.getElementById('cob-modal-title').innerText = docId !== null ? 'Editar Cobertura' : 'Nova Cobertura';
 
-            if (idx !== null) {
-                const img = state.config.accompaniments.coberturas[idx].image || '';
-                document.getElementById('cob-image').value = img;
-                if (img) {
-                    document.getElementById('cob-image-preview-img').src = img;
+            if (docId !== null) {
+                const c = state.coberturas.find(x => x.docId === docId);
+                if (!c) return;
+                nameEl.value = c.name;
+                imgEl.value = c.image || '';
+                if (c.image) {
+                    document.getElementById('cob-image-preview-img').src = c.image;
                     document.getElementById('cob-image-preview-img').classList.remove('hidden');
                     document.getElementById('cob-image-placeholder').classList.add('hidden');
                     document.getElementById('cob-image-remove').classList.remove('hidden');
@@ -1166,36 +1217,35 @@
                 const name = document.getElementById('cob-name').value.trim();
                 if (!name) return toast('Digite o nome da cobertura', 'error');
                 const image = document.getElementById('cob-image').value;
-                const idx = document.getElementById('cob-idx').value;
-                const coberturas = [...(state.config.accompaniments.coberturas || [])];
+                const docId = document.getElementById('cob-idx').value;
 
-                if (idx !== '') {
-                    coberturas[parseInt(idx)] = { ...coberturas[parseInt(idx)], name, image };
-                } else {
-                    coberturas.push({ name, image, available: true });
-                }
+                const data = { name, image, available: true };
 
                 console.log("Salvando cobertura...", name);
-                await updateDoc(doc(db, 'loja', 'config'), { 'accompaniments.coberturas': coberturas });
+                if (docId !== '') {
+                    await updateDoc(doc(db, 'coberturas_lista', docId), { name, image });
+                } else {
+                    const newId = 'cob-' + Date.now();
+                    await setDoc(doc(db, 'coberturas_lista', newId), data);
+                }
+
                 closeCoberturaModal();
-                toast(idx !== '' ? 'Cobertura atualizada!' : 'Cobertura adicionada!');
+                toast(docId !== '' ? 'Cobertura atualizada!' : 'Cobertura adicionada!');
             } catch (e) {
                 console.error("Erro ao salvar cobertura:", e);
                 toast("Erro ao salvar: " + e.message, "error");
             }
         };
 
-        window.toggleCobertura = async (idx) => {
-            const coberturas = [...state.config.accompaniments.coberturas];
-            coberturas[idx].available = !coberturas[idx].available;
-            await updateDoc(doc(db, 'loja', 'config'), { 'accompaniments.coberturas': coberturas });
+        window.toggleCobertura = async (docId) => {
+            const c = state.coberturas.find(x => x.docId === docId);
+            if (!c) return;
+            await updateDoc(doc(db, 'coberturas_lista', docId), { available: !c.available });
         };
 
-        window.deleteCobertura = async (idx) => {
+        window.deleteCobertura = async (docId) => {
             if (!confirm('Deseja apagar esta cobertura permanentemente?')) return;
-            const coberturas = [...state.config.accompaniments.coberturas];
-            coberturas.splice(idx, 1);
-            await updateDoc(doc(db, 'loja', 'config'), { 'accompaniments.coberturas': coberturas });
+            await deleteDoc(doc(db, 'coberturas_lista', docId));
             toast('Cobertura removida!');
         };
 

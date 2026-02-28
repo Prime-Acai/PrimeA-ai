@@ -595,12 +595,13 @@
         phone: "5589988171689",
         statusMode: "auto",
         openingHours: { start: 16, end: 23 },
-        sizes: DEFAULT_ITEMS,
-        accompaniments: DEFAULT_ACCOMPANIMENTS,
+        accompaniments: { frutas: [], adicionais: [], coberturas: [] }, // Initialize with empty arrays
         pixKey: "89988171689",
         pixName: "Paulo Cunha da Silva",
         zones: []
       },
+      products: [], // New top-level array for products
+      coberturas: [], // New top-level array for coberturas
       deliveryType: "Retirada",
       paymentVerified: false,
       currentCopo: null,
@@ -662,8 +663,27 @@
         db.doc('loja/config').onSnapshot((snap) => {
           if (snap.exists) {
             state.config = { ...state.config, ...snap.data() };
-            window.renderMenu();
             window.updateUI();
+          }
+        });
+
+        // 🍨 ESCUTAR PRODUTOS E COBERTURAS (COLEÇÕES SEPARADAS)
+        db.collection('produtos').onSnapshot((snap) => {
+          state.products = snap.docs.map(d => ({ docId: d.id, ...d.data() }));
+          window.renderMenu();
+        });
+
+        db.collection('coberturas_lista').onSnapshot((snap) => {
+          state.coberturas = snap.docs.map(d => ({ docId: d.id, ...d.data() }));
+          state.config.accompaniments.coberturas = state.coberturas;
+        });
+
+        // Fallback para outros tipos de acompanhamento se ainda existirem no doc global
+        db.doc('loja/config').onSnapshot((snap) => {
+          if (snap.exists && snap.data().accompaniments) {
+            const acc = snap.data().accompaniments;
+            if (acc.frutas) state.config.accompaniments.frutas = acc.frutas;
+            if (acc.adicionais) state.config.accompaniments.adicionais = acc.adicionais;
           }
         });
 
@@ -868,8 +888,8 @@
     };
 
     // --- LÓGICA COPO PERSONALIZADO ---
-    window.openCopoModal = (index) => {
-      const item = state.config.sizes[index];
+    window.openCopoModal = (idx) => {
+      const item = state.products[idx]; // Changed from state.config.sizes[index]
       state.currentCopo = item;
       state.copoQty = 1;
       document.getElementById('copo-modal-title').innerText = item.name;
@@ -968,7 +988,10 @@
       const grid = document.getElementById('products-grid');
       if (!grid) return;
       grid.innerHTML = "";
-      state.config.sizes.forEach((item, idx) => {
+
+      const productsToRender = state.products && state.products.length > 0 ? state.products : [];
+
+      productsToRender.forEach((item, idx) => {
         if (item.available === false) return;
         const div = document.createElement('div');
         div.style.animationDelay = `${idx * 0.1}s`;
