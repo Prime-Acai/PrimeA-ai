@@ -571,7 +571,7 @@
                         </div>
                     </div>
                 </div>
-                <button type="button" onclick="saveCobertura()"
+                <button type="button" id="cob-save-btn" onclick="saveCobertura()"
                     class="w-full py-5 bg-brand-600 text-white rounded-2xl font-black shadow-xl">SALVAR
                     COBERTURA</button>
             </div>
@@ -1262,6 +1262,10 @@
             document.getElementById('cob-image-remove').classList.add('hidden');
             document.getElementById('cob-modal-title').innerText = docId !== null ? 'Editar Cobertura' : 'Nova Cobertura';
 
+            const saveBtn = document.getElementById('cob-save-btn');
+            saveBtn.onclick = () => saveCobertura();
+            saveBtn.innerText = 'SALVAR COBERTURA';
+
             if (docId !== null) {
                 const c = state.coberturas.find(x => x.docId === docId);
                 if (!c) return;
@@ -1335,6 +1339,9 @@
                     await setDoc(doc(db, 'coberturas_info', newId), data);
                 }
 
+                const saveBtn = document.getElementById('cob-save-btn');
+                saveBtn.onclick = () => saveCobertura();
+                saveBtn.innerText = 'SALVAR COBERTURA';
                 closeCoberturaModal();
                 toast(docId !== '' ? 'Cobertura atualizada!' : 'Cobertura adicionada!');
             } catch (e) {
@@ -1359,7 +1366,13 @@
         window.addCreme = () => openCremeModal(null);
         window.editCreme = (docId) => openCremeModal(docId);
         window.openCremeModal = (docId) => {
+            const m = document.getElementById('modal-cobertura');
             document.getElementById('cob-modal-title').innerText = docId !== null ? 'Editar Creme' : 'Novo Creme';
+            
+            const saveBtn = document.getElementById('cob-save-btn');
+            saveBtn.onclick = () => saveCreme();
+            saveBtn.innerText = 'SALVAR CREME';
+            
             openGenericModal(docId, state.cremes);
         };
         window.saveCreme = async () => { await saveGenericItem('coberturas_lista', 'Creme'); };
@@ -1408,6 +1421,9 @@
                 if (!name) return toast(`Digite o nome do ${typeName.toLowerCase()}`, 'error');
                 if (docId !== '') { await updateDoc(doc(db, collectionName, docId), { name, image }); }
                 else { await setDoc(doc(db, collectionName, (collectionName === 'coberturas_lista' && typeName === 'Creme' ? 'creme-' : 'cob-') + Date.now()), { name, image, available: true }); }
+                const saveBtn = document.getElementById('cob-save-btn');
+                saveBtn.onclick = () => (collectionName === 'coberturas_lista' ? saveCreme() : saveCobertura()); // Restaurar padrão após salvar se necessário ou deixar o open configurar
+                
                 closeCoberturaModal(); toast(`${typeName} salvo!`);
             } catch (e) { toast("Erro ao salvar", "error"); }
         }
