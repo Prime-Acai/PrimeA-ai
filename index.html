@@ -148,6 +148,41 @@
       transform: scale(1);
     }
 
+    /* Tabs de Categoria */
+    .category-tab {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      padding: 0.85rem 1rem;
+      border-radius: 1.25rem;
+      font-weight: 800;
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      flex: 1;
+      cursor: pointer;
+    }
+
+    .category-tab.active {
+      background-color: #2563eb;
+      color: white;
+      box-shadow: 0 10px 15px -3px rgba(37, 99, 235, 0.2);
+      transform: translateY(-2px);
+    }
+
+    .category-tab:not(.active) {
+      background-color: white;
+      color: #94a3b8;
+      border: 1px solid #f1f5f9;
+    }
+
+    .category-tab:not(.active):hover {
+      background-color: #f8fafc;
+      color: #64748b;
+    }
+
     .option-checkbox:disabled+div {
       opacity: 0.5;
       cursor: not-allowed;
@@ -276,10 +311,11 @@
           <div>
             <h1 class="font-display font-extrabold text-lg leading-tight text-slate-900 tracking-tight">Prime Açaí
             </h1>
-            <div class="flex items-center gap-1">
-              <span id="status-dot" class="w-1.5 h-1.5 rounded-full bg-slate-300"></span>
-              <p id="status-text" class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Verificando...
-              </p>
+            <div id="status-badge"
+              class="mt-1 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border transition-all duration-500">
+              <span id="status-dot-inner" class="w-1.5 h-1.5 rounded-full transition-all duration-500"></span>
+              <span id="status-text"
+                class="text-[9px] font-black uppercase tracking-widest transition-all duration-500">Verificando...</span>
             </div>
           </div>
         </div>
@@ -327,11 +363,20 @@
           class="absolute -bottom-4 -right-4 w-40 h-40 text-white opacity-5 rotate-12 pointer-events-none"></i>
       </div>
 
+      <!-- Filtro de Categorias -->
+      <div class="flex gap-3 px-1 mb-6">
+        <button onclick="window.switchCategory('acai')" id="tab-acai" class="category-tab active">
+          <i data-lucide="cup-soda" class="w-4 h-4"></i>
+          Açaí
+        </button>
+        <button onclick="window.switchCategory('sorvete')" id="tab-sorvete" class="category-tab">
+          <i data-lucide="ice-cream-2" class="w-4 h-4"></i>
+          Sorvetes
+        </button>
+      </div>
+
       <!-- Grid de Produtos -->
-      <div>
-        <h3
-          class="text-sm font-black text-slate-800 uppercase tracking-wide mb-4 pl-1 border-l-4 border-brand-500 ml-1">
-          &nbsp; Escolha o Tamanho</h3>
+      <div id="products-container">
         <div id="products-grid" class="grid grid-cols-1 gap-3 pb-4"></div>
       </div>
 
@@ -589,6 +634,7 @@
     };
 
     let state = {
+      activeCategory: 'acai',
       cart: [],
       config: {
         storeName: "Prime Açaí",
@@ -903,10 +949,13 @@
       limitsContainer.innerHTML = '';
       const limits = item.limits;
       const badgeClass = "text-[10px] font-bold px-2 py-1 rounded-lg border bg-slate-50 border-slate-200 text-slate-500 uppercase tracking-wide";
-      if (limits.adicional) limitsContainer.innerHTML += `<span class="${badgeClass}">${limits.adicional} Complementos</span>`;
-      if (limits.fruta) limitsContainer.innerHTML += `<span class="${badgeClass}">${limits.fruta} ${limits.fruta > 1 ? 'Frutas' : 'Fruta'}</span>`;
-      if (limits.cobertura) limitsContainer.innerHTML += `<span class="${badgeClass}">${limits.cobertura} ${limits.cobertura > 1 ? 'Cremes' : 'Creme'}</span>`;
-      if (limits.cobertura_real) limitsContainer.innerHTML += `<span class="${badgeClass}">${limits.cobertura_real} ${limits.cobertura_real > 1 ? 'Coberturas' : 'Cobertura'}</span>`;
+
+      if (item.category !== 'sorvete') {
+        if (limits.adicional) limitsContainer.innerHTML += `<span class="${badgeClass}">${limits.adicional} Complementos</span>`;
+        if (limits.fruta) limitsContainer.innerHTML += `<span class="${badgeClass}">${limits.fruta} ${limits.fruta > 1 ? 'Frutas' : 'Fruta'}</span>`;
+        if (limits.cobertura) limitsContainer.innerHTML += `<span class="${badgeClass}">${limits.cobertura} ${limits.cobertura > 1 ? 'Cremes' : 'Creme'}</span>`;
+        if (limits.cobertura_real) limitsContainer.innerHTML += `<span class="${badgeClass}">${limits.cobertura_real} ${limits.cobertura_real > 1 ? 'Coberturas' : 'Cobertura'}</span>`;
+      }
 
       document.getElementById('copo-qty-display').innerText = "1";
       document.getElementById('copo-total-price').innerText = `R$ ${item.price.toFixed(2).replace('.', ',')}`;
@@ -936,10 +985,18 @@
         return html;
       };
 
-      container.innerHTML += renderSection("Frutas", state.config.accompaniments.frutas, "fruta");
-      container.innerHTML += renderSection("Complementos (Adicionais)", state.config.accompaniments.adicionais, "adicional");
-      container.innerHTML += renderSection("Cremes", state.cremes, "cobertura");
-      container.innerHTML += renderSection("Coberturas (Caldas)", state.coberturas, "cobertura_real");
+      if (item.category === 'sorvete') {
+        if (item.allowCob) {
+          container.innerHTML += renderSection("Coberturas (Caldas)", state.coberturas, "cobertura_real");
+        } else {
+          container.innerHTML += `<div class="p-6 text-center text-slate-400 text-xs italic bg-slate-50 rounded-2xl border border-slate-100">Não há acompanhamentos selecionáveis para este item.</div>`;
+        }
+      } else {
+        container.innerHTML += renderSection("Frutas", state.config.accompaniments.frutas, "fruta");
+        container.innerHTML += renderSection("Complementos (Adicionais)", state.config.accompaniments.adicionais, "adicional");
+        container.innerHTML += renderSection("Cremes", state.cremes, "cobertura");
+        container.innerHTML += renderSection("Coberturas (Caldas)", state.coberturas, "cobertura_real");
+      }
 
       document.getElementById('copo-modal').classList.remove('hidden');
       window.refreshIcons();
@@ -1012,25 +1069,53 @@
       setTimeout(() => window.toggleCart(true), 300);
     };
 
+    window.switchCategory = (cat) => {
+      state.activeCategory = cat;
+
+      // Update UI Tabs
+      document.getElementById('tab-acai').classList.toggle('active', cat === 'acai');
+      document.getElementById('tab-sorvete').classList.toggle('active', cat === 'sorvete');
+
+      window.renderMenu();
+    };
+
     window.renderMenu = () => {
       const grid = document.getElementById('products-grid');
       if (!grid) return;
       grid.innerHTML = "";
 
       const productsToRender = state.products && state.products.length > 0 ? state.products : [];
+      const filtered = productsToRender.filter(p => {
+        if (state.activeCategory === 'acai') return p.category !== 'sorvete';
+        return p.category === 'sorvete';
+      });
 
-      productsToRender.forEach((item, idx) => {
+      if (filtered.length === 0) {
+        grid.innerHTML = `
+          <div class="p-12 text-center">
+            <div class="w-16 h-16 bg-slate-50 text-slate-300 rounded-full flex items-center justify-center mx-auto mb-4">
+              <i data-lucide="package-search" class="w-8 h-8"></i>
+            </div>
+            <p class="text-slate-400 font-bold text-sm">Nenhum item disponível nesta categoria</p>
+          </div>
+        `;
+        window.refreshIcons();
+        return;
+      }
+
+      filtered.forEach((item) => {
         if (item.available === false) return;
+        const origIdx = state.products.indexOf(item);
         const div = document.createElement('div');
-        div.style.animationDelay = `${idx * 0.1}s`;
+        div.style.animationDelay = `${origIdx * 0.1}s`;
         div.className = `product-card bg-white p-4 rounded-[24px] border border-slate-100 flex items-center gap-4 cursor-pointer select-none relative overflow-hidden active:scale-95 transition-transform hover:shadow-md`;
-        div.onclick = () => window.openCopoModal(idx);
+        div.onclick = () => window.openCopoModal(origIdx);
         let imageHTML = '';
         if (item.image) {
           imageHTML = `<img src="${item.image}" class="w-full h-full object-cover" alt="${item.name}">`;
         } else {
           imageHTML = `
-             <i data-lucide="cup-soda" class="w-8 h-8 relative z-10"></i>
+             <i data-lucide="${item.category === 'sorvete' ? 'ice-cream-2' : 'cup-soda'}" class="w-8 h-8 relative z-10"></i>
              <div class="absolute -bottom-2 -right-2 w-8 h-8 bg-brand-500 opacity-20 rounded-full blur-sm"></div>
             `;
         }
@@ -1078,15 +1163,28 @@
 
     window.updateUI = () => {
       const isOpen = window.isStoreOpen();
-      const stDot = document.getElementById('status-indicator');
-      const stTxt = document.getElementById('status-text');
-      const stDotH = document.getElementById('status-dot');
-      if (stDot) stDot.className = `absolute bottom-0 right-0 w-3.5 h-3.5 border-2 border-white rounded-full ${isOpen ? 'bg-green-500 animate-pulse' : 'bg-red-500'}`;
-      if (stDotH) stDotH.className = `w-1.5 h-1.5 rounded-full ${isOpen ? 'bg-green-500' : 'bg-red-500'}`;
-      if (stTxt) {
-        stTxt.innerText = isOpen ? "Aberto Agora" : "Fechado";
-        stTxt.className = `text-[10px] font-bold uppercase tracking-wider ${isOpen ? 'text-green-600' : 'text-red-500'}`;
+
+      const indicator = document.getElementById('status-indicator');
+      const badge = document.getElementById('status-badge');
+      const dotInner = document.getElementById('status-dot-inner');
+      const text = document.getElementById('status-text');
+
+      if (indicator) {
+        indicator.className = `absolute bottom-0 right-0 w-3.5 h-3.5 border-2 border-white rounded-full transition-colors duration-500 ${isOpen ? 'bg-green-500' : 'bg-red-500'}`;
       }
+
+      if (badge && dotInner && text) {
+        if (isOpen) {
+          badge.className = "mt-1 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border border-green-100 bg-green-50/50 backdrop-blur-sm text-green-600 shadow-sm shadow-green-900/5 animate-pulse-slow";
+          dotInner.className = "w-1.5 h-1.5 rounded-full bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.6)]";
+          text.innerText = "Aberto Agora";
+        } else {
+          badge.className = "mt-1 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border border-red-100 bg-red-50/30 backdrop-blur-sm text-red-500 opacity-80";
+          dotInner.className = "w-1.5 h-1.5 rounded-full bg-red-400";
+          text.innerText = "Fechado";
+        }
+      }
+
       window.validateCheckout();
     };
 
@@ -1162,17 +1260,17 @@
       let paymentStatusFull = method;
       if (method === 'Pix') paymentStatusFull += " (Confirmado no Site ✅)";
 
-      let msg = `🥣 *NOVO PEDIDO - PRIME AÇAÍ*\n\n`;
-      msg += `👤 *Cliente:* ${name}\n`;
-      msg += `💳 *Pag:* ${paymentStatusFull}\n`;
-      msg += `🚶 *Retirada na Loja*\n`;
-      msg += `\n*ITENS DO PEDIDO:*\n`;
+      let msg = `🥣 * NOVO PEDIDO - PRIME AÇAÍ *\n\n`;
+      msg += `👤 * Cliente:* ${name} \n`;
+      msg += `💳 * Pag:* ${paymentStatusFull} \n`;
+      msg += `🚶 * Retirada na Loja *\n`;
+      msg += `\n * ITENS DO PEDIDO:*\n`;
       state.cart.forEach(i => {
-        msg += `▪️ ${i.qty}x ${i.name}\n`;
+        msg += `▪️ ${i.qty}x ${i.name} \n`;
         if (i.obs) msg += `   _(${i.obs})_\n`;
       });
-      if (obsGeneral) msg += `\n⚠️ *Obs Geral:* ${obsGeneral}\n`;
-      msg += `\n💰 *TOTAL: ${totalFinal}*`;
+      if (obsGeneral) msg += `\n⚠️ * Obs Geral:* ${obsGeneral} \n`;
+      msg += `\n💰 * TOTAL: ${totalFinal}* `;
 
       // Aguarda Firebase ficar pronto (máx 5s) antes de salvar
       try {

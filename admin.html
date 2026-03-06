@@ -610,6 +610,29 @@
                             class="w-full p-4 bg-slate-50 rounded-2xl border-2 border-transparent focus:border-brand-500 font-bold outline-none">
                     </div>
                 </div>
+                <!-- NOVOS CAMPOS CATEGORIA E COBERTURAS -->
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="space-y-2">
+                        <label
+                            class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-2">Categoria</label>
+                        <select id="prod-category"
+                            class="w-full p-4 bg-slate-50 rounded-2xl border-2 border-transparent focus:border-brand-500 font-bold outline-none text-slate-700">
+                            <option value="acai">Açaí</option>
+                            <option value="sorvete">Sorvetes e Picolés</option>
+                        </select>
+                    </div>
+                    <div class="space-y-2 flex flex-col justify-center pt-6 pl-2">
+                        <label class="font-bold text-sm text-slate-700 flex items-center cursor-pointer select-none">
+                            <input type="checkbox" id="prod-allow-cob" class="hidden peer">
+                            <div
+                                class="w-6 h-6 rounded-lg border-2 border-slate-300 flex items-center justify-center mr-3 peer-checked:bg-brand-500 peer-checked:border-brand-500 transition-colors">
+                                <i data-lucide="check"
+                                    class="w-4 h-4 text-white opacity-0 peer-checked:opacity-100 transition-opacity"></i>
+                            </div>
+                            Permitir Coberturas
+                        </label>
+                    </div>
+                </div>
                 <!-- IMAGE FIELD -->
                 <div class="space-y-2">
                     <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-2">📷 Foto do
@@ -938,8 +961,12 @@
                 <div class="bg-white p-8 rounded-[3rem] border-2 ${s.available ? 'border-transparent' : 'border-red-50 grayscale scale-[0.98]'} shadow-sm flex flex-col justify-between hover:shadow-xl transition-all relative">
                     ${!s.available ? '<span class="absolute top-6 right-8 bg-red-500 text-white text-[9px] font-black uppercase tracking-widest px-3 py-1 rounded-full z-10 shadow-lg">Esgotado</span>' : ''}
                     <div>
-                        <div class="w-20 h-20 rounded-3xl mb-6 shadow-sm overflow-hidden flex items-center justify-center ${s.image ? '' : 'bg-brand-50 text-brand-600'}">
+                        <div class="w-20 h-20 rounded-3xl mb-4 shadow-sm overflow-hidden flex items-center justify-center ${s.image ? '' : 'bg-brand-50 text-brand-600'}">
                              ${s.image ? `<img src="${s.image}" class="w-full h-full object-cover" alt="${s.name}">` : '<i data-lucide="cup-soda" class="w-10 h-10"></i>'}
+                        </div>
+                        <div class="flex items-center gap-2 mb-2">
+                             <span class="px-2 py-1 bg-slate-100 rounded-lg text-[9px] font-black text-slate-500 uppercase tracking-widest">${s.category === 'sorvete' ? '🍦 Sorvete/Picolé' : '🫐 Açaí'}</span>
+                             ${s.category === 'sorvete' && s.allowCob ? `<span class="px-2 py-1 bg-brand-50 rounded-lg text-[9px] font-black text-brand-600 uppercase tracking-widest">C/ Cobert.</span>` : ''}
                         </div>
                         <h4 class="font-display font-black text-2xl text-slate-900 leading-tight mb-2">${s.name}</h4>
                         <p class="text-[11px] text-slate-400 font-bold uppercase tracking-widest mb-6 border-b border-slate-50 pb-4">${s.desc || 'Tamanho padrão'}</p>
@@ -1087,6 +1114,9 @@
             document.getElementById('prod-image-placeholder').classList.remove('hidden');
             document.getElementById('prod-image-remove').classList.add('hidden');
 
+            document.getElementById('prod-category').value = 'acai';
+            document.getElementById('prod-allow-cob').checked = false;
+
             document.getElementById('prod-id').value = docId !== null ? docId : '';
             if (docId !== null) {
                 const s = state.products.find(p => p.docId === docId);
@@ -1099,6 +1129,9 @@
                 document.getElementById('prod-lim-adicional').value = s.limits.adicional;
                 document.getElementById('prod-lim-cobertura').value = s.limits.cobertura;
                 document.getElementById('prod-lim-cobertura-real').value = s.limits.cobertura_real || 0;
+
+                document.getElementById('prod-category').value = s.category || 'acai';
+                document.getElementById('prod-allow-cob').checked = s.allowCob || false;
                 if (s.image) {
                     document.getElementById('prod-image-preview-img').src = s.image;
                     document.getElementById('prod-image-preview-img').classList.remove('hidden');
@@ -1163,12 +1196,17 @@
                 const cobertura = parseInt(document.getElementById('prod-lim-cobertura').value) || 0;
                 const cobertura_real = parseInt(document.getElementById('prod-lim-cobertura-real').value) || 0;
 
+                const category = document.getElementById('prod-category').value;
+                const allowCob = document.getElementById('prod-allow-cob').checked;
+
                 const product = {
                     name: name,
                     price: price,
                     desc: document.getElementById('prod-desc').value,
                     image: document.getElementById('prod-image').value.trim(),
                     available: true,
+                    category: category,
+                    allowCob: allowCob,
                     limits: { fruta, adicional, cobertura, cobertura_real }
                 };
 
@@ -1291,10 +1329,10 @@
 
                 console.log("Salvando cobertura...", name);
                 if (docId !== '') {
-                    await updateDoc(doc(db, 'coberturas_lista', docId), { name, image });
+                    await updateDoc(doc(db, 'coberturas_info', docId), { name, image });
                 } else {
                     const newId = 'cob-' + Date.now();
-                    await setDoc(doc(db, 'coberturas_lista', newId), data);
+                    await setDoc(doc(db, 'coberturas_info', newId), data);
                 }
 
                 closeCoberturaModal();
@@ -1324,15 +1362,15 @@
             document.getElementById('cob-modal-title').innerText = docId !== null ? 'Editar Creme' : 'Novo Creme';
             openGenericModal(docId, state.cremes);
         };
-        window.saveCreme = async () => { await saveGenericItem('cremes_lista', 'Creme'); };
+        window.saveCreme = async () => { await saveGenericItem('coberturas_lista', 'Creme'); };
         window.toggleCreme = async (docId) => {
             const c = state.cremes.find(x => x.docId === docId);
             if (!c) return;
-            await updateDoc(doc(db, 'cremes_lista', docId), { available: !c.available });
+            await updateDoc(doc(db, 'coberturas_lista', docId), { available: !c.available });
         };
         window.deleteCreme = async (docId) => {
             if (!confirm('Deseja apagar este creme permanentemente?')) return;
-            await deleteDoc(doc(db, 'cremes_lista', docId));
+            await deleteDoc(doc(db, 'coberturas_lista', docId));
             toast('Creme removido!');
         };
 
@@ -1369,7 +1407,7 @@
                 const docId = document.getElementById('cob-idx').value;
                 if (!name) return toast(`Digite o nome do ${typeName.toLowerCase()}`, 'error');
                 if (docId !== '') { await updateDoc(doc(db, collectionName, docId), { name, image }); }
-                else { await setDoc(doc(db, collectionName, (collectionName === 'cremes_lista' ? 'creme-' : 'cob-') + Date.now()), { name, image, available: true }); }
+                else { await setDoc(doc(db, collectionName, (collectionName === 'coberturas_lista' && typeName === 'Creme' ? 'creme-' : 'cob-') + Date.now()), { name, image, available: true }); }
                 closeCoberturaModal(); toast(`${typeName} salvo!`);
             } catch (e) { toast("Erro ao salvar", "error"); }
         }
