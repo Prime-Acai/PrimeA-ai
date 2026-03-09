@@ -219,6 +219,10 @@
                     class="sidebar-item w-full flex items-center gap-3 px-4 py-4 rounded-2xl text-slate-500 font-bold transition-all hover:bg-slate-50">
                     <i data-lucide="settings" class="w-5 h-5"></i> Configurações
                 </button>
+                <button onclick="showTab('fidelidade')" id="nav-fidelidade"
+                    class="sidebar-item w-full flex items-center gap-3 px-4 py-4 rounded-2xl text-slate-500 font-bold transition-all hover:bg-slate-50">
+                    <i data-lucide="gift" class="w-5 h-5"></i> Club Prime (Fidelid.)
+                </button>
             </nav>
         </div>
 
@@ -272,6 +276,10 @@
             <i data-lucide="settings"></i>
             <span>Ajustes</span>
         </button>
+        <button onclick="showTab('fidelidade')" id="m-nav-fidelidade" class="mobile-nav-item">
+            <i data-lucide="gift"></i>
+            <span>Club Prime</span>
+        </button>
     </nav>
 
     <!-- CONTENT -->
@@ -310,7 +318,6 @@
                     <h3 class="text-slate-400 text-xs font-black uppercase tracking-widest mb-1">Faturamento Total</h3>
                     <p id="stats-revenue" class="text-4xl font-display font-black text-slate-900">R$ 0,00</p>
                 </div>
-                <!-- Store Controls -->
                 <div
                     class="bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-sm hover:shadow-md transition-all">
                     <h3 class="text-slate-400 text-xs font-black uppercase tracking-widest mb-4">Controle da Loja</h3>
@@ -323,6 +330,25 @@
                     <button onclick="updateStoreStatus('auto')"
                         class="w-full py-2 bg-slate-50 text-slate-400 text-[9px] font-bold uppercase rounded-lg hover:bg-slate-100">Seguir
                         Horários Automáticos</button>
+                </div>
+            </div>
+
+            <!-- RANKING ROW -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- Top Copos -->
+                <div class="bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-sm">
+                    <h3 class="font-display font-black text-2xl mb-6">Top Copos/Itens</h3>
+                    <div id="ranking-copos" class="space-y-4">
+                        <p class="text-xs text-slate-400 italic">Carregando...</p>
+                    </div>
+                </div>
+
+                <!-- Top Acompanhamentos -->
+                <div class="bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-sm">
+                    <h3 class="font-display font-black text-2xl mb-6">Top Acompanh.</h3>
+                    <div id="ranking-extras" class="space-y-4">
+                        <p class="text-xs text-slate-400 italic">Carregando...</p>
+                    </div>
                 </div>
             </div>
 
@@ -465,6 +491,15 @@
                         </div>
                     </div>
 
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                        <div>
+                            <label
+                                class="text-[10px] font-black uppercase tracking-widest text-slate-400 block mb-3 ml-2">Tempo de Espera (min)</label>
+                            <input type="text" id="conf-wait-time" placeholder="Ex: 15-30"
+                                class="w-full p-5 bg-slate-50 border-2 border-transparent focus:border-brand-500 rounded-2xl outline-none font-bold placeholder:text-slate-300">
+                        </div>
+                    </div>
+
                     <div class="pt-6 border-t border-slate-50">
                         <h4 class="font-display font-bold text-lg mb-6 flex items-center gap-2 text-slate-700 italic"><i
                                 data-lucide="credit-card" class="w-5 h-5"></i> Recebimento PIX</h4>
@@ -499,6 +534,71 @@
                 <button onclick="saveAllConfig()"
                     class="w-full py-6 bg-slate-900 text-white rounded-3xl font-black text-sm shadow-2xl active:scale-95 transition-all">SALVAR
                     TODAS ALTERAÇÕES</button>
+            </div>
+        </section>
+
+        <!-- FIDELIDADE & CUPONS TAB -->
+        <section id="tab-fidelidade" class="tab-content space-y-8 animate-fade-in hidden">
+            <header>
+                <h2 class="font-display font-black text-4xl text-slate-900 tracking-tight">Clube Prime</h2>
+                <p class="text-slate-400 font-medium">Cartão fidelidade manual e gestão de cupons</p>
+            </header>
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                
+                <!-- Fidelidade Card -->
+                <div class="bg-white p-10 rounded-[3rem] border border-slate-100 shadow-xl space-y-8">
+                    <div class="flex items-center gap-4 mb-2">
+                        <div class="w-12 h-12 bg-indigo-50 text-indigo-600 rounded-2xl flex items-center justify-center">
+                            <i data-lucide="award" class="w-6 h-6"></i>
+                        </div>
+                        <h3 class="font-display font-black text-2xl">Cartão Fidelidade</h3>
+                    </div>
+                    <p class="text-sm text-slate-500 mb-6 leading-relaxed">Localize o cliente pelo número do WhatsApp e adicione carimbos no cartão virtual dele.</p>
+                    
+                    <div class="space-y-4">
+                        <div class="flex gap-3">
+                            <div class="flex-1">
+                                <label class="text-[10px] font-black uppercase tracking-widest text-slate-400 block mb-2 ml-2">Buscar WhatsApp</label>
+                                <input type="text" id="fid-search" placeholder="(00) 00000-0000" class="w-full p-4 bg-slate-50 rounded-2xl border-2 border-transparent focus:border-indigo-500 font-bold outline-none">
+                            </div>
+                            <div class="flex items-end">
+                                <button onclick="searchFidelidade()" class="h-[56px] px-6 bg-indigo-600 text-white rounded-2xl font-black text-sm shadow-xl shadow-indigo-500/20 active:scale-95 transition-all">BUSCAR</button>
+                            </div>
+                        </div>
+
+                        <div id="fid-result" class="hidden mt-6 p-6 bg-slate-50 rounded-3xl border border-slate-100">
+                            <h4 class="text-xs font-black text-slate-400 uppercase tracking-widest mb-4">Resultado do Cliente</h4>
+                            <div class="flex flex-col items-center justify-center py-6">
+                                <p id="fid-user-phone" class="font-display font-black text-xl text-slate-900 mb-1"></p>
+                                <p class="text-3xl font-black text-indigo-600 mb-8"><span id="fid-user-points">0</span> <span class="text-sm text-indigo-400">PONTOS</span></p>
+                                <div class="flex gap-4 w-full">
+                                    <button onclick="updateFidelidade(-1)" class="flex-1 p-4 bg-white text-slate-600 rounded-2xl border border-slate-200 font-black flex justify-center hover:bg-slate-100 active:scale-95"><i data-lucide="minus"></i></button>
+                                    <button onclick="updateFidelidade(1)" class="flex-[3] p-4 bg-indigo-600 text-white rounded-2xl shadow-xl shadow-indigo-500/20 font-black flex items-center justify-center gap-2 hover:bg-indigo-700 active:scale-95"><i data-lucide="plus"></i> ADICIONAR PONTO</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Cupons Card -->
+                <div class="bg-white p-10 rounded-[3rem] border border-slate-100 shadow-xl space-y-8 flex flex-col">
+                    <div class="flex items-center justify-between mb-2">
+                        <div class="flex items-center gap-4">
+                            <div class="w-12 h-12 bg-amber-50 text-amber-600 rounded-2xl flex items-center justify-center">
+                                <i data-lucide="ticket" class="w-6 h-6"></i>
+                            </div>
+                            <h3 class="font-display font-black text-2xl">Cupons</h3>
+                        </div>
+                        <button onclick="openCupomModal()" class="p-3 bg-amber-100 text-amber-600 rounded-xl hover:bg-amber-200 active:scale-95 transition-all outline-none"><i data-lucide="plus" class="w-5 h-5"></i></button>
+                    </div>
+                    <p class="text-sm text-slate-500 mb-6 leading-relaxed">Crie códigos de desconto em R$ para os clientes usarem na tela de pagamento.</p>
+                    
+                    <div id="cupons-list" class="flex-1 overflow-y-auto pr-2 space-y-3 no-scrollbar max-h-[400px]">
+                        <!-- Renderizado por JS -->
+                    </div>
+                </div>
+
             </div>
         </section>
     </main>
@@ -572,8 +672,29 @@
                     </div>
                 </div>
                 <button type="button" id="cob-save-btn" onclick="saveCobertura()"
-                    class="w-full py-5 bg-brand-600 text-white rounded-2xl font-black shadow-xl">SALVAR
+                    class="w-full py-5 bg-brand-600 text-white rounded-2xl font-black shadow-xl mt-8">SALVAR
                     COBERTURA</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- CUPOM MODAL -->
+    <div id="modal-cupom" class="fixed inset-0 z-[125] bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center p-6">
+        <div class="bg-white w-full max-w-sm p-10 rounded-[3rem] shadow-2xl relative animate-fade-in">
+            <button onclick="closeCupomModal()" class="absolute top-8 right-8 p-3 text-slate-300 hover:text-slate-500 transition-colors"><i data-lucide="x" class="w-7 h-7"></i></button>
+            <input type="hidden" id="cupom-doc-id">
+            <h3 class="font-display font-black text-2xl mb-8">Novo Cupom</h3>
+            
+            <div class="space-y-6">
+                <div>
+                    <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-2 block mb-2">Código (Ex: PRIME10)</label>
+                    <input type="text" id="cupom-codigo" class="w-full p-4 bg-slate-50 rounded-2xl border-2 border-transparent focus:border-amber-500 font-black text-lg outline-none uppercase" oninput="this.value = this.value.toUpperCase()">
+                </div>
+                <div>
+                    <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-2 block mb-2">Desconto Fixo (R$)</label>
+                    <input type="number" step="0.5" id="cupom-valor" placeholder="10.00" class="w-full p-4 bg-slate-50 rounded-2xl border-2 border-transparent focus:border-amber-500 font-bold outline-none">
+                </div>
+                <button type="button" onclick="saveCupom()" class="w-full py-5 bg-amber-500 text-white rounded-2xl font-black shadow-xl shadow-amber-500/20 mt-4 active:scale-95 transition-all">CRIAR CUPOM</button>
             </div>
         </div>
     </div>
@@ -722,7 +843,8 @@
         const auth = getAuth(app);
         const db = getFirestore(app);
 
-        let state = { config: null, pedidos: [], products: [], cremes: [], coberturas: [] };
+        let state = { config: null, pedidos: [], products: [], cremes: [], coberturas: [], cupons: [] };
+        let currentFidPhone = "";
 
         // --- AUTH LOGIC ---
         window.handleLogin = async () => {
@@ -804,6 +926,10 @@
                 state.coberturas = snap.docs.map(d => ({ docId: d.id, ...d.data() }));
                 renderCoberturas();
             });
+            onSnapshot(collection(db, 'cupons'), (snap) => {
+                state.cupons = snap.docs.map(d => ({ docId: d.id, ...d.data() }));
+                renderCupons();
+            });
 
             const qOrders = query(collection(db, 'pedidos'), orderBy('data', 'desc'), limit(100));
             onSnapshot(qOrders, (snap) => { state.pedidos = snap.docs.map(d => ({ id: d.id, ...d.data() })); renderPedidos(); renderStats(); });
@@ -828,6 +954,7 @@
             if (!isBootstrap && !confirm("AVISO: Isso irá apagar todos os seus produtos e preços atuais. Continuar?")) return;
             const defaults = {
                 storeName: "Açai Prime", phone: "5589988171689", pixKey: "89988171689", pixName: "Nome do Titular",
+                waitTime: "15-30",
                 openingHours: { start: 16, end: 23 },
                 sizes: [
                     { id: 'p300', name: "Copo 300ml", price: 13.00, desc: "3 Compl. + 1 Fruta + 1 Creme", available: true, image: "copo_prime_acai_1.jpg", limits: { fruta: 1, adicional: 3, cobertura: 1 } },
@@ -856,6 +983,79 @@
             const totalRevenue = state.pedidos.reduce((acc, p) => acc + (p.total || 0), 0);
             document.getElementById('stats-orders').innerText = totalPedidos;
             document.getElementById('stats-revenue').innerText = `R$ ${totalRevenue.toFixed(2).replace('.', ',')}`;
+
+            // RANKING LOGIC
+            const coposCount = {};
+            const extrasCount = {};
+
+            // Helper to clean up the obs string:
+            // Example obs: "Frutas: Banana | Adicionais: Leite Ninho, Paçoca"
+            const parseObsToExtrasOptions = (obs) => {
+                if (!obs || obs === "Sem acompanhamentos") return [];
+                const sections = obs.split('|').map(s => s.trim());
+                let foundExtras = [];
+                sections.forEach(sec => {
+                    const parts = sec.split(':');
+                    if (parts.length > 1) {
+                        const items = parts[1].split(',').map(i => i.trim());
+                        foundExtras = foundExtras.concat(items);
+                    }
+                });
+                return foundExtras;
+            };
+
+            state.pedidos.forEach(p => {
+                if (p.itens) {
+                    p.itens.forEach(item => {
+                        // contagem de copo
+                        coposCount[item.name] = (coposCount[item.name] || 0) + item.qty;
+
+                        // contagem de extras
+                        const extras = parseObsToExtrasOptions(item.obs);
+                        extras.forEach(ext => {
+                            extrasCount[ext] = (extrasCount[ext] || 0) + item.qty;
+                        });
+                    });
+                }
+            });
+
+            const topCopos = Object.entries(coposCount).sort((a, b) => b[1] - a[1]).slice(0, 5);
+            const topExtras = Object.entries(extrasCount).sort((a, b) => b[1] - a[1]).slice(0, 5);
+
+            const rCopos = document.getElementById('ranking-copos');
+            const rExtras = document.getElementById('ranking-extras');
+
+            if (rCopos) {
+                 if (topCopos.length === 0) {
+                     rCopos.innerHTML = '<p class="text-xs text-slate-400 italic">Sem dados suficientes.</p>';
+                 } else {
+                     rCopos.innerHTML = topCopos.map((c, i) => `
+                        <div class="flex justify-between items-center p-3 bg-slate-50 rounded-2xl">
+                            <div class="flex items-center gap-3">
+                                <span class="w-8 h-8 rounded-full bg-brand-100 text-brand-600 font-black flex items-center justify-center text-xs">#${i + 1}</span>
+                                <span class="font-bold text-sm text-slate-800">${c[0]}</span>
+                            </div>
+                            <span class="text-xs font-black text-slate-400 bg-white px-3 py-1.5 rounded-full border border-slate-100 shadow-sm">${c[1]} un</span>
+                        </div>
+                     `).join('');
+                 }
+            }
+
+            if (rExtras) {
+                 if (topExtras.length === 0) {
+                     rExtras.innerHTML = '<p class="text-xs text-slate-400 italic">Sem dados suficientes.</p>';
+                 } else {
+                     rExtras.innerHTML = topExtras.map((e, i) => `
+                        <div class="flex justify-between items-center p-3 bg-slate-50 rounded-2xl">
+                            <div class="flex items-center gap-3">
+                                <span class="w-8 h-8 rounded-full bg-amber-100 text-amber-600 font-black flex items-center justify-center text-xs">#${i + 1}</span>
+                                <span class="font-bold text-sm text-slate-800">${e[0]}</span>
+                            </div>
+                            <span class="text-xs font-black text-slate-400 bg-white px-3 py-1.5 rounded-full border border-slate-100 shadow-sm">${e[1]} un</span>
+                        </div>
+                     `).join('');
+                 }
+            }
         }
 
         function renderPedidos() {
@@ -1056,9 +1256,11 @@
                 list.innerHTML = items.map((item, idx) => `
                     <div class="group flex items-center justify-between p-4 bg-slate-50 rounded-2xl hover:bg-white hover:shadow-md border border-transparent hover:border-slate-100 transition-all">
                         <span class="text-sm font-black ${item.available ? 'text-slate-700' : 'text-slate-300 line-through'}">${item.name}</span>
-                        <div class="flex items-center gap-1 opacity-0 group-hover:opacity-100 hover:scale-105 transition-all">
-                            <button onclick="toggleItemStatus('${cat}', ${idx})" class="p-2.5 ${item.available ? 'text-amber-500' : 'text-green-500'} bg-white rounded-xl shadow-sm"><i data-lucide="${item.available ? 'eye-off' : 'eye'}" class="w-4 h-4"></i></button>
-                            <button onclick="deleteItemStatus('${cat}', ${idx})" class="p-2.5 text-red-500 bg-white rounded-xl shadow-sm"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+                        <div class="flex items-center gap-2 opacity-100">
+                            <button onclick="toggleItemStatus('${cat}', ${idx})" class="px-3 py-1.5 text-[10px] font-black uppercase tracking-widest rounded-lg transition-all ${item.available ? 'bg-green-100 text-green-700 hover:bg-green-200' : 'bg-red-100 text-red-700 hover:bg-red-200'}">
+                                ${item.available ? 'Disponível' : 'Esgotado'}
+                            </button>
+                            <button onclick="deleteItemStatus('${cat}', ${idx})" class="p-2 text-red-500 bg-white rounded-xl shadow-sm hover:bg-red-50"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
                         </div>
                     </div>
                 `).join('');
@@ -1067,10 +1269,11 @@
         }
 
         function fillConfigForm() {
-            document.getElementById('conf-phone').value = state.config.phone;
-            document.getElementById('conf-name').value = state.config.storeName;
-            document.getElementById('conf-pix-key').value = state.config.pixKey;
-            document.getElementById('conf-pix-name').value = state.config.pixName;
+            document.getElementById('conf-phone').value = state.config.phone || '';
+            document.getElementById('conf-name').value = state.config.storeName || '';
+            document.getElementById('conf-pix-key').value = state.config.pixKey || '';
+            document.getElementById('conf-pix-name').value = state.config.pixName || '';
+            document.getElementById('conf-wait-time').value = state.config.waitTime || '';
         }
 
         // --- GLOBAL ACTIONS ---
@@ -1446,10 +1649,118 @@
                 phone: document.getElementById('conf-phone').value,
                 storeName: document.getElementById('conf-name').value,
                 pixKey: document.getElementById('conf-pix-key').value,
-                pixName: document.getElementById('conf-pix-name').value
+                pixName: document.getElementById('conf-pix-name').value,
+                waitTime: document.getElementById('conf-wait-time').value
             };
             await updateDoc(doc(db, 'loja', 'config'), data);
             toast("Configurações Globais Salvas!");
+        };
+
+        // --- FIDELIDADE LOGIC (MANUAL) ---
+        window.searchFidelidade = async () => {
+             const input = document.getElementById('fid-search').value.replace(/\D/g, '');
+             if (!input) return toast('Digite um telefone', 'error');
+             
+             try {
+                 const docRef = doc(db, 'clientes_fidelidade', input);
+                 const snap = await getDoc(docRef);
+                 let pts = 0;
+                 if (snap.exists()) {
+                     pts = snap.data().pontos || 0;
+                 }
+                 
+                 currentFidPhone = input;
+                 document.getElementById('fid-user-phone').innerText = `Cliente: ${input}`;
+                 document.getElementById('fid-user-points').innerText = pts;
+                 document.getElementById('fid-result').classList.remove('hidden');
+             } catch (e) {
+                 toast('Erro na busca', 'error');
+             }
+        };
+        
+        // Formata input ao digitar
+        document.getElementById('fid-search').addEventListener('input', (e) => {
+            let x = e.target.value.replace(/\D/g, '').match(/(\d{0,2})(\d{0,5})(\d{0,4})/);
+            e.target.value = !x[2] ? x[1] : '(' + x[1] + ') ' + x[2] + (x[3] ? '-' + x[3] : '');
+        });
+
+        window.updateFidelidade = async (delta) => {
+             if (!currentFidPhone) return;
+             try {
+                  const docRef = doc(db, 'clientes_fidelidade', currentFidPhone);
+                  const snap = await getDoc(docRef);
+                  let current = 0;
+                  if (snap.exists()) { current = snap.data().pontos || 0; }
+                  
+                  let next = current + delta;
+                  if (next < 0) next = 0;
+                  
+                  await setDoc(docRef, { telefone: currentFidPhone, pontos: next, lastUpdate: new Date().toISOString() }, { merge: true });
+                  
+                  document.getElementById('fid-user-points').innerText = next;
+                  toast(delta > 0 ? '+1 Ponto Adicionado!' : 'Ponto Removido');
+             } catch (e) {
+                  toast('Erro ao atualizar', 'error');
+             }
+        };
+
+        // --- CUPONS LOGIC ---
+        function renderCupons() {
+             const list = document.getElementById('cupons-list');
+             if (!list) return;
+             if (state.cupons.length === 0) {
+                 list.innerHTML = '<div class="text-center p-8 text-slate-300 font-bold uppercase tracking-widest text-[10px]">Nenhum cupom criado</div>';
+                 return;
+             }
+             
+             list.innerHTML = state.cupons.map(c => `
+                 <div class="flex items-center justify-between p-4 bg-slate-50 border border-slate-100 rounded-2xl group ${!c.ativo ? 'opacity-50' : ''}">
+                     <div>
+                         <p class="font-black text-slate-900">${c.codigo}</p>
+                         <p class="text-[10px] font-bold text-amber-600 tracking-widest uppercase">Desconto: R$ ${c.valor.toFixed(2).replace('.', ',')}</p>
+                     </div>
+                     <div class="flex items-center gap-2">
+                         <button onclick="toggleCupom('${c.docId}', ${c.ativo})" class="p-2 bg-white rounded-lg shadow-sm border border-slate-100 text-slate-400 hover:text-amber-500 outline-none"><i data-lucide="${c.ativo ? 'eye' : 'eye-off'}" class="w-4 h-4"></i></button>
+                         <button onclick="deleteCupom('${c.docId}')" class="p-2 bg-white rounded-lg shadow-sm border border-slate-100 text-slate-400 hover:text-red-500 outline-none"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+                     </div>
+                 </div>
+             `).join('');
+             lucide.createIcons();
+        }
+
+        window.openCupomModal = () => {
+             document.getElementById('cupom-codigo').value = '';
+             document.getElementById('cupom-valor').value = '';
+             document.getElementById('modal-cupom').classList.remove('hidden');
+        };
+        window.closeCupomModal = () => document.getElementById('modal-cupom').classList.add('hidden');
+
+        window.saveCupom = async () => {
+             const codigo = document.getElementById('cupom-codigo').value.trim().toUpperCase();
+             const valor = parseFloat(document.getElementById('cupom-valor').value);
+             if (!codigo || !valor || valor <= 0) return toast('Preencha os dados corretamente', 'error');
+             
+             try {
+                 await setDoc(doc(db, 'cupons', codigo), {
+                     codigo,
+                     valor,
+                     ativo: true,
+                     criadoEm: new Date().toISOString()
+                 });
+                 closeCupomModal();
+                 toast('Cupom Criado!');
+             } catch (e) {
+                 toast('Erro ao criar cupom', 'error');
+             }
+        };
+
+        window.toggleCupom = async (docId, currentStatus) => {
+             await updateDoc(doc(db, 'cupons', docId), { ativo: !currentStatus });
+        };
+
+        window.deleteCupom = async (docId) => {
+             if (!confirm('Excluir este cupom?')) return;
+             await deleteDoc(doc(db, 'cupons', docId));
         };
 
         window.toast = (m, t = 'success') => {
