@@ -1546,7 +1546,7 @@
       let pontosGanhosAcai = 0;
       let pontosGanhosSorvete = 0;
       const pontosConfig = state.pontosConfig || {};
-      cartSnapshot.forEach(item => {
+      state.cart.forEach(item => {
           const ptsPerUnit = pontosConfig[item.name] || 0;
           const prodInfo = (state.products || []).find(p => p.name === item.name);
           const cat = prodInfo ? prodInfo.category : 'acai';
