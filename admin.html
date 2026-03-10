@@ -85,14 +85,23 @@
                 right: 0;
                 background: white;
                 display: flex;
-                justify-content: space-around;
-                padding: 12px 10px 25px 10px;
+                overflow-x: auto;
+                justify-content: flex-start;
+                gap: 8px;
+                padding: 12px 16px 25px 16px;
                 border-top: 1px solid #f1f5f9;
                 z-index: 90;
                 box-shadow: 0 -10px 20px rgba(0, 0, 0, 0.02);
+                -webkit-overflow-scrolling: touch;
+            }
+
+            .mobile-nav::-webkit-scrollbar {
+                display: none;
             }
 
             .mobile-nav-item {
+                flex: 0 0 auto;
+                min-width: 64px;
                 display: flex;
                 flex-direction: column;
                 align-items: center;
@@ -102,6 +111,13 @@
                 font-weight: 800;
                 text-transform: uppercase;
                 letter-spacing: 0.05em;
+                padding: 6px;
+                border-radius: 12px;
+                transition: background-color 0.2s;
+            }
+
+            .mobile-nav-item:active {
+                background-color: #f1f5f9;
             }
 
             .mobile-nav-item.active {
@@ -114,7 +130,7 @@
             }
 
             main {
-                padding-bottom: 100px !important;
+                padding-bottom: 110px !important;
             }
         }
 
@@ -133,8 +149,8 @@
 <body class="flex min-h-screen text-slate-800">
 
     <!-- LOGIN OVERLAY -->
-    <div id="login-overlay" class="fixed inset-0 z-[100] bg-slate-900 flex items-center justify-center p-6">
-        <div class="bg-white w-full max-w-md p-10 rounded-[2.5rem] shadow-2xl text-center animate-fade-in">
+    <div id="login-overlay" class="fixed inset-0 z-[100] bg-slate-900 flex items-center justify-center p-4 lg:p-6">
+        <div class="bg-white w-full max-w-md p-8 lg:p-10 rounded-[2.5rem] shadow-2xl text-center animate-fade-in">
             <div class="w-20 h-20 bg-brand-50 rounded-3xl flex items-center justify-center mx-auto mb-6 text-brand-600">
                 <i data-lucide="shield-check" class="w-10 h-10"></i>
             </div>
@@ -155,6 +171,7 @@
                     <input type="password" id="login-pass" placeholder="••••••••"
                         class="w-full p-4 bg-slate-50 border-2 border-transparent focus:border-brand-500 rounded-2xl outline-none font-bold transition-all tracking-widest">
                 </div>
+                <div id="login-error" class="hidden text-xs font-bold text-red-500 bg-red-50 border border-red-100 rounded-xl p-3 text-center"></div>
                 <button onclick="handleLogin()" id="login-btn"
                     class="w-full py-5 bg-brand-600 text-white rounded-2xl font-black text-sm shadow-xl shadow-brand-500/20 hover:bg-brand-700 active:scale-95 transition-all mt-4">ENTRAR
                     NO PAINEL</button>
@@ -164,8 +181,8 @@
 
     <!-- BOOTSTRAP MODAL (If data is missing) -->
     <div id="bootstrap-modal"
-        class="fixed inset-0 z-[150] bg-slate-900/90 backdrop-blur-md hidden flex items-center justify-center p-6 text-center">
-        <div class="bg-white max-w-sm p-10 rounded-[2.5rem] shadow-2xl">
+        class="fixed inset-0 z-[150] bg-slate-900/90 backdrop-blur-md hidden flex items-center justify-center p-4 lg:p-6 text-center">
+        <div class="bg-white max-w-sm p-8 lg:p-10 rounded-[2.5rem] shadow-2xl">
             <div
                 class="w-16 h-16 bg-yellow-50 text-yellow-600 rounded-full flex items-center justify-center mx-auto mb-6">
                 <i data-lucide="database" class="w-8 h-8"></i>
@@ -264,6 +281,10 @@
             <i data-lucide="box"></i>
             <span>Cardápio</span>
         </button>
+        <button onclick="showTab('acompanhamentos')" id="m-nav-acompanhamentos" class="mobile-nav-item">
+            <i data-lucide="cherry"></i>
+            <span>Acamps</span>
+        </button>
         <button onclick="showTab('cremes')" id="m-nav-cremes" class="mobile-nav-item">
             <i data-lucide="droplet"></i>
             <span>Cremes</span>
@@ -303,7 +324,7 @@
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <!-- Cards remain same but polished -->
                 <div
-                    class="bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-sm hover:shadow-md transition-all">
+                    class="bg-white p-6 lg:p-8 rounded-[2.5rem] border border-slate-100 shadow-sm hover:shadow-md transition-all">
                     <div class="w-14 h-14 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center mb-6">
                         <i data-lucide="receipt" class="w-7 h-7"></i>
                     </div>
@@ -311,7 +332,7 @@
                     <p id="stats-orders" class="text-4xl font-display font-black text-slate-900">0</p>
                 </div>
                 <div
-                    class="bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-sm hover:shadow-md transition-all">
+                    class="bg-white p-6 lg:p-8 rounded-[2.5rem] border border-slate-100 shadow-sm hover:shadow-md transition-all">
                     <div class="w-14 h-14 bg-green-50 text-green-600 rounded-2xl flex items-center justify-center mb-6">
                         <i data-lucide="dollar-sign" class="w-7 h-7"></i>
                     </div>
@@ -319,7 +340,7 @@
                     <p id="stats-revenue" class="text-4xl font-display font-black text-slate-900">R$ 0,00</p>
                 </div>
                 <div
-                    class="bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-sm hover:shadow-md transition-all">
+                    class="bg-white p-6 lg:p-8 rounded-[2.5rem] border border-slate-100 shadow-sm hover:shadow-md transition-all">
                     <h3 class="text-slate-400 text-xs font-black uppercase tracking-widest mb-4">Controle da Loja</h3>
                     <div class="grid grid-cols-2 gap-3 mb-4">
                         <button onclick="updateStoreStatus('open')"
@@ -336,7 +357,7 @@
             <!-- RANKING ROW -->
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <!-- Top Copos -->
-                <div class="bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-sm">
+                <div class="bg-white p-6 lg:p-8 rounded-[2.5rem] border border-slate-100 shadow-sm">
                     <h3 class="font-display font-black text-2xl mb-6">Top Copos/Itens</h3>
                     <div id="ranking-copos" class="space-y-4">
                         <p class="text-xs text-slate-400 italic">Carregando...</p>
@@ -344,7 +365,7 @@
                 </div>
 
                 <!-- Top Acompanhamentos -->
-                <div class="bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-sm">
+                <div class="bg-white p-6 lg:p-8 rounded-[2.5rem] border border-slate-100 shadow-sm">
                     <h3 class="font-display font-black text-2xl mb-6">Top Acompanh.</h3>
                     <div id="ranking-extras" class="space-y-4">
                         <p class="text-xs text-slate-400 italic">Carregando...</p>
@@ -354,7 +375,7 @@
 
             <!-- Recent Orders List -->
             <div class="bg-white rounded-[2.5rem] border border-slate-100 shadow-sm overflow-hidden">
-                <div class="p-10 border-b border-slate-50 flex items-center justify-between">
+                <div class="p-6 lg:p-10 border-b border-slate-50 flex flex-col md:flex-row md:items-center justify-between gap-4">
                     <h3 class="font-display font-black text-2xl">Pedidos Recentes</h3>
                     <button onclick="showTab('pedidos')"
                         class="text-brand-600 font-black text-xs uppercase tracking-widest flex items-center gap-2">Ver
@@ -403,7 +424,7 @@
                 <p class="text-slate-400 font-medium">Controle de insumos e disponibilidade</p>
             </header>
             <div class="grid grid-cols-1 md:grid-cols-3 gap-10">
-                <div class="bg-white p-8 rounded-[2.5rem] shadow-sm border border-slate-50">
+                <div class="bg-white p-6 lg:p-8 rounded-[2.5rem] shadow-sm border border-slate-50">
                     <div class="flex items-center justify-between mb-8">
                         <h3 class="font-display font-black text-xl flex items-center gap-2"><i data-lucide="apple"
                                 class="w-6 h-6 text-red-500"></i> Frutas</h3>
@@ -413,7 +434,7 @@
                     </div>
                     <div id="list-frutas" class="space-y-3"></div>
                 </div>
-                <div class="bg-white p-8 rounded-[2.5rem] shadow-sm border border-slate-50">
+                <div class="bg-white p-6 lg:p-8 rounded-[2.5rem] shadow-sm border border-slate-50">
                     <div class="flex items-center justify-between mb-8">
                         <h3 class="font-display font-black text-xl flex items-center gap-2"><i data-lucide="cookie"
                                 class="w-6 h-6 text-amber-500"></i> Compl.</h3>
@@ -423,7 +444,7 @@
                     </div>
                     <div id="list-adicionais" class="space-y-3"></div>
                 </div>
-                <div class="bg-white p-8 rounded-[2.5rem] shadow-sm border border-slate-50">
+                <div class="bg-white p-6 lg:p-8 rounded-[2.5rem] shadow-sm border border-slate-50">
                     <div class="flex items-center justify-between mb-8">
                         <h3 class="font-display font-black text-xl flex items-center gap-2"><i data-lucide="droplet"
                                 class="w-6 h-6 text-indigo-500"></i> Cremes</h3>
@@ -472,7 +493,7 @@
                 <h2 class="font-display font-black text-4xl text-slate-900 tracking-tight">Ajustes Loja</h2>
                 <p class="text-slate-400 font-medium">Dados de contato e recebimento</p>
             </header>
-            <div class="max-w-2xl bg-white p-12 rounded-[3.5rem] border border-slate-100 shadow-xl space-y-10">
+            <div class="max-w-2xl bg-white p-6 lg:p-12 rounded-[2rem] lg:rounded-[3.5rem] border border-slate-100 shadow-xl space-y-10">
                 <div class="space-y-6">
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
                         <div>
@@ -539,15 +560,49 @@
 
         <!-- FIDELIDADE & CUPONS TAB -->
         <section id="tab-fidelidade" class="tab-content space-y-8 animate-fade-in hidden">
-            <header>
-                <h2 class="font-display font-black text-4xl text-slate-900 tracking-tight">Clube Prime</h2>
-                <p class="text-slate-400 font-medium">Cartão fidelidade manual e gestão de cupons</p>
+            <header class="flex items-center justify-between flex-wrap gap-4">
+                <div>
+                    <h2 class="font-display font-black text-4xl text-slate-900 tracking-tight">Clube Prime</h2>
+                    <p class="text-slate-400 font-medium">Cartão fidelidade e gestão de cupons</p>
+                </div>
+                <button id="btn-toggle-fidelidade" onclick="toggleFidelidade()"
+                    class="flex items-center gap-3 px-5 py-3 rounded-2xl border-2 font-black text-sm transition-all active:scale-95">
+                    <i data-lucide="power" class="w-4 h-4"></i>
+                    <span id="btn-fid-label">Desativar</span>
+                </button>
             </header>
+
+            <!-- Pontuação Config Card -->
+            <div class="bg-white p-6 lg:p-10 rounded-[2rem] lg:rounded-[3rem] border border-slate-100 shadow-xl space-y-6 mb-8" id="pontos-config-card">
+                <div class="flex items-center gap-4">
+                    <div class="w-12 h-12 bg-violet-50 text-violet-600 rounded-2xl flex items-center justify-center">
+                        <i data-lucide="star" class="w-6 h-6"></i>
+                    </div>
+                    <div>
+                        <h3 class="font-display font-black text-2xl">Pontuação por Produto</h3>
+                        <p class="text-sm text-slate-400 font-medium">Defina quantos pontos cada tamanho de copo vale</p>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4" id="pontos-produtos-list">
+                    <p class="text-xs text-slate-400 italic col-span-2">Carregando produtos...</p>
+                </div>
+
+                <div class="flex items-center gap-4 pt-4 border-t border-slate-100">
+                    <div class="flex-1">
+                        <label class="text-[10px] font-black uppercase tracking-widest text-slate-400 block mb-2 ml-2">Meta de Pontos (para ganhar prêmio)</label>
+                        <input type="number" id="pontos-meta" min="1" value="10" class="w-full p-4 bg-slate-50 rounded-2xl border-2 border-transparent focus:border-violet-500 font-black text-lg outline-none" placeholder="Ex: 10">
+                    </div>
+                    <div class="flex items-end">
+                        <button onclick="savePontosConfig()" class="h-[56px] px-6 bg-violet-600 text-white rounded-2xl font-black text-sm shadow-xl shadow-violet-500/20 active:scale-95 transition-all">SALVAR</button>
+                    </div>
+                </div>
+            </div>
 
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
                 
                 <!-- Fidelidade Card -->
-                <div class="bg-white p-10 rounded-[3rem] border border-slate-100 shadow-xl space-y-8">
+                <div class="bg-white p-6 lg:p-10 rounded-[2rem] lg:rounded-[3rem] border border-slate-100 shadow-xl space-y-8">
                     <div class="flex items-center gap-4 mb-2">
                         <div class="w-12 h-12 bg-indigo-50 text-indigo-600 rounded-2xl flex items-center justify-center">
                             <i data-lucide="award" class="w-6 h-6"></i>
@@ -582,7 +637,7 @@
                 </div>
 
                 <!-- Cupons Card -->
-                <div class="bg-white p-10 rounded-[3rem] border border-slate-100 shadow-xl space-y-8 flex flex-col">
+                <div class="bg-white p-6 lg:p-10 rounded-[2rem] lg:rounded-[3rem] border border-slate-100 shadow-xl space-y-8 flex flex-col">
                     <div class="flex items-center justify-between mb-2">
                         <div class="flex items-center gap-4">
                             <div class="w-12 h-12 bg-amber-50 text-amber-600 rounded-2xl flex items-center justify-center">
@@ -607,9 +662,9 @@
     <div id="modal-order"
         class="fixed inset-0 z-[120] bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center p-6">
         <div
-            class="bg-white w-full max-w-lg p-10 rounded-[3rem] shadow-2xl relative animate-fade-in flex flex-col max-h-[90vh]">
+            class="bg-white w-full max-w-lg p-6 lg:p-10 rounded-[2rem] lg:rounded-[3rem] shadow-2xl relative animate-fade-in flex flex-col max-h-[90vh]">
             <button onclick="closeOrderModal()"
-                class="absolute top-8 right-8 p-3 text-slate-300 hover:text-slate-500 transition-colors"><i
+                class="absolute top-6 right-6 lg:top-8 lg:right-8 p-3 text-slate-300 hover:text-slate-500 transition-colors"><i
                     data-lucide="x" class="w-7 h-7"></i></button>
             <h3 class="font-display font-black text-3xl mb-1" id="order-modal-title">Detalhes do Pedido</h3>
             <p id="order-modal-date" class="text-xs text-slate-400 font-bold uppercase tracking-widest mb-8"></p>
@@ -630,9 +685,9 @@
     <!-- COBERTURA MODAL -->
     <div id="modal-cobertura"
         class="fixed inset-0 z-[115] bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center p-6">
-        <div class="bg-white w-full max-w-sm p-10 rounded-[3rem] shadow-2xl relative animate-fade-in">
+        <div class="bg-white w-full max-w-sm p-6 lg:p-10 rounded-[2rem] lg:rounded-[3rem] shadow-2xl relative animate-fade-in">
             <button onclick="closeCoberturaModal()"
-                class="absolute top-8 right-8 p-3 text-slate-300 hover:text-slate-500 transition-colors">
+                class="absolute top-6 right-6 lg:top-8 lg:right-8 p-3 text-slate-300 hover:text-slate-500 transition-colors">
                 <i data-lucide="x" class="w-7 h-7"></i>
             </button>
             <input type="hidden" id="cob-idx">
@@ -679,9 +734,9 @@
     </div>
 
     <!-- CUPOM MODAL -->
-    <div id="modal-cupom" class="fixed inset-0 z-[125] bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center p-6">
-        <div class="bg-white w-full max-w-sm p-10 rounded-[3rem] shadow-2xl relative animate-fade-in">
-            <button onclick="closeCupomModal()" class="absolute top-8 right-8 p-3 text-slate-300 hover:text-slate-500 transition-colors"><i data-lucide="x" class="w-7 h-7"></i></button>
+    <div id="modal-cupom" class="fixed inset-0 z-[125] bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center p-4 lg:p-6">
+        <div class="bg-white w-full max-w-sm p-6 lg:p-10 rounded-[2rem] lg:rounded-[3rem] shadow-2xl relative animate-fade-in">
+            <button onclick="closeCupomModal()" class="absolute top-6 right-6 lg:top-8 lg:right-8 p-3 text-slate-300 hover:text-slate-500 transition-colors"><i data-lucide="x" class="w-7 h-7"></i></button>
             <input type="hidden" id="cupom-doc-id">
             <h3 class="font-display font-black text-2xl mb-8">Novo Cupom</h3>
             
@@ -701,10 +756,10 @@
 
     <!-- PRODUCT MODAL (Same as before but polished) -->
     <div id="modal-product"
-        class="fixed inset-0 z-[110] bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center p-6">
-        <div class="bg-white w-full max-w-lg p-10 rounded-[3rem] shadow-2xl relative animate-fade-in">
+        class="fixed inset-0 z-[110] bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center p-4 lg:p-6">
+        <div class="bg-white w-full max-w-lg p-6 lg:p-10 rounded-[2rem] lg:rounded-[3rem] shadow-2xl relative animate-fade-in max-h-[95vh] overflow-y-auto no-scrollbar">
             <button onclick="closeProductModal()"
-                class="absolute top-8 right-8 p-3 text-slate-300 hover:text-slate-500 transition-colors"><i
+                class="absolute top-6 right-6 lg:top-8 lg:right-8 p-3 text-slate-300 hover:text-slate-500 transition-colors"><i
                     data-lucide="x" class="w-7 h-7"></i></button>
             <h3 class="font-display font-black text-2xl mb-8" id="product-modal-title">Novo Produto</h3>
             <form id="product-form" class="space-y-6">
@@ -843,7 +898,7 @@
         const auth = getAuth(app);
         const db = getFirestore(app);
 
-        let state = { config: null, pedidos: [], products: [], cremes: [], coberturas: [], cupons: [] };
+        let state = { config: null, pedidos: [], products: [], cremes: [], coberturas: [], cupons: [], pontosConfig: {} };
         let currentFidPhone = "";
 
         // --- AUTH LOGIC ---
@@ -855,7 +910,16 @@
             btn.innerText = "Autorizando...";
             btn.disabled = true;
             try { await signInWithEmailAndPassword(auth, email, pass); }
-            catch (e) { toast("Erro de Acesso: Verifique e-mail e senha", "error"); btn.disabled = false; btn.innerText = "ENTRAR NO PAINEL"; }
+            catch (e) {
+                const errEl = document.getElementById('login-error');
+                if (errEl) {
+                    errEl.innerText = 'Email ou senha incorretos. Verifique suas credenciais no Firebase.';
+                    errEl.classList.remove('hidden');
+                }
+                toast("Erro de Acesso: Verifique e-mail e senha", "error");
+                btn.disabled = false;
+                btn.innerText = "ENTRAR NO PAINEL";
+            }
         };
 
         window.handleLogout = () => signOut(auth);
@@ -910,13 +974,23 @@
             }
 
             // Listeners
-            onSnapshot(doc(db, 'loja', 'config'), (snap) => { if (snap.exists()) { state.config = snap.data(); renderAll(); } });
+             onSnapshot(doc(db, 'loja', 'config'), (snap) => {
+                if (snap.exists()) {
+                    state.config = snap.data();
+                    state.pontosConfig = snap.data().pontosConfig || {};
+                    const metaEl = document.getElementById('pontos-meta');
+                    if (metaEl) metaEl.value = snap.data().pontosMeta || 10;
+                    updateFidelidadeToggle(snap.data().fidelidadeAtiva !== false);
+                    renderAll();
+                }
+            });
             onSnapshot(doc(db, 'loja', 'status'), (snap) => { if (snap.exists()) updateStatusBadge(snap.data().mode); });
 
             // Listeners para novas coleções
             onSnapshot(collection(db, 'produtos'), (snap) => {
                 state.products = snap.docs.map(d => ({ docId: d.id, ...d.data() }));
                 renderProducts();
+                renderPontosConfig();
             });
             onSnapshot(collection(db, 'coberturas_lista'), (snap) => {
                 state.cremes = snap.docs.map(d => ({ docId: d.id, ...d.data() }));
@@ -1022,6 +1096,14 @@
             const topCopos = Object.entries(coposCount).sort((a, b) => b[1] - a[1]).slice(0, 5);
             const topExtras = Object.entries(extrasCount).sort((a, b) => b[1] - a[1]).slice(0, 5);
 
+            // Salvar o produto mais vendido no Firebase para exibir no site
+            if (topCopos.length > 0) {
+                const bestSeller = topCopos[0][0];
+                if (state.config?.maisVendido !== bestSeller) {
+                    updateDoc(doc(db, 'loja', 'config'), { maisVendido: bestSeller }).catch(() => {});
+                }
+            }
+
             const rCopos = document.getElementById('ranking-copos');
             const rExtras = document.getElementById('ranking-extras');
 
@@ -1030,10 +1112,11 @@
                      rCopos.innerHTML = '<p class="text-xs text-slate-400 italic">Sem dados suficientes.</p>';
                  } else {
                      rCopos.innerHTML = topCopos.map((c, i) => `
-                        <div class="flex justify-between items-center p-3 bg-slate-50 rounded-2xl">
+                        <div class="flex justify-between items-center p-3 ${i === 0 ? 'bg-amber-50 border border-amber-100' : 'bg-slate-50'} rounded-2xl">
                             <div class="flex items-center gap-3">
-                                <span class="w-8 h-8 rounded-full bg-brand-100 text-brand-600 font-black flex items-center justify-center text-xs">#${i + 1}</span>
+                                <span class="w-8 h-8 rounded-full ${i === 0 ? 'bg-amber-400 text-white' : 'bg-brand-100 text-brand-600'} font-black flex items-center justify-center text-xs">${i === 0 ? '🔥' : '#' + (i + 1)}</span>
                                 <span class="font-bold text-sm text-slate-800">${c[0]}</span>
+                                ${i === 0 ? '<span class="text-[9px] font-black text-amber-600 bg-amber-100 px-2 py-0.5 rounded-full uppercase tracking-widest">Mais Pedido</span>' : ''}
                             </div>
                             <span class="text-xs font-black text-slate-400 bg-white px-3 py-1.5 rounded-full border border-slate-100 shadow-sm">${c[1]} un</span>
                         </div>
@@ -1654,6 +1737,73 @@
             };
             await updateDoc(doc(db, 'loja', 'config'), data);
             toast("Configurações Globais Salvas!");
+        };
+
+        // --- TOGGLE FIDELIDADE ---
+        function updateFidelidadeToggle(isActive) {
+            const btn = document.getElementById('btn-toggle-fidelidade');
+            const label = document.getElementById('btn-fid-label');
+            if (!btn || !label) return;
+            if (isActive) {
+                label.innerText = 'Desativar';
+                btn.className = 'flex items-center gap-3 px-5 py-3 rounded-2xl border-2 border-red-200 text-red-500 font-black text-sm transition-all active:scale-95 hover:bg-red-50';
+            } else {
+                label.innerText = 'Ativar Club Prime';
+                btn.className = 'flex items-center gap-3 px-5 py-3 rounded-2xl border-2 border-green-200 text-green-600 font-black text-sm transition-all active:scale-95 hover:bg-green-50';
+            }
+        }
+
+        window.toggleFidelidade = async () => {
+            const isActive = state.config?.fidelidadeAtiva !== false; // true by default
+            const next = !isActive;
+            try {
+                await updateDoc(doc(db, 'loja', 'config'), { fidelidadeAtiva: next });
+                toast(next ? 'Club Prime ATIVADO!' : 'Club Prime DESATIVADO!');
+            } catch (e) {
+                toast('Erro ao alternar fidelidade', 'error');
+            }
+        };
+
+        // --- PONTUAÇÃO POR PRODUTO ---
+        function renderPontosConfig() {
+            const container = document.getElementById('pontos-produtos-list');
+            if (!container) return;
+            const products = state.products || [];
+            if (products.length === 0) {
+                container.innerHTML = '<p class="text-xs text-slate-400 italic col-span-2">Nenhum produto cadastrado ainda.</p>';
+                return;
+            }
+            container.innerHTML = products.map(p => `
+                <div class="flex items-center gap-4 p-4 bg-slate-50 rounded-2xl border border-slate-100">
+                    <div class="flex-1 min-w-0">
+                        <p class="font-bold text-slate-800 text-sm truncate">${p.name}</p>
+                        <p class="text-[10px] text-slate-400 font-medium">R$ ${(p.price||0).toFixed(2).replace('.', ',')}</p>
+                    </div>
+                    <div class="flex items-center gap-2 shrink-0">
+                        <label class="text-[10px] font-black text-violet-500 uppercase">pts</label>
+                        <input type="number" min="0" value="${state.pontosConfig[p.name] || 0}"
+                            id="pts-prod-${p.docId}"
+                            class="w-16 p-2 text-center bg-white rounded-xl border-2 border-violet-100 focus:border-violet-400 font-black text-base outline-none">
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        window.savePontosConfig = async () => {
+            const products = state.products || [];
+            const newConfig = {};
+            products.forEach(p => {
+                const el = document.getElementById('pts-prod-' + p.docId);
+                if (el) newConfig[p.name] = parseInt(el.value) || 0;
+            });
+            const meta = parseInt(document.getElementById('pontos-meta').value) || 10;
+            try {
+                await updateDoc(doc(db, 'loja', 'config'), { pontosConfig: newConfig, pontosMeta: meta });
+                state.pontosConfig = newConfig;
+                toast('Pontuação Salva!');
+            } catch (e) {
+                toast('Erro ao salvar pontuação', 'error');
+            }
         };
 
         // --- FIDELIDADE LOGIC (MANUAL) ---
