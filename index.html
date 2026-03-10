@@ -340,7 +340,7 @@
     <main class="px-5 pt-6 w-full max-w-lg space-y-6 flex-1">
 
       <!-- Banner de Destaque -->
-      <div class="relative w-full rounded-[2rem] overflow-hidden shadow-xl shadow-blue-900/20">
+      <div class="relative w-full rounded-[2rem] overflow-hidden shadow-xl shadow-blue-900/20 mb-6">
         <div class="absolute inset-0 bg-gradient-to-r from-brand-900 to-brand-600"></div>
         <div class="absolute inset-0 opacity-20"
           style="background-image: radial-gradient(circle at 2px 2px, white 1px, transparent 0); background-size: 20px 20px;">
@@ -364,8 +364,21 @@
             </div>
           </div>
         </div>
-        <i data-lucide="cup-soda"
-          class="absolute -bottom-4 -right-4 w-40 h-40 text-white opacity-5 rotate-12 pointer-events-none"></i>
+        <i data-lucide="cup-soda" class="absolute -bottom-4 -right-4 w-40 h-40 text-white opacity-5 rotate-12 pointer-events-none"></i>
+      </div>
+
+      <!-- Banner de Pontos (Fidelidade) -->
+      <div id="loyalty-announcement" class="hidden relative w-full mb-6 rounded-[2rem] overflow-hidden shadow-xl shadow-violet-900/10 bg-gradient-to-r from-violet-600 to-indigo-600 p-5 animate-slide-up group">
+        <div class="absolute inset-0 opacity-20" style="background-image: radial-gradient(circle at 2px 2px, white 1px, transparent 0); background-size: 20px 20px;"></div>
+        <div class="relative z-10 flex items-center gap-4">
+          <div class="w-12 h-12 bg-white/20 rounded-2xl flex items-center justify-center shrink-0 backdrop-blur-md shadow-sm group-hover:scale-105 transition-transform">
+            <i data-lucide="gift" class="w-6 h-6 text-white"></i>
+          </div>
+          <div>
+            <h3 class="font-display font-black text-white text-lg leading-tight mb-1">Clube de Vantagens</h3>
+            <p id="loyalty-announcement-text" class="text-violet-100 text-[11px] font-medium leading-snug">Junte os pontos e troque por produtos da loja. 30 pontos é igual a R$ 15,00!!</p>
+          </div>
+        </div>
       </div>
 
       <!-- Filtro de Categorias -->
@@ -739,11 +752,22 @@
             state.config = { ...state.config, ...data };
             state.pontosConfig = data.pontosConfig || {};
             state.pontosMeta = data.pontosMeta || 10;
+            state.pontosValorReais = data.pontosValorReais || 0.50;
             state.fidelidadeAtiva = data.fidelidadeAtiva !== false;
             state.maisVendido = data.maisVendido || null;
             if (!state.fidelidadeAtiva) {
               const card = document.getElementById('loyalty-card');
               if (card) card.classList.add('hidden');
+              const banner = document.getElementById('loyalty-announcement');
+              if (banner) banner.classList.add('hidden');
+            } else {
+              const banner = document.getElementById('loyalty-announcement');
+              if (banner) {
+                banner.classList.remove('hidden');
+                // Calcula exemplo de 30 pontos
+                const exemploR$ = (30 * state.pontosValorReais).toFixed(2).replace('.', ',');
+                document.getElementById('loyalty-announcement-text').innerText = `Junte os pontos e troque por produtos da loja. 30 pontos é igual a R$ ${exemploR$}!!`;
+              }
             }
             if (!state.config.accompaniments) state.config.accompaniments = { frutas: [], adicionais: [], coberturas: [] };
             if (data.accompaniments) {
@@ -1532,7 +1556,7 @@
           else { pontosGanhosAcai += pts; }
       });
       if (pontosGanhos > 0) {
-          msg += `\n⭐ *+${pontosGanhosSorvete > 0 ? pontosGanhosSorvete + ' pts Sorvete' : ''}${pontosGanhosAcai > 0 && pontosGanhosSorvete > 0 ? ' | ' : ''}${pontosGanhosAcai > 0 ? pontosGanhosAcai + ' pts Açaí' : ''} Club Prime!*\n`;
+          msg += `\n⭐ *+${pontosGanhosSorvete > 0 ? pontosGanhosSorvete.toString().replace('.', ',') + ' pts Sorvete' : ''}${pontosGanhosAcai > 0 && pontosGanhosSorvete > 0 ? ' | ' : ''}${pontosGanhosAcai > 0 ? pontosGanhosAcai.toString().replace('.', ',') + ' pts Açaí' : ''} Club Prime!*\n`;
       }
 
       msg += `\n💰 * TOTAL FINAL: ${totalFinal}* `;

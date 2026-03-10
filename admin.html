@@ -588,12 +588,16 @@
                     <p class="text-xs text-slate-400 italic col-span-2">Carregando produtos...</p>
                 </div>
 
-                <div class="flex items-center gap-4 pt-4 border-t border-slate-100">
-                    <div class="flex-1">
+                <div class="flex flex-col md:flex-row gap-4 pt-4 border-t border-slate-100">
+                    <div class="flex-[2]">
                         <label class="text-[10px] font-black uppercase tracking-widest text-slate-400 block mb-2 ml-2">Meta de Pontos (para ganhar prêmio)</label>
                         <input type="number" id="pontos-meta" min="1" value="10" class="w-full p-4 bg-slate-50 rounded-2xl border-2 border-transparent focus:border-violet-500 font-black text-lg outline-none" placeholder="Ex: 10">
                     </div>
-                    <div class="flex items-end">
+                    <div class="flex-[3]">
+                        <label class="text-[10px] font-black uppercase tracking-widest text-slate-400 block mb-2 ml-2">Valor em Reais por Ponto (Ex: 0.50)</label>
+                        <input type="number" id="pontos-valor-reais" min="0" step="0.05" value="0.50" class="w-full p-4 bg-slate-50 rounded-2xl border-2 border-transparent focus:border-violet-500 font-black text-lg outline-none" placeholder="Ex: 0.50">
+                    </div>
+                    <div class="flex items-end shrink-0">
                         <button onclick="savePontosConfig()" class="h-[56px] px-6 bg-violet-600 text-white rounded-2xl font-black text-sm shadow-xl shadow-violet-500/20 active:scale-95 transition-all">SALVAR</button>
                     </div>
                 </div>
@@ -997,6 +1001,8 @@
                     state.pontosConfig = snap.data().pontosConfig || {};
                     const metaEl = document.getElementById('pontos-meta');
                     if (metaEl) metaEl.value = snap.data().pontosMeta || 10;
+                    const valReaisEl = document.getElementById('pontos-valor-reais');
+                    if (valReaisEl) valReaisEl.value = snap.data().pontosValorReais || 0.50;
                     updateFidelidadeToggle(snap.data().fidelidadeAtiva !== false);
                     renderAll();
                 }
@@ -1832,9 +1838,9 @@
                     </div>
                     <div class="flex items-center gap-2 shrink-0">
                         <label class="text-[10px] font-black text-violet-500 uppercase">pts</label>
-                        <input type="number" min="0" value="${state.pontosConfig[p.name] || 0}"
+                        <input type="number" min="0" step="0.01" value="${state.pontosConfig[p.name] || 0}"
                             id="pts-prod-${p.docId}"
-                            class="w-16 p-2 text-center bg-white rounded-xl border-2 border-violet-100 focus:border-violet-400 font-black text-base outline-none">
+                            class="w-20 p-2 text-center bg-white rounded-xl border-2 border-violet-100 focus:border-violet-400 font-black text-base outline-none">
                     </div>
                 </div>
             `).join('');
@@ -1845,11 +1851,12 @@
             const newConfig = {};
             products.forEach(p => {
                 const el = document.getElementById('pts-prod-' + p.docId);
-                if (el) newConfig[p.name] = parseInt(el.value) || 0;
+                if (el) newConfig[p.name] = parseFloat(el.value) || 0;
             });
             const meta = parseInt(document.getElementById('pontos-meta').value) || 10;
+            const valorReais = parseFloat(document.getElementById('pontos-valor-reais').value) || 0;
             try {
-                await updateDoc(doc(db, 'loja', 'config'), { pontosConfig: newConfig, pontosMeta: meta });
+                await updateDoc(doc(db, 'loja', 'config'), { pontosConfig: newConfig, pontosMeta: meta, pontosValorReais: valorReais });
                 state.pontosConfig = newConfig;
                 toast('Pontuação Salva!');
             } catch (e) {
