@@ -624,13 +624,21 @@
 
                         <div id="fid-result" class="hidden mt-6 p-6 bg-slate-50 rounded-3xl border border-slate-100">
                             <h4 class="text-xs font-black text-slate-400 uppercase tracking-widest mb-4">Resultado do Cliente</h4>
-                            <div class="flex flex-col items-center justify-center py-6">
-                                <p id="fid-user-phone" class="font-display font-black text-xl text-slate-900 mb-1"></p>
-                                <p class="text-3xl font-black text-indigo-600 mb-8"><span id="fid-user-points">0</span> <span class="text-sm text-indigo-400">PONTOS</span></p>
-                                <div class="flex gap-4 w-full">
-                                    <button onclick="updateFidelidade(-1)" class="flex-1 p-4 bg-white text-slate-600 rounded-2xl border border-slate-200 font-black flex justify-center hover:bg-slate-100 active:scale-95"><i data-lucide="minus"></i></button>
-                                    <button onclick="updateFidelidade(1)" class="flex-[3] p-4 bg-indigo-600 text-white rounded-2xl shadow-xl shadow-indigo-500/20 font-black flex items-center justify-center gap-2 hover:bg-indigo-700 active:scale-95"><i data-lucide="plus"></i> ADICIONAR PONTO</button>
-                                </div>
+                            <div class="flex flex-col items-center justify-center py-4 gap-1">
+                                <p id="fid-user-phone" class="font-display font-black text-xl text-slate-900 mb-3"></p>
+                                <p id="fid-user-points" class="text-sm font-black text-indigo-600 mb-5"></p>
+                            </div>
+                            <!-- Açaí controls -->
+                            <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 mb-2">🫐 Açaí</p>
+                            <div class="flex gap-3 mb-4">
+                                <button onclick="updateFidelidade(-1, 'acai')" class="flex-1 p-3 bg-white text-slate-600 rounded-2xl border border-slate-200 font-black flex justify-center hover:bg-slate-100 active:scale-95"><i data-lucide="minus"></i></button>
+                                <button onclick="updateFidelidade(1, 'acai')" class="flex-[3] p-3 bg-brand-600 text-white rounded-2xl shadow-xl shadow-brand-500/20 font-black flex items-center justify-center gap-2 hover:bg-brand-700 active:scale-95"><i data-lucide="plus"></i> +1 PT AÇAÍ</button>
+                            </div>
+                            <!-- Sorvete controls -->
+                            <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 mb-2">🍦 Sorvete</p>
+                            <div class="flex gap-3">
+                                <button onclick="updateFidelidade(-1, 'sorvete')" class="flex-1 p-3 bg-white text-slate-600 rounded-2xl border border-slate-200 font-black flex justify-center hover:bg-slate-100 active:scale-95"><i data-lucide="minus"></i></button>
+                                <button onclick="updateFidelidade(1, 'sorvete')" class="flex-[3] p-3 bg-indigo-600 text-white rounded-2xl shadow-xl shadow-indigo-500/20 font-black flex items-center justify-center gap-2 hover:bg-indigo-700 active:scale-95"><i data-lucide="plus"></i> +1 PT SORVETE</button>
                             </div>
                         </div>
                     </div>
@@ -784,6 +792,15 @@
                             class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-2">Descrição</label>
                         <input type="text" id="prod-desc"
                             class="w-full p-4 bg-slate-50 rounded-2xl border-2 border-transparent focus:border-brand-500 font-bold outline-none">
+                    </div>
+                </div>
+                <!-- ESTOQUE -->
+                <div class="space-y-2">
+                    <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-2">📦 Quantidade em Estoque</label>
+                    <div class="flex items-center gap-3">
+                        <input type="number" id="prod-estoque" min="0" placeholder="Ex: 10"
+                            class="flex-1 p-4 bg-slate-50 rounded-2xl border-2 border-transparent focus:border-brand-500 font-bold outline-none">
+                        <span class="text-xs text-slate-400 font-bold">unidades<br><span class="font-normal">(vazio = ilimitado)</span></span>
                     </div>
                 </div>
                 <!-- NOVOS CAMPOS CATEGORIA E COBERTURAS -->
@@ -1231,8 +1248,12 @@
                 await deleteDoc(doc(db, 'pedidos', id));
                 toast('Pedido removido!');
             } catch (e) {
-                console.error('Erro ao deletar:', e);
-                toast('Erro ao remover pedido', 'error');
+                console.error('Erro ao deletar pedido:', e);
+                if (e.code === 'permission-denied') {
+                    toast('Sem permissão: configure as regras do Firestore para allow delete.', 'error');
+                } else {
+                    toast('Erro: ' + e.message, 'error');
+                }
             }
         };
 
@@ -1259,6 +1280,14 @@
                              <div class="flex justify-between text-xs"><span class="text-slate-400 font-medium">Limite Compl.</span><span class="font-black text-slate-800">${s.limits.adicional}</span></div>
                              <div class="flex justify-between text-xs"><span class="text-slate-400 font-medium">Limite Cremes</span><span class="font-black text-brand-500">${s.limits.cobertura}</span></div>
                              <div class="flex justify-between text-xs"><span class="text-slate-400 font-medium">Limite Cobert.</span><span class="font-black text-indigo-500">${s.limits.cobertura_real || 0}</span></div>
+                             <div class="flex justify-between items-center text-xs mt-2 pt-2 border-t border-slate-50">
+                                 <span class="text-slate-400 font-medium">📦 Estoque</span>
+                                 <div class="flex items-center gap-2">
+                                     <button onclick="adjustStock('${s.docId}', ${JSON.stringify(s.estoque ?? null)}, -1)" class="w-6 h-6 rounded-lg bg-red-50 text-red-500 font-black text-sm flex items-center justify-center hover:bg-red-500 hover:text-white transition-all">−</button>
+                                     <span class="font-black ${s.estoque === 0 ? 'text-red-500' : s.estoque !== null && s.estoque !== undefined && s.estoque <= 3 ? 'text-orange-500' : 'text-slate-800'} min-w-[40px] text-center">${s.estoque !== null && s.estoque !== undefined ? s.estoque + ' un' : '∞'}</span>
+                                     <button onclick="adjustStock('${s.docId}', ${JSON.stringify(s.estoque ?? null)}, 1)" class="w-6 h-6 rounded-lg bg-green-50 text-green-600 font-black text-sm flex items-center justify-center hover:bg-green-500 hover:text-white transition-all">+</button>
+                                 </div>
+                             </div>
                         </div>
                     </div>
                     <div class="flex gap-3 pt-4 border-t border-slate-50">
@@ -1418,6 +1447,8 @@
 
                 document.getElementById('prod-category').value = s.category || 'acai';
                 document.getElementById('prod-allow-cob').checked = s.allowCob || false;
+                const est = s.estoque;
+                document.getElementById('prod-estoque').value = (est !== null && est !== undefined) ? est : '';
                 if (s.image) {
                     document.getElementById('prod-image-preview-img').src = s.image;
                     document.getElementById('prod-image-preview-img').classList.remove('hidden');
@@ -1485,6 +1516,9 @@
                 const category = document.getElementById('prod-category').value;
                 const allowCob = document.getElementById('prod-allow-cob').checked;
 
+                const estoqueVal = document.getElementById('prod-estoque').value;
+                const estoque = estoqueVal !== '' ? parseInt(estoqueVal) : null;
+
                 const product = {
                     name: name,
                     price: price,
@@ -1493,6 +1527,7 @@
                     available: true,
                     category: category,
                     allowCob: allowCob,
+                    estoque: estoque,
                     limits: { fruta, adicional, cobertura, cobertura_real }
                 };
 
@@ -1518,6 +1553,22 @@
             if (!confirm('Deseja apagar este produto permanentemente?')) return;
             await deleteDoc(doc(db, 'produtos', docId));
             toast('Produto removido!');
+        };
+
+        window.adjustStock = async (docId, current, delta) => {
+            let newStock;
+            if (current === null || current === undefined) {
+                // Era ilimitado: se clicar '-', começa a rastrear
+                newStock = delta > 0 ? null : 0;
+            } else {
+                newStock = Math.max(0, current + delta);
+            }
+            try {
+                await updateDoc(doc(db, 'produtos', docId), { estoque: newStock });
+                toast(newStock === null ? 'Estoque: Ilimitado' : `Estoque: ${newStock} unidades`);
+            } catch (e) {
+                toast('Erro ao ajustar estoque', 'error');
+            }
         };
 
         window.addItemToCategory = async (cat) => {
@@ -1814,14 +1865,16 @@
              try {
                  const docRef = doc(db, 'clientes_fidelidade', input);
                  const snap = await getDoc(docRef);
-                 let pts = 0;
+                 let ptAcai = 0, ptSorvete = 0;
                  if (snap.exists()) {
-                     pts = snap.data().pontos || 0;
+                     const d = snap.data();
+                     ptAcai = d.pontos_acai ?? d.pontos ?? 0;
+                     ptSorvete = d.pontos_sorvete ?? 0;
                  }
                  
                  currentFidPhone = input;
                  document.getElementById('fid-user-phone').innerText = `Cliente: ${input}`;
-                 document.getElementById('fid-user-points').innerText = pts;
+                 document.getElementById('fid-user-points').innerText = `🫐 ${ptAcai} pts Açaí  |  🍦 ${ptSorvete} pts Sorvete`;
                  document.getElementById('fid-result').classList.remove('hidden');
              } catch (e) {
                  toast('Erro na busca', 'error');
@@ -1834,21 +1887,25 @@
             e.target.value = !x[2] ? x[1] : '(' + x[1] + ') ' + x[2] + (x[3] ? '-' + x[3] : '');
         });
 
-        window.updateFidelidade = async (delta) => {
+        window.updateFidelidade = async (delta, cat = 'acai') => {
              if (!currentFidPhone) return;
              try {
                   const docRef = doc(db, 'clientes_fidelidade', currentFidPhone);
                   const snap = await getDoc(docRef);
-                  let current = 0;
-                  if (snap.exists()) { current = snap.data().pontos || 0; }
+                  const d = snap.exists() ? snap.data() : {};
+                  const field = cat === 'sorvete' ? 'pontos_sorvete' : 'pontos_acai';
+                  const ptAcai = d.pontos_acai ?? d.pontos ?? 0;
+                  const ptSorvete = d.pontos_sorvete ?? 0;
                   
-                  let next = current + delta;
-                  if (next < 0) next = 0;
+                  let current = cat === 'sorvete' ? ptSorvete : ptAcai;
+                  let next = Math.max(0, current + delta);
                   
-                  await setDoc(docRef, { telefone: currentFidPhone, pontos: next, lastUpdate: new Date().toISOString() }, { merge: true });
+                  await setDoc(docRef, { telefone: currentFidPhone, [field]: next, lastUpdate: new Date().toISOString() }, { merge: true });
                   
-                  document.getElementById('fid-user-points').innerText = next;
-                  toast(delta > 0 ? '+1 Ponto Adicionado!' : 'Ponto Removido');
+                  const newAcai = cat === 'acai' ? next : ptAcai;
+                  const newSorv = cat === 'sorvete' ? next : ptSorvete;
+                  document.getElementById('fid-user-points').innerText = `🫐 ${newAcai} pts Açaí  |  🍦 ${newSorv} pts Sorvete`;
+                  toast(delta > 0 ? `+1 Ponto ${cat === 'sorvete' ? 'Sorvete' : 'Açaí'} Adicionado!` : 'Ponto Removido');
              } catch (e) {
                   toast('Erro ao atualizar', 'error');
              }
