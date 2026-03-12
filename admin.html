@@ -397,6 +397,37 @@
                 <h2 class="font-display font-black text-4xl text-slate-900 tracking-tight">Histórico</h2>
                 <p class="text-slate-400 font-medium">Relatório completo de vendas</p>
             </header>
+            <div class="bg-white p-6 lg:p-8 rounded-[2.5rem] border border-slate-100 shadow-sm space-y-6">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div>
+                        <label class="text-[10px] font-black uppercase tracking-widest text-slate-400 block mb-2 ml-2">Buscar Cliente</label>
+                        <div class="relative">
+                            <i data-lucide="search" class="w-4 h-4 absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                            <input type="text" id="filter-name" oninput="renderPedidos()" placeholder="Nome do cliente..." 
+                                class="w-full pl-11 pr-4 py-3 bg-slate-50 border-2 border-transparent focus:border-brand-500 rounded-xl outline-none font-bold text-sm">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="text-[10px] font-black uppercase tracking-widest text-slate-400 block mb-2 ml-2">Data do Pedido</label>
+                        <div class="relative">
+                            <i data-lucide="calendar" class="w-4 h-4 absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                            <input type="date" id="filter-date" onchange="renderPedidos()" 
+                                class="w-full pl-11 pr-4 py-3 bg-slate-50 border-2 border-transparent focus:border-brand-500 rounded-xl outline-none font-bold text-sm">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="text-[10px] font-black uppercase tracking-widest text-slate-400 block mb-2 ml-2">Pagamento</label>
+                        <select id="filter-payment" onchange="renderPedidos()" 
+                            class="w-full px-4 py-3 bg-slate-50 border-2 border-transparent focus:border-brand-500 rounded-xl outline-none font-bold text-sm appearance-none">
+                            <option value="">Todos os Métodos</option>
+                            <option value="Pix">Pix</option>
+                            <option value="Cartão">Cartão</option>
+                            <option value="Dinheiro">Dinheiro</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
             <div class="bg-white rounded-[2.5rem] border border-slate-100 shadow-sm overflow-hidden">
                 <div id="all-orders-list" class="divide-y divide-slate-50"></div>
             </div>
@@ -1039,8 +1070,18 @@
                 renderCupons();
             });
 
-            const qOrders = query(collection(db, 'pedidos'), orderBy('data', 'desc'), limit(100));
-            onSnapshot(qOrders, (snap) => { state.pedidos = snap.docs.map(d => ({ id: d.id, ...d.data() })); renderPedidos(); renderStats(); });
+            const qOrders = query(collection(db, 'pedidos'));
+            onSnapshot(qOrders, (snap) => { 
+                state.pedidos = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+                // Ordenar localmente se possível, ou apenas renderizar para teste
+                state.pedidos.sort((a, b) => {
+                    const da = a.data ? new Date(a.data) : 0;
+                    const dbVal = b.data ? new Date(b.data) : 0;
+                    return dbVal - da;
+                });
+                renderPedidos(); 
+                renderStats(); 
+            });
         }
 
         function updateStatusBadge(mode) {
@@ -1178,7 +1219,20 @@
         function renderPedidos() {
             const listAll = document.getElementById('all-orders-list');
             const listRecent = document.getElementById('recent-orders-list');
-            const html = state.pedidos.length === 0 ? '<div class="p-20 text-center text-slate-300 font-bold uppercase tracking-widest text-[10px]">Aguardando primeiro pedido...</div>' : state.pedidos.map((p, idx) => `
+            
+            // Flltros
+            const filterName = document.getElementById('filter-name')?.value.toLowerCase() || '';
+            const filterDate = document.getElementById('filter-date')?.value || '';
+            const filterPayment = document.getElementById('filter-payment')?.value || '';
+
+            const filteredOrders = state.pedidos.filter(p => {
+                const matchName = p.cliente.toLowerCase().includes(filterName);
+                const matchDate = filterDate ? new Date(p.data).toISOString().split('T')[0] === filterDate : true;
+                const matchPayment = filterPayment ? p.pagamento === filterPayment : true;
+                return matchName && matchDate && matchPayment;
+            });
+
+            const html = filteredOrders.length === 0 ? '<div class="p-20 text-center text-slate-300 font-bold uppercase tracking-widest text-[10px]">Nenhum pedido encontrado com esses filtros...</div>' : filteredOrders.map((p, idx) => `
                 <div class="p-8 flex flex-col md:flex-row md:items-center justify-between gap-6 hover:bg-slate-50 transition-all group">
                     <div class="flex items-start gap-5">
                          <div class="w-14 h-14 bg-slate-100 rounded-2xl flex items-center justify-center text-slate-400 group-hover:bg-brand-50 group-hover:text-brand-500 transition-colors">
@@ -1203,19 +1257,25 @@
                     </div>
                 </div>
             `).join('');
+            
             if (listAll) listAll.innerHTML = html;
-            if (listRecent) listRecent.innerHTML = state.pedidos.slice(0, 5).length === 0 ? html : state.pedidos.slice(0, 5).map(p => `
-                 <div class="p-8 flex items-center justify-between hover:bg-slate-50 transition-colors">
-                    <div class="flex items-center gap-4">
-                        <div class="w-2 h-10 bg-brand-500 rounded-full"></div>
-                        <div>
-                             <h5 class="font-bold text-slate-800">${p.cliente}</h5>
-                             <p class="text-[9px] text-slate-400 font-bold uppercase tracking-widest">${new Date(p.data).toLocaleTimeString('pt-BR')}</p>
+            
+            // Recent orders (sempre os 5 mais recentes de state.pedidos, sem filtro, para o Dashboard)
+            if (listRecent) {
+                const recentOrders = state.pedidos.slice(0, 5);
+                listRecent.innerHTML = recentOrders.length === 0 ? '<div class="p-10 text-center text-slate-300 font-bold uppercase tracking-widest text-[10px]">Sem pedidos recentes</div>' : recentOrders.map(p => `
+                     <div class="p-8 flex items-center justify-between hover:bg-slate-50 transition-colors">
+                        <div class="flex items-center gap-4">
+                            <div class="w-2 h-10 bg-brand-500 rounded-full"></div>
+                            <div>
+                                 <h5 class="font-bold text-slate-800">${p.cliente}</h5>
+                                 <p class="text-[9px] text-slate-400 font-bold uppercase tracking-widest">${new Date(p.data).toLocaleTimeString('pt-BR')}</p>
+                            </div>
                         </div>
-                    </div>
-                    <p class="font-display font-black text-slate-900">R$ ${p.total.toFixed(2).replace('.', ',')}</p>
-                 </div>
-            `).join('');
+                        <p class="font-display font-black text-slate-900">R$ ${p.total.toFixed(2).replace('.', ',')}</p>
+                     </div>
+                `).join('');
+            }
             lucide.createIcons();
         }
 
