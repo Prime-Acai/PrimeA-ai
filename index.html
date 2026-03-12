@@ -1509,7 +1509,7 @@
 
       const btn = document.getElementById('btn-checkout');
       const originalHtml = btn.innerHTML;
-      btn.innerHTML = 'Redirecionando...';
+      btn.innerHTML = 'Enviando Pedido...';
       btn.disabled = true;
 
       const method = document.getElementById('payment-method').value;
@@ -1522,7 +1522,7 @@
       let totalVal = subTotalVal - discountVal;
       if (totalVal < 0) totalVal = 0;
 
-      // Monta a mensagem do WhatsApp PRIMEIRO (prioridade)
+      // Monta a mensagem do WhatsApp
       let paymentStatusFull = method;
       if (method === 'Pix') paymentStatusFull += " (Confirmado no Site ✅)";
 
@@ -1544,7 +1544,6 @@
           msg += `\n🎟️ * Cupom Aplicado:* ${state.appliedCupom.codigo} (- R$ ${state.appliedCupom.valor.toFixed(2).replace('.', ',')})\n`;
       }
       
-      // Calcular pontos ganhos POR CATEGORIA
       let pontosGanhos = 0;
       let pontosGanhosAcai = 0;
       let pontosGanhosSorvete = 0;
@@ -1564,64 +1563,62 @@
 
       msg += `\n💰 * TOTAL FINAL: ${totalFinal}* `;
 
-      // ✅ ABRE O WHATSAPP IMEDIATAMENTE (antes de qualquer async)
+      // Snapshot do carrinho
+      const cartSnapshot = [...state.cart];
+
+      // Salva no Firebase AGUARDANDO a confirmação
+      try {
+        await Promise.race([firebaseReady, new Promise((_, r) => setTimeout(() => r(new Error("Timeout")), 8000))]);
+        if (db && firebaseConnected) {
+          await db.collection('pedidos').add({
+            cliente: name,
+            telefone: phone,
+            pagamento: method,
+            total: totalVal,
+            cupomInfo: state.appliedCupom ? state.appliedCupom : null,
+            pontosGanhos: pontosGanhos,
+            itens: cartSnapshot,
+            obsGeral: obsGeneral,
+            data: new Date().toISOString(),
+            status: 'novo',
+            delivery: "Retirada",
+            isVIP: state.userOrderCount >= (state.pontosMeta || 10)
+          });
+          
+          if (pontosGanhos > 0) {
+            const phoneKey = phone.replace(/\D/g, '');
+            const fidRef = db.collection('clientes_fidelidade').doc(phoneKey);
+            const fidSnap = await fidRef.get();
+            const existingData = fidSnap.exists ? fidSnap.data() : {};
+            const ptAcaiAtual = existingData.pontos_acai ?? existingData.pontos ?? 0;
+            const ptSorveteAtual = existingData.pontos_sorvete ?? 0;
+            await fidRef.set({
+              telefone: phoneKey,
+              pontos_acai: ptAcaiAtual + pontosGanhosAcai,
+              pontos_sorvete: ptSorveteAtual + pontosGanhosSorvete,
+              lastUpdate: new Date().toISOString()
+            }, { merge: true });
+          }
+          console.log("✅ Pedido salvo no Firebase!");
+        }
+      } catch (e) {
+        console.error("Erro Firebase:", e);
+        window.toast("Aviso: Falha ao registrar no sistema, mas o pedido será enviado por WhatsApp.", "warning");
+      }
+
+      // Abre o WhatsApp
       const phoneNum = state.config.phone ? state.config.phone.replace(/\D/g, '') : "5579996040320";
       const waUrl = `https://api.whatsapp.com/send?phone=${phoneNum}&text=${encodeURIComponent(msg)}`;
       window.open(waUrl, '_blank');
 
-      // Salva snapshot do carrinho antes de limpar
-      const cartSnapshot = [...state.cart];
-
       // Limpa o carrinho
       state.cart = [];
       saveCart();
-      btn.disabled = false;
-      btn.innerHTML = originalHtml;
+      
+      btn.innerHTML = 'Pedido Enviado! ✅';
       window.toast("Pedido enviado! ✅");
 
-      // Salva no Firebase em background (não bloqueia o WhatsApp)
-      (async () => {
-        try {
-          await Promise.race([firebaseReady, new Promise(r => setTimeout(r, 5000))]);
-          if (db && firebaseConnected) {
-            await db.collection('pedidos').add({
-              cliente: name,
-              telefone: phone,
-              pagamento: method,
-              total: totalVal,
-              cupomInfo: state.appliedCupom ? state.appliedCupom : null,
-              pontosGanhos: pontosGanhos,
-              itens: cartSnapshot,
-              obsGeral: obsGeneral,
-              data: new Date().toISOString(),
-              status: 'novo',
-              delivery: "Retirada",
-              isVIP: state.userOrderCount >= (state.pontosMeta || 10)
-            });
-            // Acumular pontos POR CATEGORIA
-            if (pontosGanhos > 0) {
-              const phoneKey = phone.replace(/\D/g, '');
-              const fidRef = db.collection('clientes_fidelidade').doc(phoneKey);
-              const fidSnap = await fidRef.get();
-              const existingData = fidSnap.exists ? fidSnap.data() : {};
-              // Suporte ao formato antigo
-              const ptAcaiAtual = existingData.pontos_acai ?? existingData.pontos ?? 0;
-              const ptSorveteAtual = existingData.pontos_sorvete ?? 0;
-              await fidRef.set({
-                telefone: phoneKey,
-                pontos_acai: ptAcaiAtual + pontosGanhosAcai,
-                pontos_sorvete: ptSorveteAtual + pontosGanhosSorvete,
-                lastUpdate: new Date().toISOString()
-              }, { merge: true });
-            }
-            console.log("✅ Pedido salvo no Firebase!");
-          }
-        } catch (e) {
-          console.error("Erro Firebase (background):", e);
-        }
-      })();
-
-      setTimeout(() => window.location.reload(), 3000);
+      setTimeout(() => window.location.reload(), 2000);
     };
 
     function saveCart() { localStorage.setItem('acai_cart_simple_v2', JSON.stringify(state.cart)); }
