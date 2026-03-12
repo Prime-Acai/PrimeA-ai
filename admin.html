@@ -632,17 +632,28 @@
                                 <p id="fid-user-phone" class="font-display font-black text-xl text-slate-900 mb-3"></p>
                                 <p id="fid-user-points" class="text-sm font-black text-indigo-600 mb-5"></p>
                             </div>
+
+                            <div class="mb-6 p-4 bg-white rounded-2xl border border-slate-100 shadow-sm">
+                                <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-2 ml-1">Valor a Adicionar/Remover</label>
+                                <div class="relative">
+                                    <input type="text" id="fid-custom-points" placeholder="Ex: 0,25 ou 1" value="1" 
+                                        class="w-full p-4 bg-slate-50 rounded-xl border-2 border-transparent focus:border-indigo-500 font-black text-lg outline-none text-center"
+                                        oninput="this.value = this.value.replace(/[^0-9,.]/g, '').replace('.', ',')">
+                                    <div class="absolute right-4 top-1/2 -translate-y-1/2 text-[10px] font-black text-slate-300 uppercase">PTS</div>
+                                </div>
+                            </div>
+
                             <!-- Açaí controls -->
                             <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 mb-2">🫐 Açaí</p>
                             <div class="flex gap-3 mb-4">
                                 <button onclick="updateFidelidade(-1, 'acai')" class="flex-1 p-3 bg-white text-slate-600 rounded-2xl border border-slate-200 font-black flex justify-center hover:bg-slate-100 active:scale-95"><i data-lucide="minus"></i></button>
-                                <button onclick="updateFidelidade(1, 'acai')" class="flex-[3] p-3 bg-brand-600 text-white rounded-2xl shadow-xl shadow-brand-500/20 font-black flex items-center justify-center gap-2 hover:bg-brand-700 active:scale-95"><i data-lucide="plus"></i> +1 PT AÇAÍ</button>
+                                <button onclick="updateFidelidade(1, 'acai')" class="flex-[3] p-3 bg-brand-600 text-white rounded-2xl shadow-xl shadow-brand-500/20 font-black flex items-center justify-center gap-2 hover:bg-brand-700 active:scale-95"><i data-lucide="plus"></i> <span class="pt-label-acai">PONTOS AÇAÍ</span></button>
                             </div>
                             <!-- Sorvete controls -->
                             <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 mb-2">🍦 Sorvete</p>
                             <div class="flex gap-3">
                                 <button onclick="updateFidelidade(-1, 'sorvete')" class="flex-1 p-3 bg-white text-slate-600 rounded-2xl border border-slate-200 font-black flex justify-center hover:bg-slate-100 active:scale-95"><i data-lucide="minus"></i></button>
-                                <button onclick="updateFidelidade(1, 'sorvete')" class="flex-[3] p-3 bg-indigo-600 text-white rounded-2xl shadow-xl shadow-indigo-500/20 font-black flex items-center justify-center gap-2 hover:bg-indigo-700 active:scale-95"><i data-lucide="plus"></i> +1 PT SORVETE</button>
+                                <button onclick="updateFidelidade(1, 'sorvete')" class="flex-[3] p-3 bg-indigo-600 text-white rounded-2xl shadow-xl shadow-indigo-500/20 font-black flex items-center justify-center gap-2 hover:bg-indigo-700 active:scale-95"><i data-lucide="plus"></i> <span class="pt-label-sorvete">PONTOS SORVETE</span></button>
                             </div>
                         </div>
                     </div>
@@ -1881,7 +1892,9 @@
                  
                  currentFidPhone = input;
                  document.getElementById('fid-user-phone').innerText = `Cliente: ${input}`;
-                 document.getElementById('fid-user-points').innerText = `🫐 ${ptAcai} pts Açaí  |  🍦 ${ptSorvete} pts Sorvete`;
+                 const acaiFinal = typeof ptAcai === 'number' ? ptAcai.toFixed(2).replace('.', ',').replace(',00', '') : ptAcai;
+                 const sorvFinal = typeof ptSorvete === 'number' ? ptSorvete.toFixed(2).replace('.', ',').replace(',00', '') : ptSorvete;
+                 document.getElementById('fid-user-points').innerText = `🫐 ${acaiFinal} pts Açaí  |  🍦 ${sorvFinal} pts Sorvete`;
                  document.getElementById('fid-result').classList.remove('hidden');
              } catch (e) {
                  toast('Erro na busca', 'error');
@@ -1904,15 +1917,20 @@
                   const ptAcai = d.pontos_acai ?? d.pontos ?? 0;
                   const ptSorvete = d.pontos_sorvete ?? 0;
                   
+                  const inputVal = document.getElementById('fid-custom-points').value.replace(',', '.');
+                  const valToUpdate = (parseFloat(inputVal) || 1) * delta;
+
                   let current = cat === 'sorvete' ? ptSorvete : ptAcai;
-                  let next = Math.max(0, current + delta);
+                  let next = Math.max(0, current + valToUpdate);
                   
                   await setDoc(docRef, { telefone: currentFidPhone, [field]: next, lastUpdate: new Date().toISOString() }, { merge: true });
                   
                   const newAcai = cat === 'acai' ? next : ptAcai;
                   const newSorv = cat === 'sorvete' ? next : ptSorvete;
-                  document.getElementById('fid-user-points').innerText = `🫐 ${newAcai} pts Açaí  |  🍦 ${newSorv} pts Sorvete`;
-                  toast(delta > 0 ? `+1 Ponto ${cat === 'sorvete' ? 'Sorvete' : 'Açaí'} Adicionado!` : 'Ponto Removido');
+                  const acaiFinal = typeof newAcai === 'number' ? newAcai.toFixed(2).replace('.', ',').replace(',00', '') : newAcai;
+                  const sorvFinal = typeof newSorv === 'number' ? newSorv.toFixed(2).replace('.', ',').replace(',00', '') : newSorv;
+                  document.getElementById('fid-user-points').innerText = `🫐 ${acaiFinal} pts Açaí  |  🍦 ${sorvFinal} pts Sorvete`;
+                  toast(valToUpdate > 0 ? `+${Math.abs(valToUpdate).toString().replace('.', ',')} Ponto ${cat === 'sorvete' ? 'Sorvete' : 'Açaí'} Adicionado!` : 'Ponto Removido');
              } catch (e) {
                   toast('Erro ao atualizar', 'error');
              }
