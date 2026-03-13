@@ -1294,14 +1294,18 @@
     };
 
     window.saveFormData = () => {
-      const data = {
-        name: document.getElementById('client-name')?.value,
-        phone: document.getElementById('client-phone')?.value,
-        payment: document.getElementById('payment-method')?.value,
-        deliveryType: "Retirada",
-        obs: document.getElementById('obs-input')?.value
-      };
-      localStorage.setItem('acai_form_data', JSON.stringify(data));
+      try {
+        const data = {
+          name: document.getElementById('client-name') ? document.getElementById('client-name').value : "",
+          phone: document.getElementById('client-phone') ? document.getElementById('client-phone').value : "",
+          payment: document.getElementById('payment-method') ? document.getElementById('payment-method').value : "",
+          deliveryType: "Retirada",
+          obs: document.getElementById('obs-input') ? document.getElementById('obs-input').value : ""
+        };
+        localStorage.setItem('acai_form_data', JSON.stringify(data));
+      } catch (e) {
+        console.warn("localStorage não disponível", e);
+      }
     };
 
     window.restoreFormData = () => {
@@ -1324,15 +1328,24 @@
       const btn = document.getElementById('btn-checkout');
       if (!btn) return;
       const isOpen = window.isStoreOpen();
-      const name = document.getElementById('client-name')?.value || "";
-      const phone = document.getElementById('client-phone')?.value || "";
-      const method = document.getElementById('payment-method')?.value || "";
+      const nameEl = document.getElementById('client-name');
+      const name = nameEl ? nameEl.value : "";
+      const phoneEl = document.getElementById('client-phone');
+      const phone = phoneEl ? phoneEl.value : "";
+      const methodEl = document.getElementById('payment-method');
+      const method = methodEl ? methodEl.value : "";
       let ok = isOpen && state.cart.length > 0 && name && phone.length > 10 && method && state.paymentVerified;
 
       btn.disabled = !ok;
-      if (!isOpen) { btn.querySelector("span") && (btn.querySelector("span").innerText = "Loja Fechada"); }
-      else if (state.cart.length === 0) { btn.querySelector("span") && (btn.querySelector("span").innerText = "Sacola Vazia"); }
-      else { btn.querySelector("span") && (btn.querySelector("span").innerText = "Finalizar no WhatsApp"); }
+      if (!isOpen) { 
+        if (btn.querySelector("span")) btn.querySelector("span").innerText = "Loja Fechada"; 
+      }
+      else if (state.cart.length === 0) { 
+        if (btn.querySelector("span")) btn.querySelector("span").innerText = "Sacola Vazia"; 
+      }
+      else { 
+        if (btn.querySelector("span")) btn.querySelector("span").innerText = "Finalizar no WhatsApp"; 
+      }
       window.refreshIcons();
     };
 
@@ -1418,8 +1431,8 @@
             if (docSnap.exists) {
                 const d = docSnap.data();
                 // Suporte ao formato antigo (migração)
-                ptAcai = d.pontos_acai ?? d.pontos ?? 0;
-                ptSorvete = d.pontos_sorvete ?? 0;
+                ptAcai = (d.pontos_acai !== undefined && d.pontos_acai !== null) ? d.pontos_acai : ((d.pontos !== undefined && d.pontos !== null) ? d.pontos : 0);
+                ptSorvete = (d.pontos_sorvete !== undefined && d.pontos_sorvete !== null) ? d.pontos_sorvete : 0;
             }
 
             const meta = state.pontosMeta || 10;
@@ -1590,8 +1603,8 @@
             const fidRef = db.collection('clientes_fidelidade').doc(phoneKey);
             const fidSnap = await fidRef.get();
             const existingData = fidSnap.exists ? fidSnap.data() : {};
-            const ptAcaiAtual = existingData.pontos_acai ?? existingData.pontos ?? 0;
-            const ptSorveteAtual = existingData.pontos_sorvete ?? 0;
+            const ptAcaiAtual = (existingData.pontos_acai !== undefined && existingData.pontos_acai !== null) ? existingData.pontos_acai : ((existingData.pontos !== undefined && existingData.pontos !== null) ? existingData.pontos : 0);
+            const ptSorveteAtual = (existingData.pontos_sorvete !== undefined && existingData.pontos_sorvete !== null) ? existingData.pontos_sorvete : 0;
             await fidRef.set({
               telefone: phoneKey,
               pontos_acai: ptAcaiAtual + pontosGanhosAcai,
@@ -1609,7 +1622,10 @@
       // Abre o WhatsApp
       const phoneNum = state.config.phone ? state.config.phone.replace(/\D/g, '') : "5579996040320";
       const waUrl = `https://api.whatsapp.com/send?phone=${phoneNum}&text=${encodeURIComponent(msg)}`;
-      window.open(waUrl, '_blank');
+      
+      // Safari compatibility: window.open is often blocked after an await.
+      // Using window.location.href as it's more reliable for redirects in checkout flows.
+      window.location.href = waUrl;
 
       // Limpa o carrinho
       state.cart = [];
@@ -1621,7 +1637,13 @@
       setTimeout(() => window.location.reload(), 2000);
     };
 
-    function saveCart() { localStorage.setItem('acai_cart_simple_v2', JSON.stringify(state.cart)); }
+    function saveCart() { 
+      try {
+        localStorage.setItem('acai_cart_simple_v2', JSON.stringify(state.cart)); 
+      } catch (e) {
+        console.warn("localStorage fail", e);
+      }
+    }
 
     window.init = async () => {
       const hideSplash = () => {
@@ -1641,7 +1663,8 @@
       window.updateUI();
       window.restoreFormData();
       // Check loyalty if restored phone exists
-      const restoredPhone = document.getElementById('client-phone')?.value;
+      const phoneElRestored = document.getElementById('client-phone');
+      const restoredPhone = phoneElRestored ? phoneElRestored.value : "";
       if (restoredPhone && restoredPhone.length >= 14) {
           window.checkUserFidelidade(restoredPhone);
       }

@@ -1174,7 +1174,7 @@
             // Salvar o produto mais vendido no Firebase para exibir no site
             if (topCopos.length > 0) {
                 const bestSeller = topCopos[0][0];
-                if (state.config?.maisVendido !== bestSeller) {
+                if (state.config && state.config.maisVendido !== bestSeller) {
                     updateDoc(doc(db, 'loja', 'config'), { maisVendido: bestSeller }).catch(() => {});
                 }
             }
@@ -1221,9 +1221,12 @@
             const listRecent = document.getElementById('recent-orders-list');
             
             // Flltros
-            const filterName = document.getElementById('filter-name')?.value.toLowerCase() || '';
-            const filterDate = document.getElementById('filter-date')?.value || '';
-            const filterPayment = document.getElementById('filter-payment')?.value || '';
+            const filterNameEl = document.getElementById('filter-name');
+            const filterName = filterNameEl ? filterNameEl.value.toLowerCase() : '';
+            const filterDateEl = document.getElementById('filter-date');
+            const filterDate = filterDateEl ? filterDateEl.value : '';
+            const filterPaymentEl = document.getElementById('filter-payment');
+            const filterPayment = filterPaymentEl ? filterPaymentEl.value : '';
 
             const filteredOrders = state.pedidos.filter(p => {
                 const matchName = p.cliente.toLowerCase().includes(filterName);
@@ -1360,9 +1363,9 @@
                              <div class="flex justify-between items-center text-xs mt-2 pt-2 border-t border-slate-50">
                                  <span class="text-slate-400 font-medium">📦 Estoque</span>
                                  <div class="flex items-center gap-2">
-                                     <button onclick="adjustStock('${s.docId}', ${JSON.stringify(s.estoque ?? null)}, -1)" class="w-6 h-6 rounded-lg bg-red-50 text-red-500 font-black text-sm flex items-center justify-center hover:bg-red-500 hover:text-white transition-all">−</button>
+                                     <button onclick="adjustStock('${s.docId}', ${JSON.stringify((s.estoque !== undefined && s.estoque !== null) ? s.estoque : null)}, -1)" class="w-6 h-6 rounded-lg bg-red-50 text-red-500 font-black text-sm flex items-center justify-center hover:bg-red-500 hover:text-white transition-all">−</button>
                                      <span class="font-black ${s.estoque === 0 ? 'text-red-500' : s.estoque !== null && s.estoque !== undefined && s.estoque <= 3 ? 'text-orange-500' : 'text-slate-800'} min-w-[40px] text-center">${s.estoque !== null && s.estoque !== undefined ? s.estoque + ' un' : '∞'}</span>
-                                     <button onclick="adjustStock('${s.docId}', ${JSON.stringify(s.estoque ?? null)}, 1)" class="w-6 h-6 rounded-lg bg-green-50 text-green-600 font-black text-sm flex items-center justify-center hover:bg-green-500 hover:text-white transition-all">+</button>
+                                     <button onclick="adjustStock('${s.docId}', ${JSON.stringify((s.estoque !== undefined && s.estoque !== null) ? s.estoque : null)}, 1)" class="w-6 h-6 rounded-lg bg-green-50 text-green-600 font-black text-sm flex items-center justify-center hover:bg-green-500 hover:text-white transition-all">+</button>
                                  </div>
                              </div>
                         </div>
@@ -1882,7 +1885,7 @@
         }
 
         window.toggleFidelidade = async () => {
-            const isActive = state.config?.fidelidadeAtiva !== false; // true by default
+            const isActive = (state.config && state.config.fidelidadeAtiva !== false); // true by default
             const next = !isActive;
             try {
                 await updateDoc(doc(db, 'loja', 'config'), { fidelidadeAtiva: next });
@@ -1946,8 +1949,8 @@
                  let ptAcai = 0, ptSorvete = 0;
                  if (snap.exists()) {
                      const d = snap.data();
-                     ptAcai = d.pontos_acai ?? d.pontos ?? 0;
-                     ptSorvete = d.pontos_sorvete ?? 0;
+                     ptAcai = (d.pontos_acai !== undefined && d.pontos_acai !== null) ? d.pontos_acai : ((d.pontos !== undefined && d.pontos !== null) ? d.pontos : 0);
+                     ptSorvete = (d.pontos_sorvete !== undefined && d.pontos_sorvete !== null) ? d.pontos_sorvete : 0;
                  }
                  
                  currentFidPhone = input;
@@ -1974,8 +1977,8 @@
                   const snap = await getDoc(docRef);
                   const d = snap.exists() ? snap.data() : {};
                   const field = cat === 'sorvete' ? 'pontos_sorvete' : 'pontos_acai';
-                  const ptAcai = d.pontos_acai ?? d.pontos ?? 0;
-                  const ptSorvete = d.pontos_sorvete ?? 0;
+                  const ptAcai = (d.pontos_acai !== undefined && d.pontos_acai !== null) ? d.pontos_acai : ((d.pontos !== undefined && d.pontos !== null) ? d.pontos : 0);
+                  const ptSorvete = (d.pontos_sorvete !== undefined && d.pontos_sorvete !== null) ? d.pontos_sorvete : 0;
                   
                   const inputVal = document.getElementById('fid-custom-points').value.replace(',', '.');
                   const valToUpdate = (parseFloat(inputVal) || 1) * delta;
