@@ -1004,84 +1004,87 @@
 
         // --- CORE ADMIN INIT ---
         async function initAdmin() {
-            // Check for existence of config
-            const configSnap = await getDoc(doc(db, 'loja', 'config'));
-            if (!configSnap.exists()) {
-                document.getElementById('bootstrap-modal').classList.remove('hidden');
-                return;
-            } else { document.getElementById('bootstrap-modal').classList.add('hidden'); }
+            try {
+                // Check if using environment-specific config
+                const configToUse = (typeof __firebase_config !== 'undefined') ? JSON.parse(__firebase_config) : firebaseConfig;
+                const appId = (typeof __app_id !== 'undefined') ? __app_id : 'default-app-id';
 
-            const confData = configSnap.data();
-            state.config = confData;
-
-            // MIGRATION LOGIC: Se houver 'sizes' ou 'accompaniments' no doc global, migrar para coleções
-            if (confData.sizes && confData.sizes.length > 0) {
-                console.log("Migrando produtos para nova coleção...");
-                for (const s of confData.sizes) {
-                    const sid = s.id || ('prod-' + Date.now() + Math.random());
-                    await setDoc(doc(db, 'produtos', sid), { ...s, id: sid });
+                // Check for existence of config
+                const configDocPath = (typeof __firebase_config !== 'undefined') 
+                    ? `artifacts/${appId}/public/data/loja/config`
+                    : 'loja/config';
+                
+                const configSnap = await getDoc(doc(db, configDocPath));
+                
+                if (!configSnap.exists()) {
+                    document.getElementById('bootstrap-modal').classList.remove('hidden');
+                    return;
+                } else { 
+                    document.getElementById('bootstrap-modal').classList.add('hidden'); 
                 }
-                // Limpa do doc global após migrar
-                await updateDoc(doc(db, 'loja', 'config'), { sizes: [] });
+
+                const confData = configSnap.data();
+                state.config = confData;
+
+                // Listeners
+                const statusDocPath = (typeof __firebase_config !== 'undefined')
+                    ? `artifacts/${appId}/public/data/loja/status`
+                    : 'loja/status';
+
+                onSnapshot(doc(db, configDocPath), (snap) => {
+                    if (snap.exists()) {
+                        state.config = snap.data();
+                        state.pontosConfig = snap.data().pontosConfig || {};
+                        const metaEl = document.getElementById('pontos-meta');
+                        if (metaEl) metaEl.value = snap.data().pontosMeta || 10;
+                        const valReaisEl = document.getElementById('pontos-valor-reais');
+                        if (valReaisEl) valReaisEl.value = snap.data().pontosValorReais || 0.50;
+                        updateFidelidadeToggle(snap.data().fidelidadeAtiva !== false);
+                        renderAll();
+                    }
+                }, (err) => console.error("Erro snapshot config:", err));
+
+                onSnapshot(doc(db, statusDocPath), (snap) => { 
+                    if (snap.exists()) updateStatusBadge(snap.data().mode); 
+                }, (err) => console.error("Erro snapshot status:", err));
+
+                // Listeners para novas coleções
+                onSnapshot(collection(db, 'produtos'), (snap) => {
+                    state.products = snap.docs.map(d => ({ docId: d.id, ...d.data() }));
+                    renderProducts();
+                    renderPontosConfig();
+                }, (err) => console.error("Erro snapshot produtos:", err));
+
+                onSnapshot(collection(db, 'coberturas_lista'), (snap) => {
+                    state.cremes = snap.docs.map(d => ({ docId: d.id, ...d.data() }));
+                    renderCremes();
+                }, (err) => console.error("Erro snapshot cremes:", err));
+
+                onSnapshot(collection(db, 'coberturas_info'), (snap) => {
+                    state.coberturas = snap.docs.map(d => ({ docId: d.id, ...d.data() }));
+                    renderCoberturas();
+                }, (err) => console.error("Erro snapshot coberturas:", err));
+
+                onSnapshot(collection(db, 'cupons'), (snap) => {
+                    state.cupons = snap.docs.map(d => ({ docId: d.id, ...d.data() }));
+                    renderCupons();
+                }, (err) => console.error("Erro snapshot cupons:", err));
+
+                const qOrders = query(collection(db, 'pedidos'));
+                onSnapshot(qOrders, (snap) => { 
+                    state.pedidos = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+                    state.pedidos.sort((a, b) => {
+                        const da = a.data ? new Date(a.data) : 0;
+                        const dbVal = b.data ? new Date(b.data) : 0;
+                        return dbVal - da;
+                    });
+                    renderPedidos(); 
+                    renderStats(); 
+                }, (err) => console.error("Erro snapshot pedidos:", err));
+            } catch (e) {
+                console.error("Erro ao inicializar admin:", e);
+                toast("Erro ao carregar dados do sistema", "error");
             }
-            if (confData.accompaniments && confData.accompaniments.coberturas && confData.accompaniments.coberturas.length > 0) {
-                console.log("Migrando coberturas para nova coleção...");
-                for (const c of confData.accompaniments.coberturas) {
-                    const cid = 'cob-' + Math.random().toString(36).substr(2, 9);
-                    await setDoc(doc(db, 'coberturas_lista', cid), c);
-                }
-                // Limpa apenas as coberturas do doc global, mantendo frutas e adicionais
-                await updateDoc(doc(db, 'loja', 'config'), {
-                    'accompaniments.coberturas': []
-                });
-            }
-
-            // Listeners
-             onSnapshot(doc(db, 'loja', 'config'), (snap) => {
-                if (snap.exists()) {
-                    state.config = snap.data();
-                    state.pontosConfig = snap.data().pontosConfig || {};
-                    const metaEl = document.getElementById('pontos-meta');
-                    if (metaEl) metaEl.value = snap.data().pontosMeta || 10;
-                    const valReaisEl = document.getElementById('pontos-valor-reais');
-                    if (valReaisEl) valReaisEl.value = snap.data().pontosValorReais || 0.50;
-                    updateFidelidadeToggle(snap.data().fidelidadeAtiva !== false);
-                    renderAll();
-                }
-            });
-            onSnapshot(doc(db, 'loja', 'status'), (snap) => { if (snap.exists()) updateStatusBadge(snap.data().mode); });
-
-            // Listeners para novas coleções
-            onSnapshot(collection(db, 'produtos'), (snap) => {
-                state.products = snap.docs.map(d => ({ docId: d.id, ...d.data() }));
-                renderProducts();
-                renderPontosConfig();
-            });
-            onSnapshot(collection(db, 'coberturas_lista'), (snap) => {
-                state.cremes = snap.docs.map(d => ({ docId: d.id, ...d.data() }));
-                renderCremes();
-            });
-            onSnapshot(collection(db, 'coberturas_info'), (snap) => {
-                state.coberturas = snap.docs.map(d => ({ docId: d.id, ...d.data() }));
-                renderCoberturas();
-            });
-            onSnapshot(collection(db, 'cupons'), (snap) => {
-                state.cupons = snap.docs.map(d => ({ docId: d.id, ...d.data() }));
-                renderCupons();
-            });
-
-            const qOrders = query(collection(db, 'pedidos'));
-            onSnapshot(qOrders, (snap) => { 
-                state.pedidos = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-                // Ordenar localmente se possível, ou apenas renderizar para teste
-                state.pedidos.sort((a, b) => {
-                    const da = a.data ? new Date(a.data) : 0;
-                    const dbVal = b.data ? new Date(b.data) : 0;
-                    return dbVal - da;
-                });
-                renderPedidos(); 
-                renderStats(); 
-            });
         }
 
         function updateStatusBadge(mode) {
@@ -1497,7 +1500,8 @@
             await updateDoc(doc(db, 'produtos', docId), { available: !s.available });
         };
 
-        window.openProductModal = (docId = null) => {
+        window.openProductModal = openProductModal;
+        function openProductModal(docId = null) {
             const m = document.getElementById('modal-product');
             const f = document.getElementById('product-form');
             f.reset();
@@ -1580,7 +1584,7 @@
 
         window.closeProductModal = () => document.getElementById('modal-product').classList.add('hidden');
 
-        window.saveProduct = async () => {
+        async function saveProduct() {
             try {
                 const docId = document.getElementById('prod-id').value;
 
@@ -1626,6 +1630,7 @@
                 toast("Erro ao salvar: " + e.message, "error");
             }
         };
+        window.saveProduct = saveProduct;
 
         window.editProduct = (docId) => openProductModal(docId);
 
@@ -1664,7 +1669,8 @@
 
         window.editCobertura = (docId) => openCoberturaModal(docId);
 
-        window.openCoberturaModal = (docId) => {
+        window.openCoberturaModal = openCoberturaModal;
+        function openCoberturaModal(docId) {
             const m = document.getElementById('modal-cobertura');
             document.getElementById('cob-idx').value = docId !== null ? docId : '';
 
@@ -1678,7 +1684,7 @@
             document.getElementById('cob-image-placeholder').classList.remove('hidden');
             document.getElementById('cob-image-remove').classList.add('hidden');
             document.getElementById('cob-modal-title').innerText = docId !== null ? 'Editar Cobertura' : 'Nova Cobertura';
-
+            
             const saveBtn = document.getElementById('cob-save-btn');
             saveBtn.onclick = () => saveCobertura();
             saveBtn.innerText = 'SALVAR COBERTURA';
@@ -1699,7 +1705,8 @@
             lucide.createIcons();
         };
 
-        window.closeCoberturaModal = () => document.getElementById('modal-cobertura').classList.add('hidden');
+        function closeCoberturaModal() { document.getElementById('modal-cobertura').classList.add('hidden'); }
+        window.closeCoberturaModal = closeCoberturaModal;
 
         window.handleCobImageFile = (input) => {
             const file = input.files[0];
@@ -1739,7 +1746,7 @@
             document.getElementById('cob-image-remove').classList.add('hidden');
         };
 
-        window.saveCobertura = async () => {
+        async function saveCobertura() {
             try {
                 const name = document.getElementById('cob-name').value.trim();
                 if (!name) return toast('Digite o nome da cobertura', 'error');
@@ -1756,9 +1763,6 @@
                     await setDoc(doc(db, 'coberturas_info', newId), data);
                 }
 
-                const saveBtn = document.getElementById('cob-save-btn');
-                saveBtn.onclick = () => saveCobertura();
-                saveBtn.innerText = 'SALVAR COBERTURA';
                 closeCoberturaModal();
                 toast(docId !== '' ? 'Cobertura atualizada!' : 'Cobertura adicionada!');
             } catch (e) {
@@ -1766,6 +1770,7 @@
                 toast("Erro ao salvar: " + e.message, "error");
             }
         };
+        window.saveCobertura = saveCobertura;
 
         window.toggleCobertura = async (docId) => {
             const c = state.coberturas.find(x => x.docId === docId);
@@ -1782,7 +1787,7 @@
         // --- CREMES STANDALONE ACTIONS ---
         window.addCreme = () => openCremeModal(null);
         window.editCreme = (docId) => openCremeModal(docId);
-        window.openCremeModal = (docId) => {
+        function openCremeModal(docId) {
             const m = document.getElementById('modal-cobertura');
             document.getElementById('cob-modal-title').innerText = docId !== null ? 'Editar Creme' : 'Novo Creme';
             
@@ -1792,7 +1797,10 @@
             
             openGenericModal(docId, state.cremes);
         };
-        window.saveCreme = async () => { await saveGenericItem('coberturas_lista', 'Creme'); };
+        window.openCremeModal = openCremeModal;
+        
+        async function saveCreme() { await saveGenericItem('coberturas_lista', 'Creme'); };
+        window.saveCreme = saveCreme;
         window.toggleCreme = async (docId) => {
             const c = state.cremes.find(x => x.docId === docId);
             if (!c) return;
@@ -1939,7 +1947,7 @@
         };
 
         // --- FIDELIDADE LOGIC (MANUAL) ---
-        window.searchFidelidade = async () => {
+        async function searchFidelidade() {
              const input = document.getElementById('fid-search').value.replace(/\D/g, '');
              if (!input) return toast('Digite um telefone', 'error');
              
@@ -1963,6 +1971,7 @@
                  toast('Erro na busca', 'error');
              }
         };
+        window.searchFidelidade = searchFidelidade;
         
         // Formata input ao digitar
         document.getElementById('fid-search').addEventListener('input', (e) => {
@@ -2058,13 +2067,14 @@
              await deleteDoc(doc(db, 'cupons', docId));
         };
 
-        window.toast = (m, t = 'success') => {
+        function toast(m, t = 'success') {
             const el = document.getElementById('toast');
             document.getElementById('toast-msg').innerText = m;
             el.querySelector('div').className = `w-2.5 h-2.5 rounded-full animate-pulse shadow-lg ${t === 'error' ? 'bg-red-500 shadow-red-500/50' : 'bg-green-400 shadow-green-400/50'}`;
             el.classList.remove('-translate-y-20', 'opacity-0'); el.classList.add('translate-y-0', 'opacity-100');
             setTimeout(() => { el.classList.remove('translate-y-0', 'opacity-100'); el.classList.add('-translate-y-20', 'opacity-0'); }, 3000);
-        };
+        }
+        window.toast = toast;
 
     </script>
 </body>

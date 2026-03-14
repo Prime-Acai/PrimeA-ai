@@ -713,6 +713,29 @@
 
         console.log("✅ Firebase inicializado!");
 
+        // 🔐 Login Anônimo condicional
+        try {
+          // Só tenta login anônimo se não houver usuário logado (ex: admin já logado na mesma máquina)
+          auth.onAuthStateChanged(async (user) => {
+            if (!user) {
+              try {
+                await auth.signInAnonymously();
+                console.log("🔐 Autenticado anonimamente");
+              } catch (authError) {
+                if (authError.code === 'auth/admin-restricted-operation') {
+                  console.warn("⚠️ Login anônimo desativado no Firebase. Os pedidos podem falhar se as regras do Firestore exigirem auth.");
+                } else {
+                  console.error("❌ Erro na autenticação anônima:", authError);
+                }
+              }
+            } else {
+              console.log("👤 Usuário já autenticado:", user.uid);
+            }
+          });
+        } catch (authInitError) {
+          console.error("❌ Erro ao inicializar observador de auth:", authInitError);
+        }
+
         const appId = (typeof __app_id !== 'undefined') ? __app_id : 'default-app-id';
 
         globalStatusDocRef = (typeof __firebase_config !== 'undefined')
@@ -729,21 +752,21 @@
               console.log("Status recebido:", data.mode);
             }
           }
-        });
+        }, (err) => console.error("Erro no snapshot de status:", err));
 
         // 🍨 ESCUTAR PRODUTOS E COBERTURAS (COLEÇÕES SEPARADAS)
         db.collection('produtos').onSnapshot((snap) => {
           state.products = snap.docs.map(d => ({ docId: d.id, ...d.data() }));
           window.renderMenu();
-        });
+        }, (err) => console.error("Erro no snapshot de produtos:", err));
 
         db.collection('coberturas_lista').onSnapshot((snap) => {
           state.cremes = snap.docs.map(d => ({ docId: d.id, ...d.data() }));
-        });
+        }, (err) => console.error("Erro no snapshot de cremes:", err));
 
         db.collection('coberturas_info').onSnapshot((snap) => {
           state.coberturas = snap.docs.map(d => ({ docId: d.id, ...d.data() }));
-        });
+        }, (err) => console.error("Erro no snapshot de coberturas:", err));
 
         // ➕ ESCUTAR CONFIGURAÇÕES GLOBAIS
         db.doc('loja/config').onSnapshot((snap) => {
@@ -776,7 +799,7 @@
             }
             window.updateUI();
           }
-        });
+        }, (err) => console.error("Erro no snapshot de config:", err));
 
         firebaseConnected = true;
         console.log("✅ Firebase pronto!");
@@ -1599,24 +1622,32 @@
           });
           
           if (pontosGanhos > 0) {
-            const phoneKey = phone.replace(/\D/g, '');
-            const fidRef = db.collection('clientes_fidelidade').doc(phoneKey);
-            const fidSnap = await fidRef.get();
-            const existingData = fidSnap.exists ? fidSnap.data() : {};
-            const ptAcaiAtual = (existingData.pontos_acai !== undefined && existingData.pontos_acai !== null) ? existingData.pontos_acai : ((existingData.pontos !== undefined && existingData.pontos !== null) ? existingData.pontos : 0);
-            const ptSorveteAtual = (existingData.pontos_sorvete !== undefined && existingData.pontos_sorvete !== null) ? existingData.pontos_sorvete : 0;
-            await fidRef.set({
-              telefone: phoneKey,
-              pontos_acai: ptAcaiAtual + pontosGanhosAcai,
-              pontos_sorvete: ptSorveteAtual + pontosGanhosSorvete,
-              lastUpdate: new Date().toISOString()
-            }, { merge: true });
+            try {
+              const phoneKey = phone.replace(/\D/g, '');
+              const fidRef = db.collection('clientes_fidelidade').doc(phoneKey);
+              const fidSnap = await fidRef.get();
+              const existingData = fidSnap.exists ? fidSnap.data() : {};
+              const ptAcaiAtual = (existingData.pontos_acai !== undefined && existingData.pontos_acai !== null) ? existingData.pontos_acai : ((existingData.pontos !== undefined && existingData.pontos !== null) ? existingData.pontos : 0);
+              const ptSorveteAtual = (existingData.pontos_sorvete !== undefined && existingData.pontos_sorvete !== null) ? existingData.pontos_sorvete : 0;
+              await fidRef.set({
+                telefone: phoneKey,
+                pontos_acai: ptAcaiAtual + pontosGanhosAcai,
+                pontos_sorvete: ptSorveteAtual + pontosGanhosSorvete,
+                lastUpdate: new Date().toISOString()
+              }, { merge: true });
+            } catch (fidErr) {
+              console.error("Erro ao atualizar fidelidade:", fidErr);
+            }
           }
           console.log("✅ Pedido salvo no Firebase!");
+        } else {
+          throw new Error("Firebase não conectado");
         }
       } catch (e) {
         console.error("Erro Firebase:", e);
-        window.toast("Aviso: Falha ao registrar no sistema, mas o pedido será enviado por WhatsApp.", "warning");
+        window.toast("Aviso: Falha ao registrar no sistema central. O pedido será enviado APENAS por WhatsApp.", "warning");
+        // Dá um tempo para o usuário ler o aviso antes do redirecionamento
+        await new Promise(r => setTimeout(r, 2000));
       }
 
       // Abre o WhatsApp
