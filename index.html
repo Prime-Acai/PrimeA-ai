@@ -1599,20 +1599,26 @@
 
       msg += `\n💰 * TOTAL FINAL: ${totalFinal}* `;
 
-      // Snapshot do carrinho
-      const cartSnapshot = [...state.cart];
+      // Snapshot do carrinho garantindo valores válidos para o Firestore (evita erros de undefined)
+      const cartSnapshot = state.cart.map(i => ({
+        id: i.id || Date.now(),
+        name: i.name || '',
+        price: i.price || 0,
+        obs: i.obs || '',
+        qty: i.qty || 1
+      }));
 
       // Salva no Firebase AGUARDANDO a confirmação
       try {
         await Promise.race([firebaseReady, new Promise((_, r) => setTimeout(() => r(new Error("Timeout")), 8000))]);
         if (db && firebaseConnected) {
           await db.collection('pedidos').add({
-            cliente: name,
-            telefone: phone,
-            pagamento: method,
-            total: totalVal,
+            cliente: name || 'Sem Nome',
+            telefone: phone || '',
+            pagamento: method || '',
+            total: totalVal || 0,
             cupomInfo: state.appliedCupom ? state.appliedCupom : null,
-            pontosGanhos: pontosGanhos,
+            pontosGanhos: pontosGanhos || 0,
             itens: cartSnapshot,
             obsGeral: obsGeneral,
             data: new Date().toISOString(),
@@ -1650,22 +1656,26 @@
         await new Promise(r => setTimeout(r, 2000));
       }
 
-      // Abre o WhatsApp
-      const phoneNum = state.config.phone ? state.config.phone.replace(/\D/g, '') : "5579996040320";
-      const waUrl = `https://api.whatsapp.com/send?phone=${phoneNum}&text=${encodeURIComponent(msg)}`;
-      
-      // Safari compatibility: window.open is often blocked after an await.
-      // Using window.location.href as it's more reliable for redirects in checkout flows.
-      window.location.href = waUrl;
-
-      // Limpa o carrinho
+      // Limpa o carrinho LOCALMENTE antes de sair da página
       state.cart = [];
       saveCart();
       
       btn.innerHTML = 'Pedido Enviado! ✅';
       window.toast("Pedido enviado! ✅");
 
-      setTimeout(() => window.location.reload(), 2000);
+      // Abre o WhatsApp
+      const phoneNum = state.config.phone ? state.config.phone.replace(/\D/g, '') : "5579996040320";
+      const waUrl = `https://api.whatsapp.com/send?phone=${phoneNum}&text=${encodeURIComponent(msg)}`;
+      
+      // Delay pequeno para dar tempo do toast renderizar e do Firebase (se pendente) terminar
+      setTimeout(() => {
+        // Safari compatibility: window.open is often blocked after an await.
+        // Using window.location.href as it's more reliable for redirects in checkout flows.
+        window.location.href = waUrl;
+
+        // O reload só ocorrerá se a página não for destruída (ex: se abrir em nova guia no Desktop)
+        setTimeout(() => window.location.reload(), 2000);
+      }, 800);
     };
 
     function saveCart() { 
