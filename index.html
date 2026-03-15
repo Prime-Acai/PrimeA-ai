@@ -713,9 +713,8 @@
 
         console.log("✅ Firebase inicializado!");
 
-        // 🔐 Login Anônimo condicional
+        // 🔐 Login Anônimo — aguarda auth completar antes de liberar envio de pedidos
         try {
-          // Só tenta login anônimo se não houver usuário logado (ex: admin já logado na mesma máquina)
           auth.onAuthStateChanged(async (user) => {
             if (!user) {
               try {
@@ -723,17 +722,22 @@
                 console.log("🔐 Autenticado anonimamente");
               } catch (authError) {
                 if (authError.code === 'auth/admin-restricted-operation') {
-                  console.warn("⚠️ Login anônimo desativado no Firebase. Os pedidos podem falhar se as regras do Firestore exigirem auth.");
+                  console.warn("⚠️ Login anônimo desativado no Firebase.");
                 } else {
                   console.error("❌ Erro na autenticação anônima:", authError);
                 }
               }
             } else {
-              console.log("👤 Usuário já autenticado:", user.uid);
+              console.log("👤 Usuário autenticado:", user.uid);
             }
+            // ✅ Só considera Firebase pronto/conectado APÓS auth resolver
+            firebaseConnected = true;
+            firebaseReadyResolve();
           });
         } catch (authInitError) {
           console.error("❌ Erro ao inicializar observador de auth:", authInitError);
+          // Resolve mesmo com erro para não travar a página
+          firebaseReadyResolve();
         }
 
         const appId = (typeof __app_id !== 'undefined') ? __app_id : 'default-app-id';
@@ -801,13 +805,12 @@
           }
         }, (err) => console.error("Erro no snapshot de config:", err));
 
-        firebaseConnected = true;
-        console.log("✅ Firebase pronto!");
+        console.log("✅ Firebase inicializado! Aguardando auth...");
 
       } catch (e) {
         console.error("❌ Erro Firebase:", e);
+        firebaseReadyResolve(); // Resolve em caso de erro para não travar
       }
-      firebaseReadyResolve();
     };
 
     initFirebase();

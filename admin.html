@@ -1070,14 +1070,21 @@
                     renderCupons();
                 }, (err) => console.error("Erro snapshot cupons:", err));
 
-                const qOrders = query(collection(db, 'pedidos'));
+                const qOrders = query(collection(db, 'pedidos'), orderBy('data', 'desc'), limit(100));
+                let knownOrderIds = new Set();
                 onSnapshot(qOrders, (snap) => { 
                     state.pedidos = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-                    state.pedidos.sort((a, b) => {
-                        const da = a.data ? new Date(a.data) : 0;
-                        const dbVal = b.data ? new Date(b.data) : 0;
-                        return dbVal - da;
-                    });
+                    
+                    // Detecta pedidos novos para notificar
+                    const newIds = new Set(state.pedidos.map(p => p.id));
+                    const hasNewOrders = knownOrderIds.size > 0 && [...newIds].some(id => !knownOrderIds.has(id));
+                    const newCount = knownOrderIds.size > 0 ? [...newIds].filter(id => !knownOrderIds.has(id)).length : 0;
+                    knownOrderIds = newIds;
+
+                    if (hasNewOrders) {
+                        notifyNewOrder(newCount);
+                    }
+
                     renderPedidos(); 
                     renderStats(); 
                 }, (err) => console.error("Erro snapshot pedidos:", err));
@@ -1085,6 +1092,75 @@
                 console.error("Erro ao inicializar admin:", e);
                 toast("Erro ao carregar dados do sistema", "error");
             }
+        }
+
+        // --- NOTIFICAÇÃO DE NOVO PEDIDO ---
+        let newOrderTitleInterval = null;
+        let newOrderCount = 0;
+
+        function notifyNewOrder(count) {
+            newOrderCount += count;
+
+            // 1. Som via Web Audio API (não precisa de arquivo externo)
+            try {
+                const ctx = new (window.AudioContext || window.webkitAudioContext)();
+                const playBeep = (freq, start, duration) => {
+                    const osc = ctx.createOscillator();
+                    const gain = ctx.createGain();
+                    osc.connect(gain);
+                    gain.connect(ctx.destination);
+                    osc.frequency.value = freq;
+                    osc.type = 'sine';
+                    gain.gain.setValueAtTime(0.4, ctx.currentTime + start);
+                    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + start + duration);
+                    osc.start(ctx.currentTime + start);
+                    osc.stop(ctx.currentTime + start + duration + 0.05);
+                };
+                playBeep(880, 0, 0.15);
+                playBeep(1100, 0.2, 0.15);
+                playBeep(1320, 0.4, 0.25);
+            } catch (e) { /* Safari pode bloquear sem interação do usuário */ }
+
+            // 2. Badge vermelho piscante nos botões de nav de pedidos
+            const badgeId = 'new-order-badge';
+            ['nav-pedidos', 'm-nav-pedidos'].forEach(navId => {
+                const navBtn = document.getElementById(navId);
+                if (!navBtn) return;
+                let badge = navBtn.querySelector(`#${badgeId}-${navId}`);
+                if (!badge) {
+                    badge = document.createElement('span');
+                    badge.id = `${badgeId}-${navId}`;
+                    badge.style.cssText = 'position:absolute;top:-4px;right:-4px;background:#ef4444;color:white;border-radius:9999px;padding:1px 6px;font-size:10px;font-weight:900;animation:pulse 1s infinite;';
+                    navBtn.style.position = 'relative';
+                    navBtn.appendChild(badge);
+                }
+                badge.innerText = newOrderCount;
+            });
+
+            // 3. Toast especial de novo pedido
+            toast(`🔔 ${count} novo(s) pedido(s) chegou!`, 'success');
+
+            // 4. Título da aba pisca
+            const originalTitle = 'Painel de Controle | Prime Açaí';
+            if (newOrderTitleInterval) clearInterval(newOrderTitleInterval);
+            let toggle = true;
+            newOrderTitleInterval = setInterval(() => {
+                document.title = toggle ? `🔔 (${newOrderCount}) NOVO PEDIDO!` : originalTitle;
+                toggle = !toggle;
+            }, 1000);
+
+            // Para o pisca-pisca quando clicar em pedidos
+            const clearNewOrders = () => {
+                newOrderCount = 0;
+                clearInterval(newOrderTitleInterval);
+                newOrderTitleInterval = null;
+                document.title = originalTitle;
+                document.querySelectorAll('[id^="new-order-badge"]').forEach(b => b.remove());
+            };
+            ['nav-pedidos', 'm-nav-pedidos'].forEach(navId => {
+                const navBtn = document.getElementById(navId);
+                if (navBtn) navBtn.addEventListener('click', clearNewOrders, { once: true });
+            });
         }
 
         function updateStatusBadge(mode) {
