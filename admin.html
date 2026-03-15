@@ -1232,9 +1232,9 @@
             const filterPayment = filterPaymentEl ? filterPaymentEl.value : '';
 
             const filteredOrders = state.pedidos.filter(p => {
-                const matchName = p.cliente.toLowerCase().includes(filterName);
+                const matchName = (p.cliente || 'Sem Nome').toLowerCase().includes(filterName);
                 const matchDate = filterDate ? new Date(p.data).toISOString().split('T')[0] === filterDate : true;
-                const matchPayment = filterPayment ? p.pagamento === filterPayment : true;
+                const matchPayment = filterPayment ? (p.pagamento || '').includes(filterPayment) : true;
                 return matchName && matchDate && matchPayment;
             });
 
@@ -1245,14 +1245,14 @@
                               <i data-lucide="shopping-bag" class="w-7 h-7"></i>
                          </div>
                          <div>
-                              <h4 class="font-black text-slate-900 text-lg flex items-center gap-2">${p.cliente} <span class="px-2 py-0.5 bg-slate-100 rounded-lg text-[10px] text-slate-400 font-bold uppercase tracking-wider group-hover:bg-white transition-colors">#${p.id.slice(-4)}</span></h4>
-                              <p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-1">${new Date(p.data).toLocaleString('pt-BR')}</p>
+                              <h4 class="font-black text-slate-900 text-lg flex items-center gap-2">${p.cliente || 'Sem Nome'} <span class="px-2 py-0.5 bg-slate-100 rounded-lg text-[10px] text-slate-400 font-bold uppercase tracking-wider group-hover:bg-white transition-colors">#${p.id.slice(-4)}</span></h4>
+                              <p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-1">${p.data ? new Date(p.data).toLocaleString('pt-BR') : 'Data Desconhecida'}</p>
                          </div>
                     </div>
                     <div class="flex items-center gap-10">
                          <div class="text-right">
-                              <p class="text-[10px] font-black uppercase text-slate-400 mb-1 tracking-widest">${p.pagamento} • ${p.delivery}</p>
-                              <p class="text-2xl font-display font-black text-slate-900 group-hover:text-brand-600 transition-colors">R$ ${p.total.toFixed(2).replace('.', ',')}</p>
+                              <p class="text-[10px] font-black uppercase text-slate-400 mb-1 tracking-widest">${p.pagamento || 'N/A'} • ${p.delivery || 'Balcão/Retirada'}</p>
+                              <p class="text-2xl font-display font-black text-slate-900 group-hover:text-brand-600 transition-colors">R$ ${(p.total || 0).toFixed(2).replace('.', ',')}</p>
                          </div>
                          <button onclick="viewOrderDetails('${p.id}')" class="p-4 bg-white border border-slate-100 rounded-2xl hover:border-brand-500 hover:text-brand-500 hover:shadow-lg active:scale-95 transition-all outline-none">
                               <i data-lucide="eye" class="w-5 h-5"></i>
@@ -1274,11 +1274,11 @@
                         <div class="flex items-center gap-4">
                             <div class="w-2 h-10 bg-brand-500 rounded-full"></div>
                             <div>
-                                 <h5 class="font-bold text-slate-800">${p.cliente}</h5>
-                                 <p class="text-[9px] text-slate-400 font-bold uppercase tracking-widest">${new Date(p.data).toLocaleTimeString('pt-BR')}</p>
+                                 <h5 class="font-bold text-slate-800">${p.cliente || 'Sem Nome'}</h5>
+                                 <p class="text-[9px] text-slate-400 font-bold uppercase tracking-widest">${p.data ? new Date(p.data).toLocaleTimeString('pt-BR') : '--:--'}</p>
                             </div>
                         </div>
-                        <p class="font-display font-black text-slate-900">R$ ${p.total.toFixed(2).replace('.', ',')}</p>
+                        <p class="font-display font-black text-slate-900">R$ ${(p.total || 0).toFixed(2).replace('.', ',')}</p>
                      </div>
                 `).join('');
             }
@@ -1288,19 +1288,19 @@
         window.viewOrderDetails = (id) => {
             const p = state.pedidos.find(p => p.id === id);
             const modal = document.getElementById('modal-order');
-            document.getElementById('order-modal-date').innerText = new Date(p.data).toLocaleString('pt-BR');
-            document.getElementById('order-modal-total').innerText = `R$ ${p.total.toFixed(2).replace('.', ',')}`;
+            document.getElementById('order-modal-date').innerText = p.data ? new Date(p.data).toLocaleString('pt-BR') : '-';
+            document.getElementById('order-modal-total').innerText = `R$ ${(p.total || 0).toFixed(2).replace('.', ',')}`;
 
             let html = `
                 <div class="space-y-4">
                     <div class="p-5 bg-slate-50 rounded-2xl">
                         <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Cliente e Contato</p>
-                        <p class="font-bold text-slate-800">${p.cliente}</p>
-                        <p class="text-xs text-brand-600 font-bold">${p.telefone}</p>
+                        <p class="font-bold text-slate-800">${p.cliente || 'Sem Nome'}</p>
+                        <p class="text-xs text-brand-600 font-bold">${p.telefone || 'Sem Telefone'}</p>
                     </div>
                     <div class="space-y-3">
                         <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Itens do Pedido</p>
-                        ${p.itens.map(i => `
+                        ${(p.itens || []).map(i => `
                             <div class="p-4 bg-white border border-slate-100 rounded-2xl shadow-sm">
                                 <div class="flex justify-between mb-1">
                                     <span class="font-black text-slate-800 text-sm">${i.qty}x ${i.name}</span>
