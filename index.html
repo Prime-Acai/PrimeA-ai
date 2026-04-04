@@ -1074,7 +1074,9 @@
         return html;
       };
 
-      if (item.category === 'sorvete') {
+      if (item.hasComplements === false) {
+        container.innerHTML += `<div class="p-6 text-center text-slate-400 text-xs italic bg-slate-50 rounded-2xl border border-slate-100">Item sem acompanhamentos.</div>`;
+      } else if (item.category === 'sorvete') {
         if (item.allowCob) {
           container.innerHTML += renderSection("Coberturas (Caldas)", state.coberturas, "cobertura_real");
         } else {
@@ -1122,7 +1124,12 @@
     window.addCopoToCart = () => {
       if (!state.currentCopo) return;
       const checkboxes = document.querySelectorAll('.option-checkbox:checked');
-      if (checkboxes.length === 0) { if (!confirm("Tem certeza que quer o copo sem acompanhamentos?")) return; }
+      
+      let needsConfirm = true;
+      if (state.currentCopo.hasComplements === false) needsConfirm = false;
+      if (state.currentCopo.category === 'sorvete' && !state.currentCopo.allowCob) needsConfirm = false;
+
+      if (checkboxes.length === 0 && needsConfirm) { if (!confirm("Tem certeza que quer o copo sem acompanhamentos?")) return; }
 
       const groups = {
         fruta: [],
@@ -1177,6 +1184,10 @@
       const filtered = productsToRender.filter(p => {
         if (state.activeCategory === 'acai') return p.category !== 'sorvete';
         return p.category === 'sorvete';
+      }).sort((a, b) => {
+        if (a.isPinned && !b.isPinned) return -1;
+        if (!a.isPinned && b.isPinned) return 1;
+        return 0;
       });
 
       if (filtered.length === 0) {
@@ -1220,6 +1231,7 @@
               <div class="flex-1 min-w-0 pr-2">
                 <div class="flex items-center gap-2 flex-wrap mb-0.5">
                   <h3 class="font-bold text-slate-800 text-base leading-tight">${item.name}</h3>
+                  ${item.isPinned ? '<span class="inline-flex items-center gap-1 text-[9px] font-black text-amber-600 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-full uppercase tracking-widest">⭐ Destaque</span>' : ''}
                   ${isBestSeller && !isEsgotado ? '<span class="inline-flex items-center gap-1 text-[9px] font-black text-amber-600 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-full uppercase tracking-widest">🔥 Mais Pedido</span>' : ''}
                 </div>
                 <p class="text-[11px] text-slate-400 leading-tight">${item.desc || item.description || ''}</p>
