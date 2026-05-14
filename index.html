@@ -782,24 +782,28 @@
             state.pontosValorReais = data.pontosValorReais || 0.50;
             state.fidelidadeAtiva = data.fidelidadeAtiva !== false;
             state.maisVendido = data.maisVendido || null;
-            if (!state.fidelidadeAtiva) {
-              const card = document.getElementById('loyalty-card');
-              if (card) card.classList.add('hidden');
-              const banner = document.getElementById('loyalty-announcement');
-              if (banner) banner.classList.add('hidden');
-            } else {
-              const banner = document.getElementById('loyalty-announcement');
-              if (banner) {
-                banner.classList.remove('hidden');
-                // Calcula exemplo de 30 pontos
-                const exemploR$ = (30 * state.pontosValorReais).toFixed(2).replace('.', ',');
-                document.getElementById('loyalty-announcement-text').innerText = `Junte os pontos e troque por produtos da loja. 30 pontos é igual a R$ ${exemploR$}!!`;
-              }
-            }
-            if (!state.config.accompaniments) state.config.accompaniments = { frutas: [], adicionais: [], coberturas: [] };
+            if (!state.config.accompaniments) state.config.accompaniments = { frutas: [], adicionais: [], coberturas: [], doces: [] };
             if (data.accompaniments) {
-              if (data.accompaniments.frutas) state.config.accompaniments.frutas = data.accompaniments.frutas;
-              if (data.accompaniments.adicionais) state.config.accompaniments.adicionais = data.accompaniments.adicionais;
+              state.config.accompaniments = data.accompaniments;
+            }
+
+            // Atualiza mensagem de fidelidade
+            const loyaltyAnnouncement = document.getElementById('loyalty-announcement');
+            if (loyaltyAnnouncement) {
+              if (data.fidelidadeAtiva === false) {
+                loyaltyAnnouncement.classList.add('hidden');
+              } else {
+                loyaltyAnnouncement.classList.remove('hidden');
+                const loyaltyText = document.getElementById('loyalty-announcement-text');
+                if (loyaltyText) {
+                  if (data.loyaltyMessage) {
+                    loyaltyText.innerText = data.loyaltyMessage;
+                  } else {
+                    const exemploR$ = (30 * state.pontosValorReais).toFixed(2).replace('.', ',');
+                    loyaltyText.innerText = `Junte os pontos e troque por produtos da loja. 30 pontos é igual a R$ ${exemploR$}!!`;
+                  }
+                }
+              }
             }
             window.updateUI();
           }
@@ -1083,10 +1087,11 @@
           container.innerHTML += `<div class="p-6 text-center text-slate-400 text-xs italic bg-slate-50 rounded-2xl border border-slate-100">Não há acompanhamentos selecionáveis para este item.</div>`;
         }
       } else {
-        container.innerHTML += renderSection("Frutas", state.config.accompaniments.frutas, "fruta");
-        container.innerHTML += renderSection("Complementos (Adicionais)", state.config.accompaniments.adicionais, "adicional");
-        container.innerHTML += renderSection("Cremes", state.cremes, "cobertura");
-        container.innerHTML += renderSection("Coberturas (Caldas)", state.coberturas, "cobertura_real");
+        container.innerHTML += renderSection("Frutas", state.config.accompaniments.frutas || [], "fruta");
+        container.innerHTML += renderSection("Complementos (Adicionais)", state.config.accompaniments.adicionais || [], "adicional");
+        container.innerHTML += renderSection("Cremes", state.cremes || [], "cobertura");
+        container.innerHTML += renderSection("Coberturas (Caldas)", state.coberturas || [], "cobertura_real");
+        container.innerHTML += renderSection("Doces", state.config.accompaniments.doces || [], "doce");
       }
 
       document.getElementById('copo-modal').classList.remove('hidden');
@@ -1135,7 +1140,8 @@
         fruta: [],
         adicional: [],
         cobertura: [],
-        cobertura_real: []
+        cobertura_real: [],
+        doce: []
       };
 
       checkboxes.forEach(cb => {
@@ -1148,6 +1154,7 @@
       if (groups.adicional.length > 0) sections.push(`Adicionais: ${groups.adicional.join(', ')}`);
       if (groups.cobertura.length > 0) sections.push(`Cremes: ${groups.cobertura.join(', ')}`);
       if (groups.cobertura_real.length > 0) sections.push(`Coberturas: ${groups.cobertura_real.join(', ')}`);
+      if (groups.doce.length > 0) sections.push(`Doces: ${groups.doce.join(', ')}`);
 
       let obsText = sections.length > 0 ? sections.join(' | ') : "Sem acompanhamentos";
 

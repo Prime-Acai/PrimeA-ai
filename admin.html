@@ -393,37 +393,33 @@
         <!-- (Other tabs remain similarly structure but polished) -->
         <!-- PEDIDOS TAB -->
         <section id="tab-pedidos" class="tab-content space-y-8 animate-fade-in">
-            <header>
-                <h2 class="font-display font-black text-4xl text-slate-900 tracking-tight">Histórico</h2>
-                <p class="text-slate-400 font-medium">Relatório completo de vendas</p>
+            <header class="flex justify-between items-end">
+                <div>
+                    <h2 class="font-display font-black text-4xl text-slate-900 tracking-tight">Histórico</h2>
+                    <p class="text-slate-400 font-medium">Relatório completo de vendas</p>
+                </div>
+                <button onclick="clearAllOrders()" class="px-6 py-4 bg-red-50 text-red-600 border-2 border-red-100 rounded-2xl font-black text-[10px] uppercase tracking-widest active:scale-95 transition-all flex items-center gap-2">
+                    <i data-lucide="trash-2" class="w-4 h-4"></i> LIMPAR TODOS OS PEDIDOS
+                </button>
             </header>
             <div class="bg-white p-6 lg:p-8 rounded-[2.5rem] border border-slate-100 shadow-sm space-y-6">
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    <div>
-                        <label class="text-[10px] font-black uppercase tracking-widest text-slate-400 block mb-2 ml-2">Buscar Cliente</label>
-                        <div class="relative">
+                <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-50 pb-6">
+                    <div class="flex flex-wrap gap-4 items-center">
+                        <div class="relative min-w-[200px]">
                             <i data-lucide="search" class="w-4 h-4 absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
-                            <input type="text" id="filter-name" oninput="renderPedidos()" placeholder="Nome do cliente..." 
-                                class="w-full pl-11 pr-4 py-3 bg-slate-50 border-2 border-transparent focus:border-brand-500 rounded-xl outline-none font-bold text-sm">
+                            <input type="text" id="filter-name" oninput="renderPedidos()" placeholder="Buscar por cliente..." class="w-full pl-11 pr-4 py-3 bg-slate-50 border-2 border-transparent focus:border-brand-500 rounded-xl outline-none font-bold text-xs transition-all">
                         </div>
-                    </div>
-                    <div>
-                        <label class="text-[10px] font-black uppercase tracking-widest text-slate-400 block mb-2 ml-2">Data do Pedido</label>
-                        <div class="relative">
-                            <i data-lucide="calendar" class="w-4 h-4 absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
-                            <input type="date" id="filter-date" onchange="renderPedidos()" 
-                                class="w-full pl-11 pr-4 py-3 bg-slate-50 border-2 border-transparent focus:border-brand-500 rounded-xl outline-none font-bold text-sm">
-                        </div>
-                    </div>
-                    <div>
-                        <label class="text-[10px] font-black uppercase tracking-widest text-slate-400 block mb-2 ml-2">Pagamento</label>
-                        <select id="filter-payment" onchange="renderPedidos()" 
-                            class="w-full px-4 py-3 bg-slate-50 border-2 border-transparent focus:border-brand-500 rounded-xl outline-none font-bold text-sm appearance-none">
-                            <option value="">Todos os Métodos</option>
+                        <input type="date" id="filter-date" onchange="renderPedidos()" class="p-3 bg-slate-50 border-2 border-transparent focus:border-brand-500 rounded-xl outline-none font-bold text-xs">
+                        <select id="filter-payment" onchange="renderPedidos()" class="p-3 bg-slate-50 border-2 border-transparent focus:border-brand-500 rounded-xl outline-none font-bold text-xs min-w-[150px]">
+                            <option value="">Todos Pagamentos</option>
                             <option value="Pix">Pix</option>
                             <option value="Cartão">Cartão</option>
                             <option value="Dinheiro">Dinheiro</option>
                         </select>
+                    </div>
+                    <div id="bulk-actions" class="hidden flex items-center gap-3">
+                        <span id="selected-count" class="text-xs font-black text-brand-600 bg-brand-50 px-3 py-1.5 rounded-full">0 selecionados</span>
+                        <button onclick="deleteSelectedOrders()" class="px-5 py-3 bg-red-600 text-white rounded-xl font-black text-[10px] uppercase tracking-widest shadow-lg shadow-red-500/20 active:scale-95 transition-all">DELETAR SELECIONADOS</button>
                     </div>
                 </div>
             </div>
@@ -454,7 +450,7 @@
                 <h2 class="font-display font-black text-4xl text-slate-900 tracking-tight">Extras</h2>
                 <p class="text-slate-400 font-medium">Controle de insumos e disponibilidade</p>
             </header>
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-10">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
                 <div class="bg-white p-6 lg:p-8 rounded-[2.5rem] shadow-sm border border-slate-50">
                     <div class="flex items-center justify-between mb-8">
                         <h3 class="font-display font-black text-xl flex items-center gap-2"><i data-lucide="apple"
@@ -484,6 +480,16 @@
                                 data-lucide="plus" class="w-4 h-4"></i></button>
                     </div>
                     <div id="list-coberturas" class="space-y-3"></div>
+                </div>
+                <div class="bg-white p-6 lg:p-8 rounded-[2.5rem] shadow-sm border border-slate-50">
+                    <div class="flex items-center justify-between mb-8">
+                        <h3 class="font-display font-black text-xl flex items-center gap-2"><i data-lucide="candy"
+                                class="w-6 h-6 text-pink-500"></i> Doces</h3>
+                        <button onclick="addItemToCategory('doces')"
+                            class="p-2 bg-brand-50 text-brand-600 rounded-lg hover:bg-brand-600 hover:text-white transition-all"><i
+                                data-lucide="plus" class="w-4 h-4"></i></button>
+                    </div>
+                    <div id="list-doces" class="space-y-3"></div>
                 </div>
             </div>
         </section>
@@ -628,9 +634,15 @@
                         <label class="text-[10px] font-black uppercase tracking-widest text-slate-400 block mb-2 ml-2">Valor em Reais por Ponto (Ex: 0.50)</label>
                         <input type="number" id="pontos-valor-reais" min="0" step="0.05" value="0.50" class="w-full p-4 bg-slate-50 rounded-2xl border-2 border-transparent focus:border-violet-500 font-black text-lg outline-none" placeholder="Ex: 0.50">
                     </div>
-                    <div class="flex items-end shrink-0">
-                        <button onclick="savePontosConfig()" class="h-[56px] px-6 bg-violet-600 text-white rounded-2xl font-black text-sm shadow-xl shadow-violet-500/20 active:scale-95 transition-all">SALVAR</button>
-                    </div>
+                </div>
+
+                <div class="pt-4">
+                    <label class="text-[10px] font-black uppercase tracking-widest text-slate-400 block mb-2 ml-2">Mensagem de Fidelidade (Exibida no Site)</label>
+                    <textarea id="loyalty-message" rows="2" class="w-full p-4 bg-slate-50 rounded-2xl border-2 border-transparent focus:border-violet-500 font-bold text-sm outline-none resize-none" placeholder="Ex: Junte os pontos e troque por produtos da loja!"></textarea>
+                </div>
+
+                <div class="flex justify-end pt-4">
+                    <button onclick="savePontosConfig()" class="h-[56px] px-8 bg-violet-600 text-white rounded-2xl font-black text-sm shadow-xl shadow-violet-500/20 active:scale-95 transition-all">SALVAR CONFIGURAÇÕES DE FIDELIDADE</button>
                 </div>
             </div>
 
@@ -966,7 +978,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, doc, onSnapshot, updateDoc, setDoc, collection, query, orderBy, limit, deleteDoc, getDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getFirestore, doc, onSnapshot, updateDoc, setDoc, collection, query, orderBy, limit, deleteDoc, getDoc, writeBatch } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyA8Xh5f0Xeu-N8NbF-WAE_sk2grcs9VN60",
@@ -1059,6 +1071,8 @@
                         if (metaEl) metaEl.value = snap.data().pontosMeta || 10;
                         const valReaisEl = document.getElementById('pontos-valor-reais');
                         if (valReaisEl) valReaisEl.value = snap.data().pontosValorReais || 0.50;
+                        const messageEl = document.getElementById('loyalty-message');
+                        if (messageEl) messageEl.value = snap.data().loyaltyMessage || '';
                         updateFidelidadeToggle(snap.data().fidelidadeAtiva !== false);
                         renderAll();
                     }
@@ -1090,7 +1104,7 @@
                     renderCupons();
                 }, (err) => console.error("Erro snapshot cupons:", err));
 
-                const qOrders = query(collection(db, 'pedidos'), orderBy('data', 'desc'), limit(100));
+                const qOrders = query(collection(db, 'pedidos'), orderBy('data', 'desc'), limit(1000));
                 let knownOrderIds = new Set();
                 onSnapshot(qOrders, (snap) => { 
                     state.pedidos = snap.docs.map(d => ({ id: d.id, ...d.data() }));
@@ -1335,8 +1349,11 @@
             });
 
             const html = filteredOrders.length === 0 ? '<div class="p-20 text-center text-slate-300 font-bold uppercase tracking-widest text-[10px]">Nenhum pedido encontrado com esses filtros...</div>' : filteredOrders.map((p, idx) => `
-                <div class="p-8 flex flex-col md:flex-row md:items-center justify-between gap-6 hover:bg-slate-50 transition-all group">
+                <div class="p-8 flex flex-col md:flex-row md:items-center justify-between gap-6 hover:bg-slate-50 transition-all group ${state.selectedOrders?.has(p.id) ? 'bg-brand-50/30' : ''}">
                     <div class="flex items-start gap-5">
+                         <div class="flex items-center h-14">
+                             <input type="checkbox" onchange="toggleOrderSelection('${p.id}')" ${state.selectedOrders?.has(p.id) ? 'checked' : ''} class="w-5 h-5 rounded-lg border-2 border-slate-200 text-brand-600 focus:ring-brand-500 cursor-pointer">
+                         </div>
                          <div class="w-14 h-14 bg-slate-100 rounded-2xl flex items-center justify-center text-slate-400 group-hover:bg-brand-50 group-hover:text-brand-500 transition-colors">
                               <i data-lucide="shopping-bag" class="w-7 h-7"></i>
                          </div>
@@ -1350,12 +1367,14 @@
                               <p class="text-[10px] font-black uppercase text-slate-400 mb-1 tracking-widest">${p.pagamento || 'N/A'} • ${p.delivery || 'Balcão/Retirada'}</p>
                               <p class="text-2xl font-display font-black text-slate-900 group-hover:text-brand-600 transition-colors">R$ ${(p.total || 0).toFixed(2).replace('.', ',')}</p>
                          </div>
-                         <button onclick="viewOrderDetails('${p.id}')" class="p-4 bg-white border border-slate-100 rounded-2xl hover:border-brand-500 hover:text-brand-500 hover:shadow-lg active:scale-95 transition-all outline-none">
-                              <i data-lucide="eye" class="w-5 h-5"></i>
-                         </button>
-                         <button onclick="deleteOrder('${p.id}')" class="p-4 bg-white border border-slate-100 rounded-2xl hover:border-red-500 hover:text-red-500 hover:shadow-lg active:scale-95 transition-all outline-none">
-                              <i data-lucide="trash-2" class="w-5 h-5"></i>
-                         </button>
+                         <div class="flex items-center gap-2">
+                             <button onclick="viewOrderDetails('${p.id}')" class="p-4 bg-white border border-slate-100 rounded-2xl hover:border-brand-500 hover:text-brand-500 hover:shadow-lg active:scale-95 transition-all outline-none">
+                                  <i data-lucide="eye" class="w-5 h-5"></i>
+                             </button>
+                             <button onclick="deleteOrder('${p.id}')" class="p-4 bg-white border border-slate-100 rounded-2xl hover:border-red-500 hover:text-red-500 hover:shadow-lg active:scale-95 transition-all outline-none">
+                                  <i data-lucide="trash-2" class="w-5 h-5"></i>
+                             </button>
+                         </div>
                     </div>
                 </div>
             `).join('');
@@ -1433,6 +1452,64 @@
                 } else {
                     toast('Erro: ' + e.message, 'error');
                 }
+            }
+        };
+        
+        window.clearAllOrders = async () => {
+            if (state.pedidos.length === 0) return toast('Não há pedidos para limpar.', 'error');
+            if (!confirm(`Tem certeza que deseja APAGAR TODOS os ${state.pedidos.length} pedidos do histórico? Esta ação não pode ser desfeita.`)) return;
+            
+            try {
+                const batch = writeBatch(db);
+                state.pedidos.forEach(p => {
+                    batch.delete(doc(db, 'pedidos', p.id));
+                });
+                await batch.commit();
+                state.selectedOrders?.clear();
+                updateBulkUI();
+                toast('Todos os pedidos foram removidos!');
+            } catch (e) {
+                console.error('Erro ao limpar pedidos:', e);
+                toast('Erro ao limpar: ' + e.message, 'error');
+            }
+        };
+
+        state.selectedOrders = new Set();
+        window.toggleOrderSelection = (id) => {
+            if (state.selectedOrders.has(id)) state.selectedOrders.delete(id);
+            else state.selectedOrders.add(id);
+            updateBulkUI();
+            renderPedidos();
+        };
+
+        function updateBulkUI() {
+            const area = document.getElementById('bulk-actions');
+            const count = document.getElementById('selected-count');
+            if (!area || !count) return;
+            
+            if (state.selectedOrders.size > 0) {
+                area.classList.remove('hidden');
+                count.innerText = `${state.selectedOrders.size} selecionados`;
+            } else {
+                area.classList.add('hidden');
+            }
+        }
+
+        window.deleteSelectedOrders = async () => {
+            if (state.selectedOrders.size === 0) return;
+            if (!confirm(`Deseja apagar os ${state.selectedOrders.size} pedidos selecionados?`)) return;
+            
+            try {
+                const batch = writeBatch(db);
+                state.selectedOrders.forEach(id => {
+                    batch.delete(doc(db, 'pedidos', id));
+                });
+                await batch.commit();
+                state.selectedOrders.clear();
+                updateBulkUI();
+                toast('Pedidos selecionados removidos!');
+            } catch (e) {
+                toast('Erro ao deletar selecionados', 'error');
             }
         };
 
@@ -1542,7 +1619,7 @@
 
         function renderAccompaniments() {
             if (!state.config || !state.config.accompaniments) return;
-            ['frutas', 'adicionais', 'coberturas'].forEach(cat => {
+            ['frutas', 'adicionais', 'coberturas', 'doces'].forEach(cat => {
                 const list = document.getElementById(`list-${cat}`);
                 if (!list) return;
                 const items = state.config.accompaniments[cat] || [];
@@ -2043,8 +2120,14 @@
             });
             const meta = parseInt(document.getElementById('pontos-meta').value) || 10;
             const valorReais = parseFloat(document.getElementById('pontos-valor-reais').value) || 0;
+            const message = document.getElementById('loyalty-message').value;
             try {
-                await updateDoc(doc(db, 'loja', 'config'), { pontosConfig: newConfig, pontosMeta: meta, pontosValorReais: valorReais });
+                await updateDoc(doc(db, 'loja', 'config'), { 
+                    pontosConfig: newConfig, 
+                    pontosMeta: meta, 
+                    pontosValorReais: valorReais,
+                    loyaltyMessage: message
+                });
                 state.pontosConfig = newConfig;
                 toast('Pontuação Salva!');
             } catch (e) {
