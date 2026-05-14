@@ -391,6 +391,10 @@
           <i data-lucide="ice-cream-2" class="w-4 h-4"></i>
           Sorvetes
         </button>
+        <button onclick="window.switchCategory('doces')" id="tab-doces" class="category-tab">
+          <i data-lucide="candy" class="w-4 h-4"></i>
+          Doces
+        </button>
       </div>
 
       <!-- Grid de Produtos -->
@@ -1178,6 +1182,7 @@
       // Update UI Tabs
       document.getElementById('tab-acai').classList.toggle('active', cat === 'acai');
       document.getElementById('tab-sorvete').classList.toggle('active', cat === 'sorvete');
+      document.getElementById('tab-doces').classList.toggle('active', cat === 'doces');
 
       window.renderMenu();
     };
@@ -1189,8 +1194,8 @@
 
       const productsToRender = state.products && state.products.length > 0 ? state.products : [];
       const filtered = productsToRender.filter(p => {
-        if (state.activeCategory === 'acai') return p.category !== 'sorvete';
-        return p.category === 'sorvete';
+        if (state.activeCategory === 'acai') return !p.category || p.category === 'acai';
+        return p.category === state.activeCategory;
       }).sort((a, b) => {
         if (a.isPinned && !b.isPinned) return -1;
         if (!a.isPinned && b.isPinned) return 1;
@@ -1220,7 +1225,7 @@
           imageHTML = `<img src="${item.image}" class="w-full h-full object-cover" alt="${item.name}">`;
         } else {
           imageHTML = `
-             <i data-lucide="${item.category === 'sorvete' ? 'ice-cream-2' : 'cup-soda'}" class="w-8 h-8 relative z-10"></i>
+             <i data-lucide="${item.category === 'sorvete' ? 'ice-cream-2' : (item.category === 'doces' ? 'candy' : 'cup-soda')}" class="w-8 h-8 relative z-10"></i>
              <div class="absolute -bottom-2 -right-2 w-8 h-8 bg-brand-500 opacity-20 rounded-full blur-sm"></div>
             `;
         }

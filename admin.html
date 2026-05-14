@@ -870,6 +870,7 @@
                             class="w-full p-4 bg-slate-50 rounded-2xl border-2 border-transparent focus:border-brand-500 font-bold outline-none text-slate-700">
                             <option value="acai">Açaí</option>
                             <option value="sorvete">Sorvetes e Picolés</option>
+                            <option value="doces">Doces</option>
                         </select>
                     </div>
                     <div class="space-y-2 flex flex-col justify-center pt-6 pl-2">
@@ -1521,11 +1522,11 @@
                 <div class="bg-white p-8 rounded-[3rem] border-2 ${s.available ? 'border-transparent' : 'border-red-50 grayscale scale-[0.98]'} shadow-sm flex flex-col justify-between hover:shadow-xl transition-all relative">
                     ${!s.available ? '<span class="absolute top-6 right-8 bg-red-500 text-white text-[9px] font-black uppercase tracking-widest px-3 py-1 rounded-full z-10 shadow-lg">Esgotado</span>' : ''}
                     <div>
-                        <div class="w-20 h-20 rounded-3xl mb-4 shadow-sm overflow-hidden flex items-center justify-center ${s.image ? '' : 'bg-brand-50 text-brand-600'}">
-                             ${s.image ? `<img src="${s.image}" class="w-full h-full object-cover" alt="${s.name}">` : '<i data-lucide="cup-soda" class="w-10 h-10"></i>'}
+                        <div class="w-20 h-20 rounded-3xl mb-4 shadow-sm overflow-hidden flex items-center justify-center ${s.image ? '' : (s.category === 'doces' ? 'bg-pink-50 text-pink-500' : 'bg-brand-50 text-brand-600')}">
+                             ${s.image ? `<img src="${s.image}" class="w-full h-full object-cover" alt="${s.name}">` : `<i data-lucide="${s.category === 'sorvete' ? 'ice-cream-2' : (s.category === 'doces' ? 'candy' : 'cup-soda')}" class="w-10 h-10"></i>`}
                         </div>
                         <div class="flex items-center gap-2 mb-2 flex-wrap">
-                             <span class="px-2 py-1 bg-slate-100 rounded-lg text-[9px] font-black text-slate-500 uppercase tracking-widest">${s.category === 'sorvete' ? '🍦 Sorvete/Picolé' : '🫐 Açaí'}</span>
+                             <span class="px-2 py-1 bg-slate-100 rounded-lg text-[9px] font-black text-slate-500 uppercase tracking-widest">${s.category === 'sorvete' ? '🍦 Sorvete/Picolé' : (s.category === 'doces' ? '🍬 Doces' : '🫐 Açaí')}</span>
                              ${s.category === 'sorvete' && s.allowCob ? `<span class="px-2 py-1 bg-brand-50 rounded-lg text-[9px] font-black text-brand-600 uppercase tracking-widest">C/ Cobert.</span>` : ''}
                              ${s.hasComplements === false ? `<span class="px-2 py-1 bg-red-50 rounded-lg text-[9px] font-black text-red-600 uppercase tracking-widest">S/ Acomp.</span>` : ''}
                              ${s.isPinned ? `<span class="px-2 py-1 bg-amber-50 rounded-lg text-[9px] font-black text-amber-600 uppercase tracking-widest">⭐ Fixado</span>` : ''}
