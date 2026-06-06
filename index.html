@@ -497,8 +497,8 @@
     }
 
     /* Esconde as marcas d'água de background modernas para ficar rústico */
-    .theme-festajunina .bg-gradient-to-r,
-    .theme-festajunina-pending body .bg-gradient-to-r {
+    .theme-festajunina #banner-principal .bg-gradient-to-r,
+    .theme-festajunina-pending body #banner-principal .bg-gradient-to-r {
       background-image: none !important;
     }
     
@@ -611,8 +611,8 @@
 
       <!-- Banner de Destaque -->
       <div id="banner-principal" class="relative w-full rounded-[2rem] overflow-hidden shadow-xl shadow-blue-900/20 mb-6 banner-principal">
-        <span class="decor-festajunina" style="top: -15px; left: -10px; font-size: 3.5rem; transform: rotate(-20deg);">👒</span>
-        <span class="decor-festajunina" style="bottom: 5px; right: -5px; font-size: 4rem;">🔥</span>
+        <span class="decor-festajunina" style="top: -15px; left: -10px; font-size: clamp(1.8rem, 5vw, 3.5rem); transform: rotate(-20deg);">👒</span>
+        <span class="decor-festajunina" style="bottom: 5px; right: -5px; font-size: clamp(1.8rem, 5vw, 4rem);">🔥</span>
         
         <div class="absolute inset-0 bg-gradient-to-r from-brand-900 to-brand-600 z-0"></div>
         <div class="absolute inset-0 opacity-20 z-0"
@@ -628,7 +628,7 @@
 
           <div id="banner-pill-bottom"
             class="flex items-center gap-3 bg-white/10 backdrop-blur-md px-5 py-3 rounded-2xl border border-white/10 hover:bg-white/20 transition-colors cursor-default w-full max-w-[280px] mx-auto text-left shadow-sm relative">
-            <span class="decor-festajunina" style="top: -15px; right: -20px; font-size: 3rem; transform: rotate(15deg);">🌽</span>
+            <span class="decor-festajunina" style="top: -15px; right: -20px; font-size: clamp(1.5rem, 4vw, 3rem); transform: rotate(15deg);">🌽</span>
             <div class="bg-orange-500 p-2.5 rounded-xl text-white shadow-md">
               <i data-lucide="ice-cream-2" class="w-5 h-5"></i>
             </div>
@@ -658,7 +658,7 @@
 
       <!-- Banner de Promoções (Baseado no modelo) -->
       <div id="promocao-announcement" class="hidden relative w-full mb-6 rounded-[2rem] overflow-hidden shadow-xl shadow-red-900/10 bg-gradient-to-r from-red-600 to-rose-600 p-5 animate-slide-up group">
-        <span class="decor-festajunina" style="bottom: 0px; right: 10px; font-size: 3rem;">🔥</span>
+        <span class="decor-festajunina" style="bottom: 0px; right: 10px; font-size: clamp(1.5rem, 4vw, 3rem);">🔥</span>
         <div class="absolute inset-0 opacity-20" style="background-image: radial-gradient(circle at 2px 2px, white 1px, transparent 0); background-size: 20px 20px;"></div>
         <div class="relative z-10 flex items-center gap-4">
           <div id="promocao-icon-container" class="w-12 h-12 bg-white/20 rounded-2xl flex items-center justify-center shrink-0 backdrop-blur-md shadow-sm group-hover:scale-105 transition-transform border border-transparent">
@@ -674,7 +674,7 @@
       <!-- Filtro de Categorias -->
       <div class="flex gap-3 px-1 mb-6 relative">
         <span class="decor-festajunina" style="top: -15px; left: -10px; font-size: 2rem; transform: rotate(-25deg);">👒</span>
-        <span class="decor-festajunina" style="bottom: -10px; right: -5px; font-size: 2.5rem;">🔥</span>
+        <span class="decor-festajunina" style="bottom: -10px; right: -5px; font-size: clamp(1.2rem, 3.5vw, 2.5rem);">🔥</span>
         <button onclick="window.switchCategory('acai')" id="tab-acai" class="category-tab active">
           <i data-lucide="cup-soda" class="w-4 h-4"></i>
           Açaí
@@ -1407,7 +1407,7 @@
     window.handlePaymentChange = () => {
       const method = document.getElementById('payment-method').value;
       const pixArea = document.getElementById('pix-area');
-      state.paymentVerified = !!method;
+      state.paymentVerified = method && method !== 'Pix';
 
       if (method === 'Pix') {
         if (pixArea) {
@@ -2175,9 +2175,10 @@
     };
 
     window.confirmPixPayment = () => {
-      // Usuário confirmou que pagou — para o timer e envia o pedido
       clearInterval(pixTimerInterval);
       pixTimerExpired = false;
+      state.paymentVerified = true;
+      window.validateCheckout();
       window.sendOrder();
     };
 
