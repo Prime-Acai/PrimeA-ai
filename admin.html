@@ -580,6 +580,21 @@
                     </div>
 
                     <div class="pt-6 border-t border-slate-50">
+                        <h4 class="font-display font-bold text-lg mb-6 flex items-center gap-2 text-slate-700 italic"><i
+                                data-lucide="palette" class="w-5 h-5"></i> Tema e Aparência</h4>
+                        <div class="flex items-center justify-between p-5 bg-slate-50 rounded-2xl">
+                            <div>
+                                <h5 class="font-bold text-slate-800 text-sm">Tema Especial: Festa Junina</h5>
+                                <p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-1">Ativa o layout decorativo no catálogo</p>
+                            </div>
+                            <label class="relative inline-flex items-center cursor-pointer">
+                                <input type="checkbox" id="conf-theme-festajunina" class="sr-only peer">
+                                <div class="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-brand-500"></div>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="pt-6 border-t border-slate-50">
                         <label
                             class="text-[10px] font-black uppercase tracking-widest text-slate-400 block mb-3 ml-2 text-red-500">ZONA
                             DE RISCO</label>
@@ -1645,6 +1660,10 @@
             document.getElementById('conf-pix-key').value = state.config.pixKey || '';
             document.getElementById('conf-pix-name').value = state.config.pixName || '';
             document.getElementById('conf-wait-time').value = state.config.waitTime || '';
+            const themeCheckbox = document.getElementById('conf-theme-festajunina');
+            if (themeCheckbox) {
+                themeCheckbox.checked = state.config.themeFestaJunina === true;
+            }
         }
 
         // --- GLOBAL ACTIONS ---
@@ -2056,7 +2075,8 @@
                 storeName: document.getElementById('conf-name').value,
                 pixKey: document.getElementById('conf-pix-key').value,
                 pixName: document.getElementById('conf-pix-name').value,
-                waitTime: document.getElementById('conf-wait-time').value
+                waitTime: document.getElementById('conf-wait-time').value,
+                themeFestaJunina: document.getElementById('conf-theme-festajunina') ? document.getElementById('conf-theme-festajunina').checked : false
             };
             await updateDoc(doc(db, 'loja', 'config'), data);
             toast("Configurações Globais Salvas!");
