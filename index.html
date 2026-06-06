@@ -364,9 +364,11 @@
       font-weight: 900 !important;
     }
 
-    /* Clube de Vantagens (Toalha Xadrez) */
+    /* Clube de Vantagens & Promoções (Toalha Xadrez) */
     .theme-festajunina #loyalty-announcement,
-    .theme-festajunina-pending body #loyalty-announcement {
+    .theme-festajunina #promocao-announcement,
+    .theme-festajunina-pending body #loyalty-announcement,
+    .theme-festajunina-pending body #promocao-announcement {
       background-color: #d32f2f !important;
       background-image: 
         repeating-linear-gradient(90deg, transparent, transparent 15px, rgba(255,255,255,0.15) 15px, rgba(255,255,255,0.15) 30px),
@@ -377,7 +379,9 @@
       box-shadow: 0 5px 15px rgba(211, 47, 47, 0.3) !important;
     }
     .theme-festajunina #loyalty-announcement::after,
-    .theme-festajunina-pending body #loyalty-announcement::after {
+    .theme-festajunina #promocao-announcement::after,
+    .theme-festajunina-pending body #loyalty-announcement::after,
+    .theme-festajunina-pending body #promocao-announcement::after {
       content: '';
       position: absolute;
       inset: 4px;
@@ -387,18 +391,26 @@
     }
     .theme-festajunina #loyalty-announcement h3,
     .theme-festajunina #loyalty-announcement p,
+    .theme-festajunina #promocao-announcement h3,
+    .theme-festajunina #promocao-announcement p,
     .theme-festajunina-pending body #loyalty-announcement h3,
-    .theme-festajunina-pending body #loyalty-announcement p {
+    .theme-festajunina-pending body #loyalty-announcement p,
+    .theme-festajunina-pending body #promocao-announcement h3,
+    .theme-festajunina-pending body #promocao-announcement p {
       color: white !important;
       text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
     }
     .theme-festajunina #loyalty-icon-container,
-    .theme-festajunina-pending body #loyalty-icon-container {
+    .theme-festajunina #promocao-icon-container,
+    .theme-festajunina-pending body #loyalty-icon-container,
+    .theme-festajunina-pending body #promocao-icon-container {
       background: #f7e1b5 !important;
       border: 2px solid #dca75e !important;
     }
     .theme-festajunina #loyalty-icon-container i,
-    .theme-festajunina-pending body #loyalty-icon-container i {
+    .theme-festajunina #promocao-icon-container i,
+    .theme-festajunina-pending body #loyalty-icon-container i,
+    .theme-festajunina-pending body #promocao-icon-container i {
       color: #b71c1c !important;
     }
 
@@ -497,6 +509,19 @@
     .theme-festajunina-pending body .bg-brand-600 { background-color: #d84315 !important; }
     .theme-festajunina .bg-brand-50,
     .theme-festajunina-pending body .bg-brand-50 { background-color: #fbe9e7 !important; }
+
+    /* Decorações Específicas Festa Junina (Fogueira, Chapéu, Milho) */
+    .decor-festajunina {
+      display: none;
+      position: absolute;
+      z-index: 20;
+      pointer-events: none;
+      filter: drop-shadow(2px 4px 6px rgba(0,0,0,0.3));
+    }
+    .theme-festajunina .decor-festajunina,
+    .theme-festajunina-pending body .decor-festajunina {
+      display: block;
+    }
   </style>
 </head>
 
@@ -586,6 +611,9 @@
 
       <!-- Banner de Destaque -->
       <div id="banner-principal" class="relative w-full rounded-[2rem] overflow-hidden shadow-xl shadow-blue-900/20 mb-6 banner-principal">
+        <span class="decor-festajunina" style="top: -15px; left: -10px; font-size: 3.5rem; transform: rotate(-20deg);">👒</span>
+        <span class="decor-festajunina" style="bottom: 5px; right: -5px; font-size: 4rem;">🔥</span>
+        
         <div class="absolute inset-0 bg-gradient-to-r from-brand-900 to-brand-600 z-0"></div>
         <div class="absolute inset-0 opacity-20 z-0"
           style="background-image: radial-gradient(circle at 2px 2px, white 1px, transparent 0); background-size: 20px 20px;">
@@ -599,7 +627,8 @@
           <h2 class="font-display font-black text-3xl mb-6 text-white leading-tight">O Verdadeiro<br>Sabor do Açaí</h2>
 
           <div id="banner-pill-bottom"
-            class="flex items-center gap-3 bg-white/10 backdrop-blur-md px-5 py-3 rounded-2xl border border-white/10 hover:bg-white/20 transition-colors cursor-default w-full max-w-[280px] mx-auto text-left shadow-sm">
+            class="flex items-center gap-3 bg-white/10 backdrop-blur-md px-5 py-3 rounded-2xl border border-white/10 hover:bg-white/20 transition-colors cursor-default w-full max-w-[280px] mx-auto text-left shadow-sm relative">
+            <span class="decor-festajunina" style="top: -15px; right: -20px; font-size: 3rem; transform: rotate(15deg);">🌽</span>
             <div class="bg-orange-500 p-2.5 rounded-xl text-white shadow-md">
               <i data-lucide="ice-cream-2" class="w-5 h-5"></i>
             </div>
@@ -613,6 +642,8 @@
 
       <!-- Banner de Pontos (Fidelidade) -->
       <div id="loyalty-announcement" class="hidden relative w-full mb-6 rounded-[2rem] overflow-hidden shadow-xl shadow-violet-900/10 bg-gradient-to-r from-violet-600 to-indigo-600 p-5 animate-slide-up group">
+        <span class="decor-festajunina" style="bottom: 5px; right: -5px; font-size: 3rem; transform: rotate(10deg);">👒</span>
+        <span class="decor-festajunina" style="bottom: 5px; right: 45px; font-size: 1.5rem;">🫐</span>
         <div class="absolute inset-0 opacity-20" style="background-image: radial-gradient(circle at 2px 2px, white 1px, transparent 0); background-size: 20px 20px;"></div>
         <div class="relative z-10 flex items-center gap-4">
           <div id="loyalty-icon-container" class="w-12 h-12 bg-white/20 rounded-2xl flex items-center justify-center shrink-0 backdrop-blur-md shadow-sm group-hover:scale-105 transition-transform border border-transparent">
@@ -625,8 +656,25 @@
         </div>
       </div>
 
+      <!-- Banner de Promoções (Baseado no modelo) -->
+      <div id="promocao-announcement" class="hidden relative w-full mb-6 rounded-[2rem] overflow-hidden shadow-xl shadow-red-900/10 bg-gradient-to-r from-red-600 to-rose-600 p-5 animate-slide-up group">
+        <span class="decor-festajunina" style="bottom: 0px; right: 10px; font-size: 3rem;">🔥</span>
+        <div class="absolute inset-0 opacity-20" style="background-image: radial-gradient(circle at 2px 2px, white 1px, transparent 0); background-size: 20px 20px;"></div>
+        <div class="relative z-10 flex items-center gap-4">
+          <div id="promocao-icon-container" class="w-12 h-12 bg-white/20 rounded-2xl flex items-center justify-center shrink-0 backdrop-blur-md shadow-sm group-hover:scale-105 transition-transform border border-transparent">
+            <i data-lucide="tag" class="w-6 h-6 text-white"></i>
+          </div>
+          <div>
+            <h3 class="font-display font-black text-white text-lg leading-tight mb-1">Promoção Especial</h3>
+            <p id="promocao-announcement-text" class="text-red-100 text-[11px] font-medium leading-snug"></p>
+          </div>
+        </div>
+      </div>
+
       <!-- Filtro de Categorias -->
-      <div class="flex gap-3 px-1 mb-6">
+      <div class="flex gap-3 px-1 mb-6 relative">
+        <span class="decor-festajunina" style="top: -15px; left: -10px; font-size: 2rem; transform: rotate(-25deg);">👒</span>
+        <span class="decor-festajunina" style="bottom: -10px; right: -5px; font-size: 2.5rem;">🔥</span>
         <button onclick="window.switchCategory('acai')" id="tab-acai" class="category-tab active">
           <i data-lucide="cup-soda" class="w-4 h-4"></i>
           Açaí
@@ -1110,6 +1158,20 @@
               }
             }
 
+            // Atualiza mensagem de promoção
+            const promoAnnouncement = document.getElementById('promocao-announcement');
+            if (promoAnnouncement) {
+              if (data.promocoes && data.promocoes.ativa) {
+                promoAnnouncement.classList.remove('hidden');
+                const promoText = document.getElementById('promocao-announcement-text');
+                if (promoText) {
+                  promoText.innerHTML = `<strong>${data.promocoes.mensagem}</strong><br>Brinde: ${data.promocoes.brinde}`;
+                }
+              } else {
+                promoAnnouncement.classList.add('hidden');
+              }
+            }
+
             const applyTheme = state.config.themeFestaJunina === true;
             if (applyTheme) {
                 document.body.classList.add('theme-festajunina');
@@ -1295,12 +1357,33 @@
       // SEMPRE RETIRADA
       const totalStr = `R$ ${total.toFixed(2).replace('.', ',')}`;
       
+      let promoHtml = '';
+      if (state.config.promocoes && state.config.promocoes.ativa) {
+          const promo = state.config.promocoes;
+          if (total >= promo.valor) {
+              promoHtml = `
+              <div class="mt-3 bg-green-50 border border-green-200 rounded-xl p-3 animate-slide-up">
+                  <p class="text-xs font-black text-green-700 flex items-center gap-2"><i data-lucide="gift" class="w-4 h-4"></i> PARABÉNS!</p>
+                  <p class="text-[10px] font-bold text-green-600 mt-1">Você ganhou: <span class="font-black uppercase tracking-wide">${promo.brinde}</span></p>
+                  <p class="text-[9px] text-green-500 mt-0.5">${promo.mensagem}</p>
+              </div>`;
+          } else {
+              const diff = promo.valor - total;
+              promoHtml = `
+              <div class="mt-3 bg-brand-50 border border-brand-100 rounded-xl p-3 animate-slide-up">
+                  <p class="text-[10px] font-black text-brand-700 flex items-center gap-1.5"><i data-lucide="info" class="w-3.5 h-3.5"></i> Faltam R$ ${diff.toFixed(2).replace('.', ',')}</p>
+                  <p class="text-[9px] text-brand-600 mt-0.5">para você ganhar: <strong class="font-black uppercase">${promo.brinde}</strong></p>
+              </div>`;
+          }
+      }
+
       const totalContainerHtml = `
           ${cupomDiscountHtml}
           <div class="flex justify-between items-center mt-3 pt-3 border-t border-slate-100 px-2">
               <span class="text-xs font-black text-slate-400 uppercase tracking-widest">Total Final</span>
               <span id="cart-total-value" class="font-display font-black text-xl text-brand-600">${totalStr}</span>
           </div>
+          ${promoHtml}
       `;
 
       const totalEl = document.getElementById('cart-total');
@@ -1921,6 +2004,12 @@
           msg += `\n🎟️ * Cupom Aplicado:* ${state.appliedCupom.codigo} (- R$ ${state.appliedCupom.valor.toFixed(2).replace('.', ',')})\n`;
       }
       
+      let brindeGanho = null;
+      if (state.config.promocoes && state.config.promocoes.ativa && totalVal >= state.config.promocoes.valor) {
+          brindeGanho = state.config.promocoes.brinde;
+          msg += `\n🎁 * BRINDE GANHO:* ${brindeGanho}\n`;
+      }
+      
       let pontosGanhos = 0;
       let pontosGanhosAcai = 0;
       let pontosGanhosSorvete = 0;
@@ -1959,6 +2048,7 @@
             pagamento: method || '',
             total: totalVal || 0,
             cupomInfo: state.appliedCupom ? state.appliedCupom : null,
+            brindeGanho: brindeGanho,
             pontosGanhos: pontosGanhos || 0,
             itens: cartSnapshot,
             obsGeral: obsGeneral,

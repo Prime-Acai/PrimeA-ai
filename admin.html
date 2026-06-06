@@ -240,6 +240,10 @@
                     class="sidebar-item w-full flex items-center gap-3 px-4 py-4 rounded-2xl text-slate-500 font-bold transition-all hover:bg-slate-50">
                     <i data-lucide="gift" class="w-5 h-5"></i> Club Prime (Fidelid.)
                 </button>
+                <button onclick="showTab('promocoes')" id="nav-promocoes"
+                    class="sidebar-item w-full flex items-center gap-3 px-4 py-4 rounded-2xl text-slate-500 font-bold transition-all hover:bg-slate-50">
+                    <i data-lucide="tag" class="w-5 h-5"></i> Promoções
+                </button>
             </nav>
         </div>
 
@@ -300,6 +304,10 @@
         <button onclick="showTab('fidelidade')" id="m-nav-fidelidade" class="mobile-nav-item">
             <i data-lucide="gift"></i>
             <span>Club Prime</span>
+        </button>
+        <button onclick="showTab('promocoes')" id="m-nav-promocoes" class="mobile-nav-item">
+            <i data-lucide="tag"></i>
+            <span>Promoções</span>
         </button>
     </nav>
 
@@ -735,6 +743,43 @@
                     </div>
                 </div>
 
+            </div>
+        </section>
+
+        <!-- PROMOÇÕES TAB -->
+        <section id="tab-promocoes" class="tab-content space-y-8 animate-fade-in">
+            <header>
+                <h2 class="font-display font-black text-4xl text-slate-900 tracking-tight">Promoções</h2>
+                <p class="text-slate-400 font-medium">Configure brindes por valor mínimo</p>
+            </header>
+            <div class="max-w-2xl bg-white p-6 lg:p-10 rounded-[2rem] lg:rounded-[3rem] border border-slate-100 shadow-xl space-y-8">
+                <div class="flex items-center justify-between p-5 bg-slate-50 rounded-2xl">
+                    <div>
+                        <h3 class="font-bold text-slate-800 text-sm">Promoção Ativa</h3>
+                        <p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-1">Ligar ou desligar o brinde global</p>
+                    </div>
+                    <label class="relative inline-flex items-center cursor-pointer">
+                        <input type="checkbox" id="prom-ativa" class="sr-only peer">
+                        <div class="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-brand-500"></div>
+                    </label>
+                </div>
+                
+                <div class="space-y-6">
+                    <div>
+                        <label class="text-[10px] font-black uppercase tracking-widest text-slate-400 block mb-3 ml-2">Valor Mínimo (R$)</label>
+                        <input type="number" step="0.5" id="prom-valor" placeholder="Ex: 50.00" class="w-full p-5 bg-slate-50 border-2 border-transparent focus:border-brand-500 rounded-2xl outline-none font-bold">
+                    </div>
+                    <div>
+                        <label class="text-[10px] font-black uppercase tracking-widest text-slate-400 block mb-3 ml-2">Nome do Brinde</label>
+                        <input type="text" id="prom-brinde" placeholder="Ex: Copo de 300ml" class="w-full p-5 bg-slate-50 border-2 border-transparent focus:border-brand-500 rounded-2xl outline-none font-bold">
+                    </div>
+                    <div>
+                        <label class="text-[10px] font-black uppercase tracking-widest text-slate-400 block mb-3 ml-2">Mensagem (Exibida no Carrinho)</label>
+                        <input type="text" id="prom-mensagem" placeholder="Ex: Compras acima de R$ 50 ganham um copo!" class="w-full p-5 bg-slate-50 border-2 border-transparent focus:border-brand-500 rounded-2xl outline-none font-bold">
+                    </div>
+                </div>
+
+                <button onclick="savePromocoesConfig()" class="w-full py-5 bg-brand-600 text-white rounded-2xl font-black text-sm shadow-xl active:scale-95 transition-all">SALVAR PROMOÇÃO</button>
             </div>
         </section>
     </main>
@@ -1664,6 +1709,16 @@
             if (themeCheckbox) {
                 themeCheckbox.checked = state.config.themeFestaJunina === true;
             }
+            if (state.config.promocoes) {
+                const promAtiva = document.getElementById('prom-ativa');
+                if (promAtiva) promAtiva.checked = state.config.promocoes.ativa || false;
+                const promValor = document.getElementById('prom-valor');
+                if (promValor) promValor.value = state.config.promocoes.valor || '';
+                const promBrinde = document.getElementById('prom-brinde');
+                if (promBrinde) promBrinde.value = state.config.promocoes.brinde || '';
+                const promMsg = document.getElementById('prom-mensagem');
+                if (promMsg) promMsg.value = state.config.promocoes.mensagem || '';
+            }
         }
 
         // --- GLOBAL ACTIONS ---
@@ -2080,6 +2135,17 @@
             };
             await updateDoc(doc(db, 'loja', 'config'), data);
             toast("Configurações Globais Salvas!");
+        };
+
+        window.savePromocoesConfig = async () => {
+            const data = {
+                ativa: document.getElementById('prom-ativa') ? document.getElementById('prom-ativa').checked : false,
+                valor: parseFloat(document.getElementById('prom-valor').value) || 0,
+                brinde: document.getElementById('prom-brinde').value.trim(),
+                mensagem: document.getElementById('prom-mensagem').value.trim()
+            };
+            await updateDoc(doc(db, 'loja', 'config'), { promocoes: data });
+            toast("Promoção Salva!");
         };
 
         // --- TOGGLE FIDELIDADE ---
