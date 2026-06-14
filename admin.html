@@ -1412,14 +1412,7 @@
             const html = filteredOrders.length === 0 ? '<div class="p-20 text-center text-slate-300 font-bold uppercase tracking-widest text-[10px]">Nenhum pedido encontrado com esses filtros...</div>' : filteredOrders.map((p, idx) => {
                 let promoBadge = '';
                 if (state.config.promocoes && state.config.promocoes.ativa) {
-                    const minVal = parseFloat(state.config.promocoes.valor) || 0;
-                    const totalPedido = parseFloat(p.total) || 0;
-                    if (totalPedido >= minVal) {
-                        promoBadge = `<span class="px-2 py-0.5 bg-green-50 text-green-600 rounded-lg text-[9px] font-black uppercase tracking-wider">🎁 Brinde Ganho</span>`;
-                    } else {
-                        const diff = minVal - totalPedido;
-                        promoBadge = `<span class="px-2 py-0.5 bg-brand-50 text-brand-600 rounded-lg text-[9px] font-black uppercase tracking-wider">Faltou R$ ${diff.toFixed(2).replace('.', ',')}</span>`;
-                    }
+                    promoBadge = `<span class="px-2 py-0.5 bg-brand-50 text-brand-600 rounded-lg text-[9px] font-black uppercase tracking-wider cursor-help" title="Promoção cumulativa ativa">🎁 Promoção Cumulativa</span>`;
                 }
 
                 return `
@@ -1488,26 +1481,14 @@
             // Lógica de Promoção de Brinde (mínimo de compra)
             let promoStatusHtml = '';
             if (state.config.promocoes && state.config.promocoes.ativa) {
-                const minVal = parseFloat(state.config.promocoes.valor) || 0;
-                const brinde = state.config.promocoes.brinde || '';
-                const totalPedido = parseFloat(p.total) || 0;
-                
-                if (totalPedido >= minVal) {
-                    promoStatusHtml = `
-                        <div class="p-5 bg-green-50 rounded-2xl border border-green-100">
-                            <p class="text-[10px] font-black text-green-600 uppercase tracking-widest mb-1">🎁 Promoção de Brinde</p>
-                            <p class="text-xs font-bold text-green-800">Este pedido qualificou-se para a promoção! Ganhou o brinde: <span class="font-black uppercase">${brinde}</span> 🎉</p>
+                promoStatusHtml = `
+                    <div id="order-modal-promo" class="p-5 bg-brand-50 rounded-2xl border border-brand-100">
+                        <p class="text-[10px] font-black text-brand-600 uppercase tracking-widest mb-1">🎁 Promoção de Brinde (Cumulativa)</p>
+                        <div id="order-modal-promo-details">
+                            <p class="text-xs text-brand-800 italic">Consultando saldo da promoção...</p>
                         </div>
-                    `;
-                } else {
-                    const diff = minVal - totalPedido;
-                    promoStatusHtml = `
-                        <div class="p-5 bg-brand-50 rounded-2xl border border-brand-100">
-                            <p class="text-[10px] font-black text-brand-600 uppercase tracking-widest mb-1">🎁 Promoção de Brinde</p>
-                            <p class="text-xs font-bold text-brand-800">Faltou apenas <span class="font-black text-brand-600">R$ ${diff.toFixed(2).replace('.', ',')}</span> para este cliente ganhar o brinde: <span class="uppercase font-bold">${brinde}</span></p>
-                        </div>
-                    `;
-                }
+                    </div>
+                `;
             }
 
             let html = `
@@ -1521,8 +1502,10 @@
                     ${promoStatusHtml}
 
                     <div id="order-modal-loyalty" class="p-5 bg-violet-50 rounded-2xl border border-violet-100">
-                        <p class="text-[10px] font-black text-violet-600 uppercase tracking-widest mb-2">✨ Clube Fidelidade (Carregando...)</p>
-                        <p class="text-xs text-slate-400 italic">Consultando pontos do cliente...</p>
+                        <p class="text-[10px] font-black text-violet-600 uppercase tracking-widest mb-2">✨ Clube Fidelidade</p>
+                        <div id="order-modal-loyalty-details">
+                            <p class="text-xs text-slate-400 italic">Consultando pontos do cliente...</p>
+                        </div>
                     </div>
 
                     <div class="space-y-3">
@@ -1553,28 +1536,37 @@
             const phoneKey = (p.telefone || '').replace(/\D/g, '');
             if (phoneKey) {
                 getDoc(doc(db, 'clientes_fidelidade', phoneKey)).then(docSnap => {
-                    const el = document.getElementById('order-modal-loyalty');
+                    const el = document.getElementById('order-modal-loyalty-details');
                     if (!el) return;
                     
                     const meta = state.pontosMeta || 10;
                     let ptAcai = 0;
                     let ptSorvete = 0;
+                    let valorPromo = 0;
                     
                     if (docSnap.exists()) {
                         const d = docSnap.data();
                         ptAcai = (d.pontos_acai !== undefined && d.pontos_acai !== null) ? d.pontos_acai : ((d.pontos !== undefined && d.pontos !== null) ? d.pontos : 0);
                         ptSorvete = (d.pontos_sorvete !== undefined && d.pontos_sorvete !== null) ? d.pontos_sorvete : 0;
+                        valorPromo = parseFloat(d.valor_promo) || 0;
+                    }
+
+                    if (window.renderPromoDetails) {
+                        window.renderPromoDetails(phoneKey, valorPromo);
                     }
                     
                     const faltamAcai = Math.max(0, meta - ptAcai);
                     const faltamSorvete = Math.max(0, meta - ptSorvete);
                     
                     el.innerHTML = `
-                        <p class="text-[10px] font-black text-violet-600 uppercase tracking-widest mb-2">✨ Clube Fidelidade</p>
                         <div class="space-y-2 text-xs font-bold text-slate-700">
                             <div class="flex items-center justify-between">
                                 <span class="flex items-center gap-1">🫐 Açaí:</span>
-                                <span class="px-2 py-0.5 rounded bg-violet-100 text-violet-700 font-black">${ptAcai}/${meta} pts</span>
+                                <div class="flex items-center gap-2">
+                                    <button onclick="window.updateFidelidadeDirect('${phoneKey}', -1, 'acai')" class="w-6 h-6 rounded bg-slate-200 text-slate-600 font-bold flex items-center justify-center active:scale-90">-</button>
+                                    <span class="px-2 py-0.5 rounded bg-violet-100 text-violet-700 font-black">${ptAcai}/${meta} pts</span>
+                                    <button onclick="window.updateFidelidadeDirect('${phoneKey}', 1, 'acai')" class="w-6 h-6 rounded bg-brand-600 text-white font-bold flex items-center justify-center active:scale-90">+</button>
+                                </div>
                             </div>
                             <p class="text-[10px] text-slate-400 font-bold ml-4">
                                 ${faltamAcai > 0 ? `Falta ${faltamAcai.toFixed(2).replace('.', ',').replace(',00', '')} pts para o prêmio` : '🎉 PRÊMIO LIBERADO!'}
@@ -1582,7 +1574,11 @@
                             
                             <div class="flex items-center justify-between border-t border-slate-100 pt-2">
                                 <span class="flex items-center gap-1">🍦 Sorvete:</span>
-                                <span class="px-2 py-0.5 rounded bg-indigo-100 text-indigo-700 font-black">${ptSorvete}/${meta} pts</span>
+                                <div class="flex items-center gap-2">
+                                    <button onclick="window.updateFidelidadeDirect('${phoneKey}', -1, 'sorvete')" class="w-6 h-6 rounded bg-slate-200 text-slate-600 font-bold flex items-center justify-center active:scale-90">-</button>
+                                    <span class="px-2 py-0.5 rounded bg-indigo-100 text-indigo-700 font-black">${ptSorvete}/${meta} pts</span>
+                                    <button onclick="window.updateFidelidadeDirect('${phoneKey}', 1, 'sorvete')" class="w-6 h-6 rounded bg-indigo-600 text-white font-bold flex items-center justify-center active:scale-90">+</button>
+                                </div>
                             </div>
                             <p class="text-[10px] text-slate-400 font-bold ml-4">
                                 ${faltamSorvete > 0 ? `Falta ${faltamSorvete.toFixed(2).replace('.', ',').replace(',00', '')} pts para o prêmio` : '🎉 PRÊMIO LIBERADO!'}
@@ -1591,10 +1587,9 @@
                     `;
                 }).catch(err => {
                     console.error("Erro ao carregar fidelidade no modal:", err);
-                    const el = document.getElementById('order-modal-loyalty');
+                    const el = document.getElementById('order-modal-loyalty-details');
                     if (el) {
                         el.innerHTML = `
-                            <p class="text-[10px] font-black text-red-600 uppercase tracking-widest mb-1">✨ Clube Fidelidade</p>
                             <p class="text-xs text-red-500">Erro ao carregar os dados de fidelidade.</p>
                         `;
                     }
@@ -1603,6 +1598,123 @@
                 const el = document.getElementById('order-modal-loyalty');
                 if (el) el.classList.add('hidden');
             }
+        };
+
+        window.updateFidelidadeDirect = async (phoneKey, delta, cat = 'acai') => {
+             if (!phoneKey) return;
+             try {
+                  const docRef = doc(db, 'clientes_fidelidade', phoneKey);
+                  const snap = await getDoc(docRef);
+                  const d = snap.exists() ? snap.data() : {};
+                  const field = cat === 'sorvete' ? 'pontos_sorvete' : 'pontos_acai';
+                  const ptAcai = (d.pontos_acai !== undefined && d.pontos_acai !== null) ? d.pontos_acai : ((d.pontos !== undefined && d.pontos !== null) ? d.pontos : 0);
+                  const ptSorvete = (d.pontos_sorvete !== undefined && d.pontos_sorvete !== null) ? d.pontos_sorvete : 0;
+                  
+                  let current = cat === 'sorvete' ? ptSorvete : ptAcai;
+                  let next = Math.max(0, current + delta);
+                  
+                  await setDoc(docRef, { telefone: phoneKey, [field]: next, lastUpdate: new Date().toISOString() }, { merge: true });
+                  
+                  toast(delta > 0 ? `+${Math.abs(delta).toString().replace('.', ',')} pt ${cat === 'sorvete' ? 'Sorvete' : 'Açaí'}` : `-${Math.abs(delta).toString().replace('.', ',')} pt ${cat === 'sorvete' ? 'Sorvete' : 'Açaí'}`);
+                  
+                  const meta = state.pontosMeta || 10;
+                  const newAcai = cat === 'acai' ? next : ptAcai;
+                  const newSorv = cat === 'sorvete' ? next : ptSorvete;
+                  const faltamAcai = Math.max(0, meta - newAcai);
+                  const faltamSorvete = Math.max(0, meta - newSorv);
+                  
+                  const el = document.getElementById('order-modal-loyalty-details');
+                  if (el) {
+                      el.innerHTML = `
+                        <div class="space-y-2 text-xs font-bold text-slate-700">
+                            <div class="flex items-center justify-between">
+                                <span class="flex items-center gap-1">🫐 Açaí:</span>
+                                <div class="flex items-center gap-2">
+                                    <button onclick="window.updateFidelidadeDirect('${phoneKey}', -1, 'acai')" class="w-6 h-6 rounded bg-slate-200 text-slate-600 font-bold flex items-center justify-center active:scale-90">-</button>
+                                    <span class="px-2 py-0.5 rounded bg-violet-100 text-violet-700 font-black">${newAcai}/${meta} pts</span>
+                                    <button onclick="window.updateFidelidadeDirect('${phoneKey}', 1, 'acai')" class="w-6 h-6 rounded bg-brand-600 text-white font-bold flex items-center justify-center active:scale-90">+</button>
+                                </div>
+                            </div>
+                            <p class="text-[10px] text-slate-400 font-bold ml-4">
+                                ${faltamAcai > 0 ? `Falta ${faltamAcai.toFixed(2).replace('.', ',').replace(',00', '')} pts para o prêmio` : '🎉 PRÊMIO LIBERADO!'}
+                            </p>
+                            
+                            <div class="flex items-center justify-between border-t border-slate-100 pt-2">
+                                <span class="flex items-center gap-1">🍦 Sorvete:</span>
+                                <div class="flex items-center gap-2">
+                                    <button onclick="window.updateFidelidadeDirect('${phoneKey}', -1, 'sorvete')" class="w-6 h-6 rounded bg-slate-200 text-slate-600 font-bold flex items-center justify-center active:scale-90">-</button>
+                                    <span class="px-2 py-0.5 rounded bg-indigo-100 text-indigo-700 font-black">${newSorv}/${meta} pts</span>
+                                    <button onclick="window.updateFidelidadeDirect('${phoneKey}', 1, 'sorvete')" class="w-6 h-6 rounded bg-indigo-600 text-white font-bold flex items-center justify-center active:scale-90">+</button>
+                                </div>
+                            </div>
+                            <p class="text-[10px] text-slate-400 font-bold ml-4">
+                                ${faltamSorvete > 0 ? `Falta ${faltamSorvete.toFixed(2).replace('.', ',').replace(',00', '')} pts para o prêmio` : '🎉 PRÊMIO LIBERADO!'}
+                            </p>
+                        </div>
+                      `;
+                  }
+             } catch (e) {
+                  console.error(e);
+                  toast('Erro ao atualizar fidelidade', 'error');
+             }
+        };
+
+        window.renderPromoDetails = (phoneKey, valorPromo) => {
+             const el = document.getElementById('order-modal-promo-details');
+             if (!el) return;
+             
+             const minVal = parseFloat(state.config.promocoes.valor) || 0;
+             const brinde = state.config.promocoes.brinde || '';
+             const diff = minVal - valorPromo;
+             
+             let content = '';
+             if (diff <= 0) {
+                 content = `
+                     <div class="p-3 bg-green-50 rounded-xl border border-green-100 mt-2">
+                         <p class="text-xs font-bold text-green-800">Este cliente já acumulou R$ ${valorPromo.toFixed(2).replace('.', ',')} e ganhou o brinde: <span class="font-black uppercase">${brinde}</span> 🎉</p>
+                     </div>
+                 `;
+             } else {
+                 content = `
+                     <div class="mt-2 space-y-2">
+                         <p class="text-xs font-bold text-brand-800">Falta <span class="font-black text-brand-600">R$ ${diff.toFixed(2).replace('.', ',')}</span> para este cliente ganhar o brinde: <span class="uppercase font-bold">${brinde}</span></p>
+                         <p class="text-[10px] text-brand-600 font-medium italic">Valor acumulado: R$ ${valorPromo.toFixed(2).replace('.', ',')} / Meta: R$ ${minVal.toFixed(2).replace('.', ',')}</p>
+                     </div>
+                 `;
+             }
+             
+             el.innerHTML = `
+                 ${content}
+                 <div class="mt-3 flex items-center justify-between border-t border-brand-100 pt-2">
+                     <span class="text-xs font-bold text-brand-700">Ajustar saldo:</span>
+                     <div class="flex items-center gap-2">
+                         <button onclick="window.updatePromoDirect('${phoneKey}', -1)" class="px-2 py-1 rounded bg-slate-200 text-slate-600 font-bold text-xs flex items-center justify-center active:scale-90">- R$ 1,00</button>
+                         <button onclick="window.updatePromoDirect('${phoneKey}', 1)" class="px-2 py-1 rounded bg-brand-600 text-white font-bold text-xs flex items-center justify-center active:scale-90">+ R$ 1,00</button>
+                     </div>
+                 </div>
+                 <p class="text-[9px] text-slate-400 mt-1 italic text-right">O botão + R$ 1 aumenta o valor que o cliente tem acumulado.</p>
+             `;
+        };
+
+        window.updatePromoDirect = async (phoneKey, deltaAmount) => {
+             if (!phoneKey) return;
+             try {
+                  const docRef = doc(db, 'clientes_fidelidade', phoneKey);
+                  const snap = await getDoc(docRef);
+                  const d = snap.exists() ? snap.data() : {};
+                  
+                  let current = parseFloat(d.valor_promo) || 0;
+                  let next = Math.max(0, current + deltaAmount);
+                  
+                  await setDoc(docRef, { telefone: phoneKey, valor_promo: next, lastUpdate: new Date().toISOString() }, { merge: true });
+                  
+                  toast(deltaAmount > 0 ? `+${Math.abs(deltaAmount).toFixed(2).replace('.', ',')} na Promoção` : `-${Math.abs(deltaAmount).toFixed(2).replace('.', ',')} na Promoção`);
+                  
+                  window.renderPromoDetails(phoneKey, next);
+             } catch (e) {
+                  console.error(e);
+                  toast('Erro ao atualizar promoção', 'error');
+             }
         };
 
         window.closeOrderModal = () => document.getElementById('modal-order').classList.add('hidden');

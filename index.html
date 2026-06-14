@@ -1360,21 +1360,11 @@
       let promoHtml = '';
       if (state.config.promocoes && state.config.promocoes.ativa) {
           const promo = state.config.promocoes;
-          if (total >= promo.valor) {
-              promoHtml = `
-              <div class="mt-3 bg-green-50 border border-green-200 rounded-xl p-3 animate-slide-up">
-                  <p class="text-xs font-black text-green-700 flex items-center gap-2"><i data-lucide="gift" class="w-4 h-4"></i> PARABÉNS!</p>
-                  <p class="text-[10px] font-bold text-green-600 mt-1">Você ganhou: <span class="font-black uppercase tracking-wide">${promo.brinde}</span></p>
-                  <p class="text-[9px] text-green-500 mt-0.5">${promo.mensagem}</p>
-              </div>`;
-          } else {
-              const diff = promo.valor - total;
-              promoHtml = `
-              <div class="mt-3 bg-brand-50 border border-brand-100 rounded-xl p-3 animate-slide-up">
-                  <p class="text-[10px] font-black text-brand-700 flex items-center gap-1.5"><i data-lucide="info" class="w-3.5 h-3.5"></i> Faltam R$ ${diff.toFixed(2).replace('.', ',')}</p>
-                  <p class="text-[9px] text-brand-600 mt-0.5">para você ganhar: <strong class="font-black uppercase">${promo.brinde}</strong></p>
-              </div>`;
-          }
+          promoHtml = `
+          <div class="mt-3 bg-brand-50 border border-brand-100 rounded-xl p-3 animate-slide-up">
+              <p class="text-[10px] font-black text-brand-700 flex items-center gap-1.5"><i data-lucide="info" class="w-3.5 h-3.5"></i> Promoção Cumulativa!</p>
+              <p class="text-[9px] text-brand-600 mt-0.5">Acumule <strong class="font-bold">R$ ${promo.valor.toFixed(2).replace('.', ',')}</strong> em compras e ganhe: <strong class="font-black uppercase">${promo.brinde}</strong></p>
+          </div>`;
       }
 
       const totalContainerHtml = `
@@ -2058,22 +2048,34 @@
             isVIP: state.userOrderCount >= (state.pontosMeta || 10)
           });
           
-          if (pontosGanhos > 0) {
+          let promoActive = state.config.promocoes && state.config.promocoes.ativa;
+          if (pontosGanhos > 0 || promoActive) {
             try {
               const phoneKey = phone.replace(/\D/g, '');
               const fidRef = db.collection('clientes_fidelidade').doc(phoneKey);
               const fidSnap = await fidRef.get();
               const existingData = fidSnap.exists ? fidSnap.data() : {};
-              const ptAcaiAtual = (existingData.pontos_acai !== undefined && existingData.pontos_acai !== null) ? existingData.pontos_acai : ((existingData.pontos !== undefined && existingData.pontos !== null) ? existingData.pontos : 0);
-              const ptSorveteAtual = (existingData.pontos_sorvete !== undefined && existingData.pontos_sorvete !== null) ? existingData.pontos_sorvete : 0;
-              await fidRef.set({
+              
+              let updatePayload = {
                 telefone: phoneKey,
-                pontos_acai: ptAcaiAtual + pontosGanhosAcai,
-                pontos_sorvete: ptSorveteAtual + pontosGanhosSorvete,
                 lastUpdate: new Date().toISOString()
-              }, { merge: true });
+              };
+
+              if (pontosGanhos > 0) {
+                  const ptAcaiAtual = (existingData.pontos_acai !== undefined && existingData.pontos_acai !== null) ? existingData.pontos_acai : ((existingData.pontos !== undefined && existingData.pontos !== null) ? existingData.pontos : 0);
+                  const ptSorveteAtual = (existingData.pontos_sorvete !== undefined && existingData.pontos_sorvete !== null) ? existingData.pontos_sorvete : 0;
+                  updatePayload.pontos_acai = ptAcaiAtual + pontosGanhosAcai;
+                  updatePayload.pontos_sorvete = ptSorveteAtual + pontosGanhosSorvete;
+              }
+
+              if (promoActive) {
+                  const valorPromoAtual = existingData.valor_promo || 0;
+                  updatePayload.valor_promo = valorPromoAtual + totalVal;
+              }
+
+              await fidRef.set(updatePayload, { merge: true });
             } catch (fidErr) {
-              console.error("Erro ao atualizar fidelidade:", fidErr);
+              console.error("Erro ao atualizar fidelidade/promo:", fidErr);
             }
           }
           console.log("✅ Pedido salvo no Firebase!");
