@@ -1409,19 +1409,36 @@
                 return matchName && matchDate && matchPayment;
             });
 
-            const html = filteredOrders.length === 0 ? '<div class="p-20 text-center text-slate-300 font-bold uppercase tracking-widest text-[10px]">Nenhum pedido encontrado com esses filtros...</div>' : filteredOrders.map((p, idx) => `
+            const html = filteredOrders.length === 0 ? '<div class="p-20 text-center text-slate-300 font-bold uppercase tracking-widest text-[10px]">Nenhum pedido encontrado com esses filtros...</div>' : filteredOrders.map((p, idx) => {
+                let promoBadge = '';
+                if (state.config.promocoes && state.config.promocoes.ativa) {
+                    const minVal = parseFloat(state.config.promocoes.valor) || 0;
+                    const totalPedido = parseFloat(p.total) || 0;
+                    if (totalPedido >= minVal) {
+                        promoBadge = `<span class="px-2 py-0.5 bg-green-50 text-green-600 rounded-lg text-[9px] font-black uppercase tracking-wider">🎁 Brinde Ganho</span>`;
+                    } else {
+                        const diff = minVal - totalPedido;
+                        promoBadge = `<span class="px-2 py-0.5 bg-brand-50 text-brand-600 rounded-lg text-[9px] font-black uppercase tracking-wider">Faltou R$ ${diff.toFixed(2).replace('.', ',')}</span>`;
+                    }
+                }
+
+                return `
                 <div class="p-8 flex flex-col md:flex-row md:items-center justify-between gap-6 hover:bg-slate-50 transition-all group ${state.selectedOrders?.has(p.id) ? 'bg-brand-50/30' : ''}">
                     <div class="flex items-start gap-5">
                          <div class="flex items-center h-14">
-                             <input type="checkbox" onchange="toggleOrderSelection('${p.id}')" ${state.selectedOrders?.has(p.id) ? 'checked' : ''} class="w-5 h-5 rounded-lg border-2 border-slate-200 text-brand-600 focus:ring-brand-500 cursor-pointer">
-                         </div>
-                         <div class="w-14 h-14 bg-slate-100 rounded-2xl flex items-center justify-center text-slate-400 group-hover:bg-brand-50 group-hover:text-brand-500 transition-colors">
-                              <i data-lucide="shopping-bag" class="w-7 h-7"></i>
-                         </div>
-                         <div>
-                              <h4 class="font-black text-slate-900 text-lg flex items-center gap-2">${p.cliente || 'Sem Nome'} <span class="px-2 py-0.5 bg-slate-100 rounded-lg text-[10px] text-slate-400 font-bold uppercase tracking-wider group-hover:bg-white transition-colors">#${p.id.slice(-4)}</span></h4>
-                              <p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-1">${p.data ? new Date(p.data).toLocaleString('pt-BR') : 'Data Desconhecida'}</p>
-                         </div>
+                              <input type="checkbox" onchange="toggleOrderSelection('${p.id}')" ${state.selectedOrders?.has(p.id) ? 'checked' : ''} class="w-5 h-5 rounded-lg border-2 border-slate-200 text-brand-600 focus:ring-brand-500 cursor-pointer">
+                          </div>
+                          <div class="w-14 h-14 bg-slate-100 rounded-2xl flex items-center justify-center text-slate-400 group-hover:bg-brand-50 group-hover:text-brand-500 transition-colors">
+                               <i data-lucide="shopping-bag" class="w-7 h-7"></i>
+                          </div>
+                          <div>
+                               <h4 class="font-black text-slate-900 text-lg flex items-center gap-2 flex-wrap">
+                                   ${p.cliente || 'Sem Nome'} 
+                                   <span class="px-2 py-0.5 bg-slate-100 rounded-lg text-[10px] text-slate-400 font-bold uppercase tracking-wider group-hover:bg-white transition-colors">#${p.id.slice(-4)}</span>
+                                   ${promoBadge}
+                               </h4>
+                               <p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-1">${p.data ? new Date(p.data).toLocaleString('pt-BR') : 'Data Desconhecida'}</p>
+                          </div>
                     </div>
                     <div class="flex items-center gap-10">
                          <div class="text-right">
@@ -1429,16 +1446,17 @@
                               <p class="text-2xl font-display font-black text-slate-900 group-hover:text-brand-600 transition-colors">R$ ${(p.total || 0).toFixed(2).replace('.', ',')}</p>
                          </div>
                          <div class="flex items-center gap-2">
-                             <button onclick="viewOrderDetails('${p.id}')" class="p-4 bg-white border border-slate-100 rounded-2xl hover:border-brand-500 hover:text-brand-500 hover:shadow-lg active:scale-95 transition-all outline-none">
-                                  <i data-lucide="eye" class="w-5 h-5"></i>
-                             </button>
-                             <button onclick="deleteOrder('${p.id}')" class="p-4 bg-white border border-slate-100 rounded-2xl hover:border-red-500 hover:text-red-500 hover:shadow-lg active:scale-95 transition-all outline-none">
-                                  <i data-lucide="trash-2" class="w-5 h-5"></i>
-                             </button>
+                              <button onclick="viewOrderDetails('${p.id}')" class="p-4 bg-white border border-slate-100 rounded-2xl hover:border-brand-500 hover:text-brand-500 hover:shadow-lg active:scale-95 transition-all outline-none">
+                                   <i data-lucide="eye" class="w-5 h-5"></i>
+                              </button>
+                              <button onclick="deleteOrder('${p.id}')" class="p-4 bg-white border border-slate-100 rounded-2xl hover:border-red-500 hover:text-red-500 hover:shadow-lg active:scale-95 transition-all outline-none">
+                                   <i data-lucide="trash-2" class="w-5 h-5"></i>
+                              </button>
                          </div>
                     </div>
                 </div>
-            `).join('');
+                `;
+            }).join('');
             
             if (listAll) listAll.innerHTML = html;
             
@@ -1467,6 +1485,31 @@
             document.getElementById('order-modal-date').innerText = p.data ? new Date(p.data).toLocaleString('pt-BR') : '-';
             document.getElementById('order-modal-total').innerText = `R$ ${(p.total || 0).toFixed(2).replace('.', ',')}`;
 
+            // Lógica de Promoção de Brinde (mínimo de compra)
+            let promoStatusHtml = '';
+            if (state.config.promocoes && state.config.promocoes.ativa) {
+                const minVal = parseFloat(state.config.promocoes.valor) || 0;
+                const brinde = state.config.promocoes.brinde || '';
+                const totalPedido = parseFloat(p.total) || 0;
+                
+                if (totalPedido >= minVal) {
+                    promoStatusHtml = `
+                        <div class="p-5 bg-green-50 rounded-2xl border border-green-100">
+                            <p class="text-[10px] font-black text-green-600 uppercase tracking-widest mb-1">🎁 Promoção de Brinde</p>
+                            <p class="text-xs font-bold text-green-800">Este pedido qualificou-se para a promoção! Ganhou o brinde: <span class="font-black uppercase">${brinde}</span> 🎉</p>
+                        </div>
+                    `;
+                } else {
+                    const diff = minVal - totalPedido;
+                    promoStatusHtml = `
+                        <div class="p-5 bg-brand-50 rounded-2xl border border-brand-100">
+                            <p class="text-[10px] font-black text-brand-600 uppercase tracking-widest mb-1">🎁 Promoção de Brinde</p>
+                            <p class="text-xs font-bold text-brand-800">Faltou apenas <span class="font-black text-brand-600">R$ ${diff.toFixed(2).replace('.', ',')}</span> para este cliente ganhar o brinde: <span class="uppercase font-bold">${brinde}</span></p>
+                        </div>
+                    `;
+                }
+            }
+
             let html = `
                 <div class="space-y-4">
                     <div class="p-5 bg-slate-50 rounded-2xl">
@@ -1474,6 +1517,14 @@
                         <p class="font-bold text-slate-800">${p.cliente || 'Sem Nome'}</p>
                         <p class="text-xs text-brand-600 font-bold">${p.telefone || 'Sem Telefone'}</p>
                     </div>
+                    
+                    ${promoStatusHtml}
+
+                    <div id="order-modal-loyalty" class="p-5 bg-violet-50 rounded-2xl border border-violet-100">
+                        <p class="text-[10px] font-black text-violet-600 uppercase tracking-widest mb-2">✨ Clube Fidelidade (Carregando...)</p>
+                        <p class="text-xs text-slate-400 italic">Consultando pontos do cliente...</p>
+                    </div>
+
                     <div class="space-y-3">
                         <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Itens do Pedido</p>
                         ${(p.itens || []).map(i => `
@@ -1497,7 +1548,62 @@
             document.getElementById('order-modal-content').innerHTML = html;
             modal.classList.remove('hidden');
             lucide.createIcons();
-        }
+
+            // Busca os pontos de fidelidade do cliente no Firestore
+            const phoneKey = (p.telefone || '').replace(/\D/g, '');
+            if (phoneKey) {
+                getDoc(doc(db, 'clientes_fidelidade', phoneKey)).then(docSnap => {
+                    const el = document.getElementById('order-modal-loyalty');
+                    if (!el) return;
+                    
+                    const meta = state.pontosMeta || 10;
+                    let ptAcai = 0;
+                    let ptSorvete = 0;
+                    
+                    if (docSnap.exists()) {
+                        const d = docSnap.data();
+                        ptAcai = (d.pontos_acai !== undefined && d.pontos_acai !== null) ? d.pontos_acai : ((d.pontos !== undefined && d.pontos !== null) ? d.pontos : 0);
+                        ptSorvete = (d.pontos_sorvete !== undefined && d.pontos_sorvete !== null) ? d.pontos_sorvete : 0;
+                    }
+                    
+                    const faltamAcai = Math.max(0, meta - ptAcai);
+                    const faltamSorvete = Math.max(0, meta - ptSorvete);
+                    
+                    el.innerHTML = `
+                        <p class="text-[10px] font-black text-violet-600 uppercase tracking-widest mb-2">✨ Clube Fidelidade</p>
+                        <div class="space-y-2 text-xs font-bold text-slate-700">
+                            <div class="flex items-center justify-between">
+                                <span class="flex items-center gap-1">🫐 Açaí:</span>
+                                <span class="px-2 py-0.5 rounded bg-violet-100 text-violet-700 font-black">${ptAcai}/${meta} pts</span>
+                            </div>
+                            <p class="text-[10px] text-slate-400 font-bold ml-4">
+                                ${faltamAcai > 0 ? `Falta ${faltamAcai.toFixed(2).replace('.', ',').replace(',00', '')} pts para o prêmio` : '🎉 PRÊMIO LIBERADO!'}
+                            </p>
+                            
+                            <div class="flex items-center justify-between border-t border-slate-100 pt-2">
+                                <span class="flex items-center gap-1">🍦 Sorvete:</span>
+                                <span class="px-2 py-0.5 rounded bg-indigo-100 text-indigo-700 font-black">${ptSorvete}/${meta} pts</span>
+                            </div>
+                            <p class="text-[10px] text-slate-400 font-bold ml-4">
+                                ${faltamSorvete > 0 ? `Falta ${faltamSorvete.toFixed(2).replace('.', ',').replace(',00', '')} pts para o prêmio` : '🎉 PRÊMIO LIBERADO!'}
+                            </p>
+                        </div>
+                    `;
+                }).catch(err => {
+                    console.error("Erro ao carregar fidelidade no modal:", err);
+                    const el = document.getElementById('order-modal-loyalty');
+                    if (el) {
+                        el.innerHTML = `
+                            <p class="text-[10px] font-black text-red-600 uppercase tracking-widest mb-1">✨ Clube Fidelidade</p>
+                            <p class="text-xs text-red-500">Erro ao carregar os dados de fidelidade.</p>
+                        `;
+                    }
+                });
+            } else {
+                const el = document.getElementById('order-modal-loyalty');
+                if (el) el.classList.add('hidden');
+            }
+        };
 
         window.closeOrderModal = () => document.getElementById('modal-order').classList.add('hidden');
 
