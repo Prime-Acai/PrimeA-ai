@@ -651,7 +651,7 @@
                 <div class="flex flex-col md:flex-row gap-4 pt-4 border-t border-slate-100">
                     <div class="flex-[2]">
                         <label class="text-[10px] font-black uppercase tracking-widest text-slate-400 block mb-2 ml-2">Meta de Pontos (para ganhar prêmio)</label>
-                        <input type="number" id="pontos-meta" min="1" value="10" class="w-full p-4 bg-slate-50 rounded-2xl border-2 border-transparent focus:border-violet-500 font-black text-lg outline-none" placeholder="Ex: 10">
+                        <input type="number" id="pontos-meta" min="1" value="30" class="w-full p-4 bg-slate-50 rounded-2xl border-2 border-transparent focus:border-violet-500 font-black text-lg outline-none" placeholder="Ex: 30">
                     </div>
                     <div class="flex-[3]">
                         <label class="text-[10px] font-black uppercase tracking-widest text-slate-400 block mb-2 ml-2">Valor em Reais por Ponto (Ex: 0.50)</label>
@@ -700,11 +700,20 @@
                             </div>
 
                             <div class="mb-6 p-4 bg-white rounded-2xl border border-slate-100 shadow-sm">
-                                <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-2 ml-1">Valor a Adicionar/Remover</label>
+                                <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-2 ml-1">Quantidade de Pontos</label>
+                                <!-- Botões de atalho rápido -->
+                                <div class="flex gap-2 mb-3 flex-wrap">
+                                    <button onclick="setFidPoints(1)" class="flex-1 min-w-[40px] py-2 bg-slate-100 text-slate-600 rounded-xl font-black text-xs hover:bg-indigo-100 hover:text-indigo-700 active:scale-95 transition-all">1</button>
+                                    <button onclick="setFidPoints(5)" class="flex-1 min-w-[40px] py-2 bg-slate-100 text-slate-600 rounded-xl font-black text-xs hover:bg-indigo-100 hover:text-indigo-700 active:scale-95 transition-all">5</button>
+                                    <button onclick="setFidPoints(10)" class="flex-1 min-w-[40px] py-2 bg-indigo-100 text-indigo-700 rounded-xl font-black text-xs hover:bg-indigo-200 active:scale-95 transition-all">10</button>
+                                    <button onclick="setFidPoints(20)" class="flex-1 min-w-[40px] py-2 bg-indigo-100 text-indigo-700 rounded-xl font-black text-xs hover:bg-indigo-200 active:scale-95 transition-all">20</button>
+                                    <button onclick="setFidPoints(30)" class="flex-1 min-w-[40px] py-2 bg-violet-100 text-violet-700 rounded-xl font-black text-xs hover:bg-violet-200 active:scale-95 transition-all">30</button>
+                                    <button onclick="setFidPoints(50)" class="flex-1 min-w-[40px] py-2 bg-violet-100 text-violet-700 rounded-xl font-black text-xs hover:bg-violet-200 active:scale-95 transition-all">50</button>
+                                </div>
                                 <div class="relative">
-                                    <input type="text" id="fid-custom-points" placeholder="Ex: 0,25 ou 1" value="1" 
+                                    <input type="number" id="fid-custom-points" placeholder="Digite a qtd..." value="1" min="1"
                                         class="w-full p-4 bg-slate-50 rounded-xl border-2 border-transparent focus:border-indigo-500 font-black text-lg outline-none text-center"
-                                        oninput="this.value = this.value.replace(/[^0-9,.]/g, '').replace('.', ',')">
+                                        oninput="this.value = this.value.replace(/[^0-9]/g, '')">
                                     <div class="absolute right-4 top-1/2 -translate-y-1/2 text-[10px] font-black text-slate-300 uppercase">PTS</div>
                                 </div>
                             </div>
@@ -712,14 +721,14 @@
                             <!-- Açaí controls -->
                             <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 mb-2">🫐 Açaí</p>
                             <div class="flex gap-3 mb-4">
-                                <button onclick="updateFidelidade(-1, 'acai')" class="flex-1 p-3 bg-white text-slate-600 rounded-2xl border border-slate-200 font-black flex justify-center hover:bg-slate-100 active:scale-95"><i data-lucide="minus"></i></button>
-                                <button onclick="updateFidelidade(1, 'acai')" class="flex-[3] p-3 bg-brand-600 text-white rounded-2xl shadow-xl shadow-brand-500/20 font-black flex items-center justify-center gap-2 hover:bg-brand-700 active:scale-95"><i data-lucide="plus"></i> <span class="pt-label-acai">PONTOS AÇAÍ</span></button>
+                                <button onclick="updateFidelidade(-1, 'acai')" class="flex-1 p-3 bg-white text-slate-600 rounded-2xl border border-slate-200 font-black flex justify-center hover:bg-red-50 hover:text-red-600 hover:border-red-200 active:scale-95 transition-all"><i data-lucide="minus"></i></button>
+                                <button onclick="updateFidelidade(1, 'acai')" class="flex-[3] p-3 bg-brand-600 text-white rounded-2xl shadow-xl shadow-brand-500/20 font-black flex items-center justify-center gap-2 hover:bg-brand-700 active:scale-95 transition-all"><i data-lucide="plus"></i> <span class="pt-label-acai">PONTOS AÇAÍ</span></button>
                             </div>
                             <!-- Sorvete controls -->
                             <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 mb-2">🍦 Sorvete</p>
                             <div class="flex gap-3">
-                                <button onclick="updateFidelidade(-1, 'sorvete')" class="flex-1 p-3 bg-white text-slate-600 rounded-2xl border border-slate-200 font-black flex justify-center hover:bg-slate-100 active:scale-95"><i data-lucide="minus"></i></button>
-                                <button onclick="updateFidelidade(1, 'sorvete')" class="flex-[3] p-3 bg-indigo-600 text-white rounded-2xl shadow-xl shadow-indigo-500/20 font-black flex items-center justify-center gap-2 hover:bg-indigo-700 active:scale-95"><i data-lucide="plus"></i> <span class="pt-label-sorvete">PONTOS SORVETE</span></button>
+                                <button onclick="updateFidelidade(-1, 'sorvete')" class="flex-1 p-3 bg-white text-slate-600 rounded-2xl border border-slate-200 font-black flex justify-center hover:bg-red-50 hover:text-red-600 hover:border-red-200 active:scale-95 transition-all"><i data-lucide="minus"></i></button>
+                                <button onclick="updateFidelidade(1, 'sorvete')" class="flex-[3] p-3 bg-indigo-600 text-white rounded-2xl shadow-xl shadow-indigo-500/20 font-black flex items-center justify-center gap-2 hover:bg-indigo-700 active:scale-95 transition-all"><i data-lucide="plus"></i> <span class="pt-label-sorvete">PONTOS SORVETE</span></button>
                             </div>
                         </div>
                     </div>
@@ -1129,7 +1138,7 @@
                         state.config = snap.data();
                         state.pontosConfig = snap.data().pontosConfig || {};
                         const metaEl = document.getElementById('pontos-meta');
-                        if (metaEl) metaEl.value = snap.data().pontosMeta || 10;
+                        if (metaEl) metaEl.value = snap.data().pontosMeta || 30;
                         const valReaisEl = document.getElementById('pontos-valor-reais');
                         if (valReaisEl) valReaisEl.value = snap.data().pontosValorReais || 0.50;
                         const messageEl = document.getElementById('loyalty-message');
@@ -1539,7 +1548,7 @@
                     const el = document.getElementById('order-modal-loyalty-details');
                     if (!el) return;
                     
-                    const meta = state.pontosMeta || 10;
+                    const meta = state.pontosMeta || 30;
                     let ptAcai = 0;
                     let ptSorvete = 0;
                     let valorPromo = 0;
@@ -1564,7 +1573,7 @@
                                 <span class="flex items-center gap-1">🫐 Açaí:</span>
                                 <div class="flex items-center gap-2">
                                     <button onclick="window.updateFidelidadeDirect('${phoneKey}', -1, 'acai')" class="w-6 h-6 rounded bg-slate-200 text-slate-600 font-bold flex items-center justify-center active:scale-90">-</button>
-                                    <span class="px-2 py-0.5 rounded bg-violet-100 text-violet-700 font-black">${ptAcai}/${meta} pts</span>
+                                    <span class="px-2 py-0.5 rounded bg-violet-100 text-violet-700 font-black">${parseFloat(Number(ptAcai).toFixed(2))}/${meta} pts</span>
                                     <button onclick="window.updateFidelidadeDirect('${phoneKey}', 1, 'acai')" class="w-6 h-6 rounded bg-brand-600 text-white font-bold flex items-center justify-center active:scale-90">+</button>
                                 </div>
                             </div>
@@ -1576,7 +1585,7 @@
                                 <span class="flex items-center gap-1">🍦 Sorvete:</span>
                                 <div class="flex items-center gap-2">
                                     <button onclick="window.updateFidelidadeDirect('${phoneKey}', -1, 'sorvete')" class="w-6 h-6 rounded bg-slate-200 text-slate-600 font-bold flex items-center justify-center active:scale-90">-</button>
-                                    <span class="px-2 py-0.5 rounded bg-indigo-100 text-indigo-700 font-black">${ptSorvete}/${meta} pts</span>
+                                    <span class="px-2 py-0.5 rounded bg-indigo-100 text-indigo-700 font-black">${parseFloat(Number(ptSorvete).toFixed(2))}/${meta} pts</span>
                                     <button onclick="window.updateFidelidadeDirect('${phoneKey}', 1, 'sorvete')" class="w-6 h-6 rounded bg-indigo-600 text-white font-bold flex items-center justify-center active:scale-90">+</button>
                                 </div>
                             </div>
@@ -1617,7 +1626,7 @@
                   
                   toast(delta > 0 ? `+${Math.abs(delta).toString().replace('.', ',')} pt ${cat === 'sorvete' ? 'Sorvete' : 'Açaí'}` : `-${Math.abs(delta).toString().replace('.', ',')} pt ${cat === 'sorvete' ? 'Sorvete' : 'Açaí'}`);
                   
-                  const meta = state.pontosMeta || 10;
+                  const meta = state.pontosMeta || 30;
                   const newAcai = cat === 'acai' ? next : ptAcai;
                   const newSorv = cat === 'sorvete' ? next : ptSorvete;
                   const faltamAcai = Math.max(0, meta - newAcai);
@@ -1631,7 +1640,7 @@
                                 <span class="flex items-center gap-1">🫐 Açaí:</span>
                                 <div class="flex items-center gap-2">
                                     <button onclick="window.updateFidelidadeDirect('${phoneKey}', -1, 'acai')" class="w-6 h-6 rounded bg-slate-200 text-slate-600 font-bold flex items-center justify-center active:scale-90">-</button>
-                                    <span class="px-2 py-0.5 rounded bg-violet-100 text-violet-700 font-black">${newAcai}/${meta} pts</span>
+                                    <span class="px-2 py-0.5 rounded bg-violet-100 text-violet-700 font-black">${parseFloat(Number(newAcai).toFixed(2))}/${meta} pts</span>
                                     <button onclick="window.updateFidelidadeDirect('${phoneKey}', 1, 'acai')" class="w-6 h-6 rounded bg-brand-600 text-white font-bold flex items-center justify-center active:scale-90">+</button>
                                 </div>
                             </div>
@@ -1643,7 +1652,7 @@
                                 <span class="flex items-center gap-1">🍦 Sorvete:</span>
                                 <div class="flex items-center gap-2">
                                     <button onclick="window.updateFidelidadeDirect('${phoneKey}', -1, 'sorvete')" class="w-6 h-6 rounded bg-slate-200 text-slate-600 font-bold flex items-center justify-center active:scale-90">-</button>
-                                    <span class="px-2 py-0.5 rounded bg-indigo-100 text-indigo-700 font-black">${newSorv}/${meta} pts</span>
+                                    <span class="px-2 py-0.5 rounded bg-indigo-100 text-indigo-700 font-black">${parseFloat(Number(newSorv).toFixed(2))}/${meta} pts</span>
                                     <button onclick="window.updateFidelidadeDirect('${phoneKey}', 1, 'sorvete')" class="w-6 h-6 rounded bg-indigo-600 text-white font-bold flex items-center justify-center active:scale-90">+</button>
                                 </div>
                             </div>
@@ -2423,7 +2432,7 @@
                 const el = document.getElementById('pts-prod-' + p.docId);
                 if (el) newConfig[p.name] = parseFloat(el.value) || 0;
             });
-            const meta = parseInt(document.getElementById('pontos-meta').value) || 10;
+            const meta = parseInt(document.getElementById('pontos-meta').value) || 30;
             const valorReais = parseFloat(document.getElementById('pontos-valor-reais').value) || 0;
             const message = document.getElementById('loyalty-message').value;
             try {
@@ -2457,8 +2466,8 @@
                  
                  currentFidPhone = input;
                  document.getElementById('fid-user-phone').innerText = `Cliente: ${input}`;
-                 const acaiFinal = typeof ptAcai === 'number' ? ptAcai.toFixed(2).replace('.', ',').replace(',00', '') : ptAcai;
-                 const sorvFinal = typeof ptSorvete === 'number' ? ptSorvete.toFixed(2).replace('.', ',').replace(',00', '') : ptSorvete;
+                 const acaiFinal = parseFloat(Number(ptAcai).toFixed(2));
+                 const sorvFinal = parseFloat(Number(ptSorvete).toFixed(2));
                  document.getElementById('fid-user-points').innerText = `🫐 ${acaiFinal} pts Açaí  |  🍦 ${sorvFinal} pts Sorvete`;
                  document.getElementById('fid-result').classList.remove('hidden');
              } catch (e) {
@@ -2472,6 +2481,10 @@
             let x = e.target.value.replace(/\D/g, '').match(/(\d{0,2})(\d{0,5})(\d{0,4})/);
             e.target.value = !x[2] ? x[1] : '(' + x[1] + ') ' + x[2] + (x[3] ? '-' + x[3] : '');
         });
+
+        window.setFidPoints = (val) => {
+            document.getElementById('fid-custom-points').value = val;
+        };
 
         window.updateFidelidade = async (delta, cat = 'acai') => {
              if (!currentFidPhone) return;
@@ -2493,8 +2506,8 @@
                   
                   const newAcai = cat === 'acai' ? next : ptAcai;
                   const newSorv = cat === 'sorvete' ? next : ptSorvete;
-                  const acaiFinal = typeof newAcai === 'number' ? newAcai.toFixed(2).replace('.', ',').replace(',00', '') : newAcai;
-                  const sorvFinal = typeof newSorv === 'number' ? newSorv.toFixed(2).replace('.', ',').replace(',00', '') : newSorv;
+                  const acaiFinal = parseFloat(Number(newAcai).toFixed(2));
+                  const sorvFinal = parseFloat(Number(newSorv).toFixed(2));
                   document.getElementById('fid-user-points').innerText = `🫐 ${acaiFinal} pts Açaí  |  🍦 ${sorvFinal} pts Sorvete`;
                   toast(valToUpdate > 0 ? `+${Math.abs(valToUpdate).toString().replace('.', ',')} Ponto ${cat === 'sorvete' ? 'Sorvete' : 'Açaí'} Adicionado!` : 'Ponto Removido');
              } catch (e) {
