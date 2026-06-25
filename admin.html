@@ -148,6 +148,56 @@
 
 <body class="flex min-h-screen text-slate-800">
 
+<script>
+// LOGIN SIMPLES - funciona em file:// e qualquer servidor
+var _ADMIN_EMAIL = 'adminprime@gmail.com';
+var _ADMIN_PASS  = 'prime2026';
+var _SESSION_KEY = 'prime_admin_auth';
+
+function handleLogin() {
+    var email = document.getElementById('login-email').value.trim().toLowerCase();
+    var pass  = document.getElementById('login-pass').value;
+    var errEl = document.getElementById('login-error');
+    errEl.classList.add('hidden');
+    if (!pass) { errEl.innerText = 'Digite a senha.'; errEl.classList.remove('hidden'); return; }
+    if (email === _ADMIN_EMAIL && pass === _ADMIN_PASS) {
+        sessionStorage.setItem(_SESSION_KEY, '1');
+        document.getElementById('login-overlay').classList.add('hidden');
+        document.getElementById('main-content').classList.remove('hidden');
+        if (window.innerWidth >= 1024) document.getElementById('sidebar').classList.remove('hidden');
+        // Chamar initAdmin do módulo se já estiver disponível
+        if (typeof window._initAdmin === 'function') window._initAdmin();
+    } else {
+        errEl.innerText = 'E-mail ou senha incorretos.';
+        errEl.classList.remove('hidden');
+    }
+}
+
+function handleLogout() {
+    sessionStorage.removeItem(_SESSION_KEY);
+    document.getElementById('login-overlay').classList.remove('hidden');
+    document.getElementById('main-content').classList.add('hidden');
+    document.getElementById('sidebar').classList.add('hidden');
+    document.getElementById('login-pass').value = '';
+}
+
+// Permite pressionar Enter no campo de senha
+document.addEventListener('DOMContentLoaded', function() {
+    var passEl = document.getElementById('login-pass');
+    if (passEl) passEl.addEventListener('keydown', function(e) { if (e.key === 'Enter') handleLogin(); });
+    // Verificar sessão salva
+    if (sessionStorage.getItem(_SESSION_KEY) === '1') {
+        var overlay = document.getElementById('login-overlay');
+        var content = document.getElementById('main-content');
+        var sidebar = document.getElementById('sidebar');
+        if (overlay) overlay.classList.add('hidden');
+        if (content) content.classList.remove('hidden');
+        if (sidebar && window.innerWidth >= 1024) sidebar.classList.remove('hidden');
+        // initAdmin será chamado pelo módulo ao verificar a sessão
+    }
+});
+</script>
+
     <!-- LOGIN OVERLAY -->
     <div id="login-overlay" class="fixed inset-0 z-[100] bg-slate-900 flex items-center justify-center p-4 lg:p-6">
         <div class="bg-white w-full max-w-md p-8 lg:p-10 rounded-[2.5rem] shadow-2xl text-center animate-fade-in">
@@ -175,9 +225,6 @@
                 <button onclick="handleLogin()" id="login-btn"
                     class="w-full py-5 bg-brand-600 text-white rounded-2xl font-black text-sm shadow-xl shadow-brand-500/20 hover:bg-brand-700 active:scale-95 transition-all mt-4">ENTRAR
                     NO PAINEL</button>
-                <button onclick="handleResetPassword()" id="reset-btn"
-                    class="w-full py-3 mt-2 bg-transparent text-slate-500 hover:text-brand-600 rounded-2xl font-bold text-xs transition-all">Esqueci
-                    minha senha</button>
             </div>
         </div>
     </div>
@@ -1050,8 +1097,8 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut, sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, doc, onSnapshot, updateDoc, setDoc, collection, query, orderBy, limit, deleteDoc, getDoc, writeBatch } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyA8Xh5f0Xeu-N8NbF-WAE_sk2grcs9VN60",
@@ -1063,77 +1110,33 @@
         };
 
         const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
         const db = getFirestore(app);
+        const auth = getAuth(app);
+
+        // --- CREDENCIAIS ADMIN ---
+        const ADMIN_EMAIL = 'Adminprime@gmail.com';
+        const ADMIN_PASS  = 'prime2026';
+        const SESSION_KEY = 'prime_admin_auth';
 
         let state = { config: null, pedidos: [], products: [], cremes: [], coberturas: [], cupons: [], pontosConfig: {} };
         let currentFidPhone = "";
 
-        // --- AUTH LOGIC ---
-        window.handleLogin = async () => {
-            const email = document.getElementById('login-email').value;
-            const pass = document.getElementById('login-pass').value;
-            const btn = document.getElementById('login-btn');
-            if (!pass) return toast("Defina uma senha no Firebase", "error");
-            btn.innerText = "Autorizando...";
-            btn.disabled = true;
-            try { await signInWithEmailAndPassword(auth, email, pass); }
-            catch (e) {
-                console.error("Erro de login:", e.code, e.message);
-                const errEl = document.getElementById('login-error');
-                let mensagem = 'Erro ao entrar. ';
-                if (e.code === 'auth/invalid-credential' || e.code === 'auth/wrong-password' || e.code === 'auth/user-not-found') {
-                    mensagem += 'E-mail ou senha incorretos.';
-                } else if (e.code === 'auth/unauthorized-domain') {
-                    mensagem += 'Domínio não autorizado no Firebase. Abra o site via servidor (não como arquivo local).';
-                } else if (e.code === 'auth/network-request-failed') {
-                    mensagem += 'Sem conexão com a internet.';
-                } else if (e.code === 'auth/too-many-requests') {
-                    mensagem += 'Muitas tentativas. Aguarde alguns minutos.';
-                } else {
-                    mensagem += `Código: ${e.code}`;
-                }
-                if (errEl) {
-                    errEl.innerText = mensagem;
-                    errEl.classList.remove('hidden');
-                }
-                toast(mensagem, "error");
-                btn.disabled = false;
-                btn.innerText = "ENTRAR NO PAINEL";
-            }
-        };
-
-        window.handleResetPassword = async () => {
-            const email = document.getElementById('login-email').value;
-            if (!email) return toast("Preencha o e-mail para recuperar a senha", "error");
-            try {
-                await sendPasswordResetEmail(auth, email);
-                toast("E-mail de recuperação enviado! Verifique sua caixa de entrada.");
-            } catch (e) {
-                toast("Erro ao enviar e-mail: " + e.message, "error");
-            }
-        };
-
-        window.handleLogout = () => signOut(auth);
-
-        onAuthStateChanged(auth, async (user) => {
-            if (user) {
-                document.getElementById('login-overlay').classList.add('hidden');
-                if (window.innerWidth >= 1024) {
-                    document.getElementById('sidebar').classList.remove('hidden');
-                }
-                document.getElementById('main-content').classList.remove('hidden');
-                initAdmin();
-            } else {
-                document.getElementById('login-overlay').classList.remove('hidden');
-                document.getElementById('sidebar').classList.add('hidden');
-                document.getElementById('main-content').classList.add('hidden');
-            }
-        });
-
         // --- CORE ADMIN INIT ---
         async function initAdmin() {
             try {
+                // Autenticar anonimamente para satisfazer as regras do Firestore
+                try {
+                    const currentUser = auth.currentUser;
+                    if (!currentUser) {
+                        await signInAnonymously(auth);
+                        console.log("✅ Auth anônima no admin OK");
+                    } else {
+                        console.log("✅ Já autenticado:", currentUser.uid);
+                    }
+                } catch (authErr) {
+                    console.warn("⚠️ Erro auth anônima (tentando continuar mesmo assim):", authErr);
+                }
+
                 // Check if using environment-specific config
                 const configToUse = (typeof __firebase_config !== 'undefined') ? JSON.parse(__firebase_config) : firebaseConfig;
                 const appId = (typeof __app_id !== 'undefined') ? __app_id : 'default-app-id';
@@ -2602,6 +2605,12 @@
             setTimeout(() => { el.classList.remove('translate-y-0', 'opacity-100'); el.classList.add('-translate-y-20', 'opacity-0'); }, 3000);
         }
         window.toast = toast;
+
+        // Expor initAdmin globalmente e iniciar automaticamente se sessão ativa
+        window._initAdmin = initAdmin;
+        if (sessionStorage.getItem('prime_admin_auth') === '1') {
+            initAdmin();
+        }
 
     </script>
 </body>
