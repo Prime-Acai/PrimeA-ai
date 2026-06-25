@@ -162,7 +162,7 @@
                     <label
                         class="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2 block ml-2">E-mail
                         Administrativo</label>
-                    <input type="email" id="login-email" value="admin@prime.com"
+                    <input type="email" id="login-email" value="Adminprime@gmail.com"
                         class="w-full p-4 bg-slate-50 border-2 border-transparent focus:border-brand-500 rounded-2xl outline-none font-bold transition-all">
                 </div>
                 <div class="text-left">
@@ -175,6 +175,9 @@
                 <button onclick="handleLogin()" id="login-btn"
                     class="w-full py-5 bg-brand-600 text-white rounded-2xl font-black text-sm shadow-xl shadow-brand-500/20 hover:bg-brand-700 active:scale-95 transition-all mt-4">ENTRAR
                     NO PAINEL</button>
+                <button onclick="handleResetPassword()" id="reset-btn"
+                    class="w-full py-3 mt-2 bg-transparent text-slate-500 hover:text-brand-600 rounded-2xl font-bold text-xs transition-all">Esqueci
+                    minha senha</button>
             </div>
         </div>
     </div>
@@ -1047,7 +1050,7 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut, sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, doc, onSnapshot, updateDoc, setDoc, collection, query, orderBy, limit, deleteDoc, getDoc, writeBatch } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         const firebaseConfig = {
@@ -1076,14 +1079,38 @@
             btn.disabled = true;
             try { await signInWithEmailAndPassword(auth, email, pass); }
             catch (e) {
+                console.error("Erro de login:", e.code, e.message);
                 const errEl = document.getElementById('login-error');
+                let mensagem = 'Erro ao entrar. ';
+                if (e.code === 'auth/invalid-credential' || e.code === 'auth/wrong-password' || e.code === 'auth/user-not-found') {
+                    mensagem += 'E-mail ou senha incorretos.';
+                } else if (e.code === 'auth/unauthorized-domain') {
+                    mensagem += 'Domínio não autorizado no Firebase. Abra o site via servidor (não como arquivo local).';
+                } else if (e.code === 'auth/network-request-failed') {
+                    mensagem += 'Sem conexão com a internet.';
+                } else if (e.code === 'auth/too-many-requests') {
+                    mensagem += 'Muitas tentativas. Aguarde alguns minutos.';
+                } else {
+                    mensagem += `Código: ${e.code}`;
+                }
                 if (errEl) {
-                    errEl.innerText = 'Email ou senha incorretos. Verifique suas credenciais no Firebase.';
+                    errEl.innerText = mensagem;
                     errEl.classList.remove('hidden');
                 }
-                toast("Erro de Acesso: Verifique e-mail e senha", "error");
+                toast(mensagem, "error");
                 btn.disabled = false;
                 btn.innerText = "ENTRAR NO PAINEL";
+            }
+        };
+
+        window.handleResetPassword = async () => {
+            const email = document.getElementById('login-email').value;
+            if (!email) return toast("Preencha o e-mail para recuperar a senha", "error");
+            try {
+                await sendPasswordResetEmail(auth, email);
+                toast("E-mail de recuperação enviado! Verifique sua caixa de entrada.");
+            } catch (e) {
+                toast("Erro ao enviar e-mail: " + e.message, "error");
             }
         };
 
@@ -2137,7 +2164,7 @@
         window.addItemToCategory = async (cat) => {
             const name = prompt(`Nome do Novo ${cat === 'coberturas' ? 'Creme' : cat.toUpperCase()}:`);
             if (!name) return;
-            const items = [...state.config.accompaniments[cat], { name, available: true }];
+            const items = [...(state.config.accompaniments[cat] || []), { name, available: true }];
             await updateDoc(doc(db, 'loja', 'config'), { [`accompaniments.${cat}`]: items });
             toast("Adicionado!");
         };
@@ -2332,14 +2359,14 @@
         }
 
         window.toggleItemStatus = async (cat, idx) => {
-            const items = [...state.config.accompaniments[cat]];
+            const items = [...(state.config.accompaniments[cat] || [])];
             items[idx].available = !items[idx].available;
             await updateDoc(doc(db, 'loja', 'config'), { [`accompaniments.${cat}`]: items });
         };
 
         window.deleteItemStatus = async (cat, idx) => {
             if (!confirm("Deseja apagar este item permanentemente?")) return;
-            const items = [...state.config.accompaniments[cat]];
+            const items = [...(state.config.accompaniments[cat] || [])];
             items.splice(idx, 1);
             await updateDoc(doc(db, 'loja', 'config'), { [`accompaniments.${cat}`]: items });
         };

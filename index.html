@@ -1961,15 +1961,18 @@
                       <p class="text-xs text-red-100 font-bold text-center">Mostre no balcão para ganhar seu brinde: ${state.config.promocoes.brinde}! 🎉</p>
                     </div>`;
                 } else {
+                    const valorPromoFmt = valorPromo.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+                    const promoMetaFmt = promoMeta.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+                    const faltaFmt = Math.max(0, promoMeta - valorPromo).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
                     html += `<div class="p-4 bg-gradient-to-br from-red-50 to-red-100 border border-red-200 rounded-2xl animate-slide-up">
                       <div class="flex items-center justify-between mb-2">
                         <h4 class="text-xs font-black text-red-900 flex items-center gap-1.5">🎁 Promoção: ${state.config.promocoes.brinde}</h4>
-                        <span class="text-[10px] font-black text-red-600 bg-white px-2 py-0.5 rounded-md shadow-sm">${valorPromo}/${promoMeta} pts</span>
+                        <span class="text-[10px] font-black text-red-600 bg-white px-2 py-0.5 rounded-md shadow-sm">${valorPromoFmt} / ${promoMetaFmt}</span>
                       </div>
-                      <div class="w-full bg-red-200/60 rounded-full h-2 mb-1.5">
-                        <div class="bg-red-600 h-2 rounded-full transition-all duration-500" style="width:${pctPromo}%"></div>
+                      <div class="w-full bg-red-200/60 rounded-full h-2 mb-2">
+                        <div class="bg-red-500 h-2 rounded-full transition-all duration-500" style="width:${pctPromo}%"></div>
                       </div>
-                      <p class="text-[10px] text-red-700 font-medium">Você tem <strong>${valorPromo} pts</strong>. Junte mais ${ parseFloat(Number(promoMeta - valorPromo).toFixed(2)) } para o prêmio! 🎁</p>
+                      <p class="text-[10px] text-red-700 font-medium">Você já gastou <strong>${valorPromoFmt}</strong>. Faltam apenas <strong class="text-red-600">${faltaFmt}</strong> para ganhar seu brinde! 🎁</p>
                     </div>`;
                 }
             }
