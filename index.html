@@ -1864,13 +1864,15 @@
         }
         try {
             const docSnap = await db.collection('clientes_fidelidade').doc(phoneStr.replace(/\D/g, '')).get();
-            let ptAcai = 0, ptSorvete = 0;
+            let ptAcai = 0, ptSorvete = 0, valorPromo = 0;
             if (docSnap.exists) {
                 const d = docSnap.data();
                 // Suporte ao formato antigo (migração)
                 ptAcai = (d.pontos_acai !== undefined && d.pontos_acai !== null) ? d.pontos_acai : ((d.pontos !== undefined && d.pontos !== null) ? d.pontos : 0);
                 ptSorvete = (d.pontos_sorvete !== undefined && d.pontos_sorvete !== null) ? d.pontos_sorvete : 0;
+                valorPromo = parseFloat(d.valor_promo) || 0;
             }
+            state.userPromoPoints = valorPromo;
 
             const meta = state.pontosMeta || 10;
             state.userOrderCount = ptAcai + ptSorvete; // total para alertas VIP
@@ -1879,7 +1881,8 @@
             const sorvFinal = parseFloat(Number(ptSorvete).toFixed(2));
 
             const card = document.getElementById('loyalty-card');
-            const hasAny = ptAcai > 0 || ptSorvete > 0;
+            const hasPromo = !!(state.config && state.config.promocoes && state.config.promocoes.ativa);
+            const hasAny = ptAcai > 0 || ptSorvete > 0 || hasPromo;
 
             if (!hasAny) {
                 card.classList.add('hidden');
@@ -1899,7 +1902,7 @@
                     html += `<div class="p-4 bg-gradient-to-br from-brand-500 to-brand-700 border border-brand-400 rounded-2xl shadow-xl shadow-brand-500/20 animate-pulse-slow">
                       <div class="flex items-center gap-2 mb-1 justify-center">
                         <span class="text-xl">🫐</span>
-                        <h4 class="text-sm font-black text-white uppercase tracking-widest">PRÊMIO LIBERADO — AÇAÍ!</h4>
+                        <h4 class="text-sm font-black text-white uppercase tracking-widest text-center">PRÊMIO LIBERADO — AÇAÍ!</h4>
                       </div>
                       <p class="text-xs text-brand-100 font-bold text-center">Mostre no balcão para ganhar um açaí grátis! 🎉</p>
                     </div>`;
@@ -1925,7 +1928,7 @@
                     html += `<div class="p-4 bg-gradient-to-br from-indigo-500 to-indigo-700 border border-indigo-400 rounded-2xl shadow-xl shadow-indigo-500/20 animate-pulse-slow">
                       <div class="flex items-center gap-2 mb-1 justify-center">
                         <span class="text-xl">🍦</span>
-                        <h4 class="text-sm font-black text-white uppercase tracking-widest">PRÊMIO LIBERADO — SORVETE!</h4>
+                        <h4 class="text-sm font-black text-white uppercase tracking-widest text-center">PRÊMIO LIBERADO — SORVETE!</h4>
                       </div>
                       <p class="text-xs text-indigo-100 font-bold text-center">Mostre no balcão para ganhar um sorvete/picolé grátis! 🎉</p>
                     </div>`;
@@ -1939,6 +1942,34 @@
                         <div class="bg-indigo-600 h-2 rounded-full transition-all duration-500" style="width:${pctSorv}%"></div>
                       </div>
                       <p class="text-[10px] text-indigo-700 font-medium">Você tem <strong>${sorvFinal} pts</strong>. Junte mais ${ parseFloat(Number(meta - ptSorvete).toFixed(2)) } para o prêmio! 🍦</p>
+                    </div>`;
+                }
+            }
+
+            // Promoção card (Acima de 100)
+            if (hasPromo) {
+                const promoMeta = parseFloat(state.config.promocoes.valor) || 100;
+                const isPrizePromo = valorPromo >= promoMeta;
+                const pctPromo = Math.min(100, Math.round((valorPromo / promoMeta) * 100));
+                
+                if (isPrizePromo) {
+                    html += `<div class="p-4 bg-gradient-to-br from-red-500 to-red-700 border border-red-400 rounded-2xl shadow-xl shadow-red-500/20 animate-pulse-slow">
+                      <div class="flex items-center gap-2 mb-1 justify-center">
+                        <span class="text-xl">🎁</span>
+                        <h4 class="text-sm font-black text-white uppercase tracking-widest text-center">PRÊMIO LIBERADO — PROMOÇÃO!</h4>
+                      </div>
+                      <p class="text-xs text-red-100 font-bold text-center">Mostre no balcão para ganhar seu brinde: ${state.config.promocoes.brinde}! 🎉</p>
+                    </div>`;
+                } else {
+                    html += `<div class="p-4 bg-gradient-to-br from-red-50 to-red-100 border border-red-200 rounded-2xl animate-slide-up">
+                      <div class="flex items-center justify-between mb-2">
+                        <h4 class="text-xs font-black text-red-900 flex items-center gap-1.5">🎁 Promoção: ${state.config.promocoes.brinde}</h4>
+                        <span class="text-[10px] font-black text-red-600 bg-white px-2 py-0.5 rounded-md shadow-sm">${valorPromo}/${promoMeta} pts</span>
+                      </div>
+                      <div class="w-full bg-red-200/60 rounded-full h-2 mb-1.5">
+                        <div class="bg-red-600 h-2 rounded-full transition-all duration-500" style="width:${pctPromo}%"></div>
+                      </div>
+                      <p class="text-[10px] text-red-700 font-medium">Você tem <strong>${valorPromo} pts</strong>. Junte mais ${ parseFloat(Number(promoMeta - valorPromo).toFixed(2)) } para o prêmio! 🎁</p>
                     </div>`;
                 }
             }
@@ -1995,9 +2026,12 @@
       }
       
       let brindeGanho = null;
-      if (state.config.promocoes && state.config.promocoes.ativa && totalVal >= state.config.promocoes.valor) {
-          brindeGanho = state.config.promocoes.brinde;
-          msg += `\n🎁 * BRINDE GANHO:* ${brindeGanho}\n`;
+      if (state.config.promocoes && state.config.promocoes.ativa) {
+          const valorPromoAtual = (state.userPromoPoints || 0) + 5;
+          if (valorPromoAtual >= state.config.promocoes.valor) {
+              brindeGanho = state.config.promocoes.brinde;
+              msg += `\n🎁 * BRINDE GANHO:* ${brindeGanho}\n`;
+          }
       }
       
       let pontosGanhos = 0;
@@ -2070,7 +2104,7 @@
 
               if (promoActive) {
                   const valorPromoAtual = existingData.valor_promo || 0;
-                  updatePayload.valor_promo = valorPromoAtual + totalVal;
+                  updatePayload.valor_promo = valorPromoAtual + 5;
               }
 
               await fidRef.set(updatePayload, { merge: true });
