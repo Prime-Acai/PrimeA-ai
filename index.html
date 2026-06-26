@@ -657,18 +657,40 @@
         </div>
       </div>
 
-      <!-- Banner de Promoções (Baseado no modelo) -->
-      <div id="promocao-announcement" class="hidden relative w-full mb-6 rounded-[2rem] overflow-hidden shadow-xl shadow-red-900/10 bg-gradient-to-r from-red-600 to-rose-600 p-5 animate-slide-up group">
-        <span class="decor-festajunina" style="bottom: 0px; right: 10px; font-size: clamp(1.5rem, 4vw, 3rem);">🔥</span>
-        <div class="absolute inset-0 opacity-20" style="background-image: radial-gradient(circle at 2px 2px, white 1px, transparent 0); background-size: 20px 20px;"></div>
-        <div class="relative z-10 flex items-center gap-4">
-          <div id="promocao-icon-container" class="w-12 h-12 bg-white/20 rounded-2xl flex items-center justify-center shrink-0 backdrop-blur-md shadow-sm group-hover:scale-105 transition-transform border border-transparent">
-            <i data-lucide="tag" class="w-6 h-6 text-white"></i>
+      <!-- Banner de Promoções (Redesenhado - Premium) -->
+      <div id="promocao-announcement" class="hidden relative w-full mb-6 rounded-[2rem] overflow-hidden animate-slide-up">
+        <!-- Background gradient + shimmer -->
+        <div class="absolute inset-0 bg-gradient-to-br from-orange-500 via-red-500 to-rose-600"></div>
+        <div class="absolute inset-0 opacity-10" style="background-image: radial-gradient(circle at 2px 2px, white 1px, transparent 0); background-size: 18px 18px;"></div>
+        <!-- Glow blobs -->
+        <div class="absolute -top-8 -right-8 w-32 h-32 bg-yellow-300 rounded-full opacity-20 blur-2xl"></div>
+        <div class="absolute -bottom-6 -left-4 w-24 h-24 bg-orange-300 rounded-full opacity-20 blur-xl"></div>
+
+        <div class="relative z-10 p-5">
+          <!-- Top row: badge + icon -->
+          <div class="flex items-start justify-between gap-3 mb-3">
+            <div class="flex items-center gap-3">
+              <!-- Icon -->
+              <div id="promocao-icon-container" class="w-11 h-11 bg-white/25 rounded-2xl flex items-center justify-center shrink-0 backdrop-blur-md border border-white/30 shadow-lg">
+                <i data-lucide="zap" class="w-5 h-5 text-yellow-200"></i>
+              </div>
+              <div>
+                <!-- Badge pill -->
+                <span class="inline-flex items-center gap-1 bg-white/20 border border-white/30 text-white text-[9px] font-black uppercase tracking-widest px-2.5 py-1 rounded-full backdrop-blur-sm mb-1">
+                  🔥 Oferta Especial
+                </span>
+                <h3 class="font-display font-black text-white text-xl leading-tight">Promoção Ativa!</h3>
+              </div>
+            </div>
+            <!-- Emoji decoration -->
+            <span class="text-4xl select-none leading-none">🎁</span>
           </div>
-          <div>
-            <h3 class="font-display font-black text-white text-lg leading-tight mb-1">Promoção Especial</h3>
-            <p id="promocao-announcement-text" class="text-red-100 text-[11px] font-medium leading-snug"></p>
-          </div>
+
+          <!-- Divider -->
+          <div class="border-t border-white/20 mb-3"></div>
+
+          <!-- Message -->
+          <p id="promocao-announcement-text" class="text-white/90 text-xs font-semibold leading-relaxed"></p>
         </div>
       </div>
 
@@ -1394,9 +1416,20 @@
       if (state.config.promocoes && state.config.promocoes.ativa) {
           const promo = state.config.promocoes;
           promoHtml = `
-          <div class="mt-3 bg-brand-50 border border-brand-100 rounded-xl p-3 animate-slide-up">
-              <p class="text-[10px] font-black text-brand-700 flex items-center gap-1.5"><i data-lucide="info" class="w-3.5 h-3.5"></i> Promoção Cumulativa!</p>
-              <p class="text-[9px] text-brand-600 mt-0.5">Acumule <strong class="font-bold">R$ ${promo.valor.toFixed(2).replace('.', ',')}</strong> em compras e ganhe: <strong class="font-black uppercase">${promo.brinde}</strong></p>
+          <div class="mt-4 relative overflow-hidden rounded-2xl">
+            <div class="absolute inset-0 bg-gradient-to-br from-orange-500 via-red-500 to-rose-600"></div>
+            <div class="absolute inset-0 opacity-10" style="background-image: radial-gradient(circle at 2px 2px, white 1px, transparent 0); background-size: 16px 16px;"></div>
+            <div class="absolute -top-4 -right-4 w-20 h-20 bg-yellow-300 rounded-full opacity-20 blur-xl"></div>
+            <div class="relative z-10 p-4 flex items-center gap-3">
+              <div class="w-9 h-9 bg-white/20 rounded-xl flex items-center justify-center shrink-0 border border-white/30">
+                <i data-lucide="zap" class="w-4 h-4 text-yellow-200"></i>
+              </div>
+              <div class="flex-1 min-w-0">
+                <p class="text-[9px] font-black text-white/70 uppercase tracking-widest flex items-center gap-1">🔥 Promoção Ativa</p>
+                <p class="text-xs text-white font-semibold leading-snug mt-0.5">Acumule <strong class="font-black">R$ ${promo.valor.toFixed(2).replace('.', ',')}</strong> e ganhe: <strong class="font-black uppercase">${promo.brinde}</strong></p>
+              </div>
+              <span class="text-2xl leading-none select-none">🎁</span>
+            </div>
           </div>`;
       }
 
