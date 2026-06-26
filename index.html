@@ -82,6 +82,7 @@
             'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
             'float': 'float 4s ease-in-out infinite',
             'pulse-green': 'pulse-green 2s infinite',
+            'bounce-slow': 'bounce 2s infinite',
           },
           keyframes: {
             slideUp: {
@@ -974,10 +975,42 @@
     </div>
   </div>
 
+  <!-- =================== BOLÃO DA COPA =================== -->
+  <!-- Floating button (only shown when bolaoAtivo) -->
+  <button id="btn-bolao-float" onclick="window.abrirModalBolao()"
+    class="hidden fixed bottom-24 right-4 z-50 flex items-center gap-2 px-4 py-3 bg-gradient-to-r from-yellow-400 to-yellow-500 text-slate-900 rounded-2xl font-black text-sm shadow-2xl shadow-yellow-400/40 active:scale-95 transition-all animate-bounce-slow">
+    🏆 Bolão da Copa
+  </button>
+
+  <!-- Bolão Modal -->
+  <div id="modal-bolao" class="fixed inset-0 z-[200] bg-slate-900/70 backdrop-blur-sm hidden flex items-end lg:items-center justify-center p-0 lg:p-6">
+    <div class="bg-white w-full lg:max-w-md rounded-t-[2.5rem] lg:rounded-[2.5rem] shadow-2xl relative flex flex-col max-h-[92vh]">
+      <!-- Header -->
+      <div class="p-6 lg:p-8 border-b border-slate-100">
+        <button onclick="document.getElementById('modal-bolao').classList.add('hidden')" class="absolute top-5 right-5 p-2 text-slate-300 hover:text-slate-500">
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+        </button>
+        <div class="flex items-center gap-3 mb-1">
+          <span class="text-3xl">🏆</span>
+          <div>
+            <h2 class="font-black text-xl text-slate-900">Bolão da Copa!</h2>
+            <p class="text-[11px] font-bold text-slate-400 uppercase tracking-widest">Chute o placar e ganhe pontos</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Body -->
+      <div id="bolao-modal-body" class="flex-1 overflow-y-auto p-6 lg:p-8 space-y-6">
+        <p class="text-slate-300 text-sm font-bold text-center py-8">Carregando...</p>
+      </div>
+    </div>
+  </div>
+
   <!-- Firebase Compat SDK (carrega no final para não travar a página) -->
   <script src="https://www.gstatic.com/firebasejs/11.6.1/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/11.6.1/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore-compat.js"></script>
+
 
   <script>
 
@@ -2291,7 +2324,191 @@
     } else {
       window.init();
     }
+
+    // ============================================================
+    //  BOLÃO DA COPA — FUNÇÕES DO CLIENTE
+    // ============================================================
+    let _bolaoJogoAtivo = null; // jogo "aberto" em cache
+
+    // Atualiza visibilidade do botão flutuante baseado na config
+    function atualizarBotaoBolao() {
+      const btn = document.getElementById('btn-bolao-float');
+      if (!btn) return;
+      if (state.config && state.config.bolaoAtivo === true) {
+        btn.classList.remove('hidden');
+      } else {
+        btn.classList.add('hidden');
+        // Fecha modal se bolão foi desativado enquanto estava aberto
+        document.getElementById('modal-bolao').classList.add('hidden');
+      }
+    }
+
+    window.abrirModalBolao = async () => {
+      if (!db || !firebaseConnected) { alert('Conectando... Tente novamente.'); return; }
+      const modal = document.getElementById('modal-bolao');
+      const body  = document.getElementById('bolao-modal-body');
+      modal.classList.remove('hidden');
+      body.innerHTML = '<p class="text-slate-300 text-sm font-bold text-center py-8">Carregando...</p>';
+
+      try {
+        // Busca o jogo aberto mais recente
+        const jogosSnap = await db.collection('copa_jogos').where('status', '==', 'aberto').limit(1).get();
+        if (jogosSnap.empty) {
+          body.innerHTML = `
+            <div class="text-center py-10">
+              <div class="text-5xl mb-4">⚽</div>
+              <p class="font-black text-slate-700 text-lg mb-2">Nenhum jogo aberto</p>
+              <p class="text-sm text-slate-400 font-medium">Assim que o próximo jogo do Brasil for cadastrado, o palpite estará disponível aqui!</p>
+            </div>`;
+          return;
+        }
+
+        const jogoDoc = jogosSnap.docs[0];
+        _bolaoJogoAtivo = { id: jogoDoc.id, ...jogoDoc.data() };
+        const jogo = _bolaoJogoAtivo;
+        const dataFmt = jogo.data ? new Date(jogo.data).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' }) : '';
+
+        // Recupera dados do formulário para pré-preencher
+        const savedName  = (document.getElementById('client-name')  ? document.getElementById('client-name').value  : '') || window.safeStorage.getItem('acai_client_name')  || '';
+        const savedPhone = (document.getElementById('client-phone') ? document.getElementById('client-phone').value : '') || window.safeStorage.getItem('acai_client_phone') || '';
+        const phoneKey = savedPhone.replace(/\D/g, '');
+
+        // Checa se o cliente já palpitou
+        let palpiteExistente = null;
+        if (phoneKey && phoneKey.length >= 10) {
+          const palDoc = await db.collection('copa_palpites').doc(`${phoneKey}_${jogo.id}`).get();
+          if (palDoc.exists) palpiteExistente = palDoc.data();
+        }
+
+        if (palpiteExistente) {
+          body.innerHTML = `
+            <div class="text-center space-y-4">
+              <div class="text-5xl">🎯</div>
+              <h3 class="font-black text-slate-800 text-lg">Seu palpite foi registrado!</h3>
+              <div class="bg-gradient-to-br from-brand-50 to-brand-100 border border-brand-200 rounded-2xl p-6">
+                <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">Brasil 🇧🇷 × ${jogo.adversario}</p>
+                <div class="flex items-center justify-center gap-4">
+                  <div class="text-center">
+                    <div class="text-4xl font-black text-brand-700">${palpiteExistente.palpite_brasil}</div>
+                    <p class="text-[10px] font-bold text-slate-400 mt-1">Brasil</p>
+                  </div>
+                  <span class="text-2xl font-black text-slate-300">×</span>
+                  <div class="text-center">
+                    <div class="text-4xl font-black text-slate-600">${palpiteExistente.palpite_adversario}</div>
+                    <p class="text-[10px] font-bold text-slate-400 mt-1">${jogo.adversario}</p>
+                  </div>
+                </div>
+                <p class="text-xs text-slate-400 font-medium mt-4">Boa sorte! 🤞 Acerte e ganhe +10 pontos no Club Prime.</p>
+              </div>
+              <p class="text-[10px] text-slate-300 font-bold">Os palpites fecharão quando o jogo começar.</p>
+            </div>`;
+          return;
+        }
+
+        // Formulário de palpite
+        body.innerHTML = `
+          <div class="space-y-5">
+            <div class="bg-gradient-to-br from-yellow-50 to-yellow-100 border border-yellow-200 rounded-2xl p-5 text-center">
+              <p class="text-[10px] font-black text-yellow-700 uppercase tracking-widest mb-2">🇧🇷 Brasil vs ${jogo.adversario}</p>
+              ${dataFmt ? `<p class="text-xs font-bold text-yellow-600">${dataFmt}</p>` : ''}
+              <p class="text-[10px] text-yellow-600 font-medium mt-2">Acerte o placar e ganhe <strong>+10 pontos</strong> no Club Prime!</p>
+            </div>
+
+            <div>
+              <label class="text-[10px] font-black uppercase tracking-widest text-slate-400 block mb-2">Seu Nome</label>
+              <input type="text" id="bolao-nome" value="${savedName}" placeholder="Nome completo" class="w-full p-4 bg-slate-50 rounded-2xl text-sm font-bold border-2 border-transparent focus:border-brand-500/30 outline-none transition-all">
+            </div>
+            <div>
+              <label class="text-[10px] font-black uppercase tracking-widest text-slate-400 block mb-2">Seu Telefone (WhatsApp)</label>
+              <input type="text" id="bolao-telefone" value="${savedPhone}" placeholder="(79) 99999-9999" maxlength="15" class="w-full p-4 bg-slate-50 rounded-2xl text-sm font-bold border-2 border-transparent focus:border-brand-500/30 outline-none transition-all">
+            </div>
+
+            <div>
+              <label class="text-[10px] font-black uppercase tracking-widest text-slate-400 block mb-3 text-center">Chute o Placar</label>
+              <div class="flex items-center justify-center gap-4">
+                <div class="text-center">
+                  <p class="text-xs font-black text-slate-500 mb-2">🇧🇷 Brasil</p>
+                  <input type="number" id="bolao-gols-brasil" min="0" max="20" value="1" class="w-20 p-4 text-center text-2xl font-black bg-slate-50 border-2 border-brand-200 focus:border-brand-500 rounded-2xl outline-none">
+                </div>
+                <span class="text-3xl font-black text-slate-200 mt-5">×</span>
+                <div class="text-center">
+                  <p class="text-xs font-black text-slate-500 mb-2">${jogo.adversario}</p>
+                  <input type="number" id="bolao-gols-adv" min="0" max="20" value="0" class="w-20 p-4 text-center text-2xl font-black bg-slate-50 border-2 border-slate-200 focus:border-slate-400 rounded-2xl outline-none">
+                </div>
+              </div>
+            </div>
+
+            <button onclick="window.enviarPalpite()" class="w-full py-5 bg-gradient-to-r from-yellow-400 to-yellow-500 text-slate-900 rounded-2xl font-black text-sm shadow-xl shadow-yellow-400/30 active:scale-95 transition-all">
+              🏆 Enviar Meu Palpite
+            </button>
+            <p class="text-[10px] text-center text-slate-300 font-bold">Apenas 1 palpite por telefone por jogo.</p>
+          </div>`;
+      } catch(e) {
+        console.error('Erro ao carregar bolão:', e);
+        body.innerHTML = '<p class="text-red-400 text-sm font-bold text-center py-8">Erro ao carregar. Tente novamente.</p>';
+      }
+    };
+
+    window.enviarPalpite = async () => {
+      const nome     = (document.getElementById('bolao-nome')?.value || '').trim();
+      const telefone = (document.getElementById('bolao-telefone')?.value || '').trim();
+      const golsBrasil = parseInt(document.getElementById('bolao-gols-brasil')?.value) || 0;
+      const golsAdv    = parseInt(document.getElementById('bolao-gols-adv')?.value) || 0;
+
+      if (!nome) { alert('Por favor, informe seu nome.'); return; }
+      if (!telefone || telefone.replace(/\D/g, '').length < 10) { alert('Por favor, informe um telefone válido.'); return; }
+      if (!_bolaoJogoAtivo) { alert('Jogo não encontrado. Feche e reabra.'); return; }
+
+      const phoneKey = telefone.replace(/\D/g, '');
+      const docId = `${phoneKey}_${_bolaoJogoAtivo.id}`;
+
+      try {
+        await db.collection('copa_palpites').doc(docId).set({
+          jogoId:             _bolaoJogoAtivo.id,
+          telefone:           phoneKey,
+          nome,
+          palpite_brasil:     golsBrasil,
+          palpite_adversario: golsAdv,
+          acertou:            false,
+          premiado:           false,
+          dataEnvio:          new Date().toISOString()
+        });
+
+        // Feedback
+        const body = document.getElementById('bolao-modal-body');
+        body.innerHTML = `
+          <div class="text-center py-8 space-y-4">
+            <div class="text-6xl">🎯</div>
+            <h3 class="font-black text-slate-800 text-xl">Palpite registrado!</h3>
+            <div class="bg-gradient-to-br from-brand-50 to-brand-100 border border-brand-200 rounded-2xl p-6">
+              <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">Seu chute</p>
+              <div class="flex items-center justify-center gap-4">
+                <div class="text-center"><div class="text-4xl font-black text-brand-700">${golsBrasil}</div><p class="text-[10px] font-bold text-slate-400 mt-1">Brasil</p></div>
+                <span class="text-2xl font-black text-slate-300">×</span>
+                <div class="text-center"><div class="text-4xl font-black text-slate-600">${golsAdv}</div><p class="text-[10px] font-bold text-slate-400 mt-1">${_bolaoJogoAtivo.adversario}</p></div>
+              </div>
+            </div>
+            <p class="text-sm text-slate-500 font-medium">Boa sorte, ${nome.split(' ')[0]}! 🤞<br>Acerte e ganhe +10 pontos no Club Prime.</p>
+          </div>`;
+      } catch(e) {
+        console.error('Erro ao enviar palpite:', e);
+        if (e.code === 'already-exists' || e.message?.includes('already-exists')) {
+          alert('Você já enviou um palpite para este jogo!');
+        } else {
+          alert('Erro ao enviar. Verifique sua conexão e tente novamente.');
+        }
+      }
+    };
+
+    // Observa mudanças na config para mostrar/esconder o botão do bolão
+    const _origUpdateUI = window.updateUI;
+    window.updateUI = function() {
+      if (_origUpdateUI) _origUpdateUI.apply(this, arguments);
+      atualizarBotaoBolao();
+    };
+
   </script>
+
 </body>
 
 </html>

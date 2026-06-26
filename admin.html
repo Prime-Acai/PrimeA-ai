@@ -294,6 +294,10 @@ document.addEventListener('DOMContentLoaded', function() {
                     class="sidebar-item w-full flex items-center gap-3 px-4 py-4 rounded-2xl text-slate-500 font-bold transition-all hover:bg-slate-50">
                     <i data-lucide="tag" class="w-5 h-5"></i> Promoções
                 </button>
+                <button onclick="showTab('bolao')" id="nav-bolao"
+                    class="sidebar-item w-full flex items-center gap-3 px-4 py-4 rounded-2xl text-slate-500 font-bold transition-all hover:bg-slate-50">
+                    <i data-lucide="trophy" class="w-5 h-5"></i> Bolão da Copa
+                </button>
             </nav>
         </div>
 
@@ -358,6 +362,10 @@ document.addEventListener('DOMContentLoaded', function() {
         <button onclick="showTab('promocoes')" id="m-nav-promocoes" class="mobile-nav-item">
             <i data-lucide="tag"></i>
             <span>Promoções</span>
+        </button>
+        <button onclick="showTab('bolao')" id="m-nav-bolao" class="mobile-nav-item">
+            <i data-lucide="trophy"></i>
+            <span>Bolão</span>
         </button>
     </nav>
 
@@ -640,13 +648,23 @@ document.addEventListener('DOMContentLoaded', function() {
                     <div class="pt-6 border-t border-slate-50">
                         <h4 class="font-display font-bold text-lg mb-6 flex items-center gap-2 text-slate-700 italic"><i
                                 data-lucide="palette" class="w-5 h-5"></i> Tema e Aparência</h4>
-                        <div class="flex items-center justify-between p-5 bg-slate-50 rounded-2xl">
+                        <div class="flex items-center justify-between p-5 bg-slate-50 rounded-2xl mb-4">
                             <div>
                                 <h5 class="font-bold text-slate-800 text-sm">Tema Especial: Festa Junina</h5>
                                 <p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-1">Ativa o layout decorativo no catálogo</p>
                             </div>
                             <label class="relative inline-flex items-center cursor-pointer">
                                 <input type="checkbox" id="conf-theme-festajunina" class="sr-only peer">
+                                <div class="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-brand-500"></div>
+                            </label>
+                        </div>
+                        <div class="flex items-center justify-between p-5 bg-slate-50 rounded-2xl">
+                            <div>
+                                <h5 class="font-bold text-slate-800 text-sm text-brand-600">🏆 Bolão da Copa (Palpites)</h5>
+                                <p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-1">Habilita a interface de palpites de placar para os clientes</p>
+                            </div>
+                            <label class="relative inline-flex items-center cursor-pointer">
+                                <input type="checkbox" id="conf-bolao-ativo" class="sr-only peer">
                                 <div class="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-brand-500"></div>
                             </label>
                         </div>
@@ -841,7 +859,78 @@ document.addEventListener('DOMContentLoaded', function() {
                 <button onclick="savePromocoesConfig()" class="w-full py-5 bg-brand-600 text-white rounded-2xl font-black text-sm shadow-xl active:scale-95 transition-all">SALVAR PROMOÇÃO</button>
             </div>
         </section>
+
+        <!-- BOLÃO DA COPA TAB -->
+        <section id="tab-bolao" class="tab-content space-y-8 animate-fade-in">
+            <header class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+                <div>
+                    <h2 class="font-display font-black text-4xl text-slate-900 tracking-tight">🏆 Bolão da Copa</h2>
+                    <p class="text-slate-400 font-medium">Gerencie os palpites dos jogos do Brasil</p>
+                </div>
+                <button onclick="showBolaoNovoJogoForm()" class="flex items-center gap-2 px-6 py-3 bg-brand-600 text-white rounded-2xl font-black text-sm shadow-xl active:scale-95 transition-all">
+                    <i data-lucide="plus" class="w-4 h-4"></i> Cadastrar Jogo
+                </button>
+            </header>
+
+            <!-- FORM NOVO JOGO (hidden by default) -->
+            <div id="bolao-novo-jogo-form" class="hidden max-w-2xl bg-white p-6 lg:p-10 rounded-[2rem] border border-brand-100 shadow-xl space-y-6">
+                <h3 class="font-display font-bold text-xl text-slate-800">Novo Jogo do Brasil</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label class="text-[10px] font-black uppercase tracking-widest text-slate-400 block mb-3 ml-2">Adversário</label>
+                        <input type="text" id="bolao-adversario" placeholder="Ex: Argentina" class="w-full p-4 bg-slate-50 border-2 border-transparent focus:border-brand-500 rounded-2xl outline-none font-bold">
+                    </div>
+                    <div>
+                        <label class="text-[10px] font-black uppercase tracking-widest text-slate-400 block mb-3 ml-2">Data / Hora</label>
+                        <input type="datetime-local" id="bolao-data" class="w-full p-4 bg-slate-50 border-2 border-transparent focus:border-brand-500 rounded-2xl outline-none font-bold">
+                    </div>
+                </div>
+                <div class="flex gap-3">
+                    <button onclick="salvarNovoJogo()" class="flex-1 py-4 bg-brand-600 text-white rounded-2xl font-black text-sm shadow-xl active:scale-95">SALVAR JOGO</button>
+                    <button onclick="document.getElementById('bolao-novo-jogo-form').classList.add('hidden')" class="px-6 py-4 bg-slate-100 text-slate-600 rounded-2xl font-black text-sm active:scale-95">Cancelar</button>
+                </div>
+            </div>
+
+            <!-- LISTA DE JOGOS -->
+            <div id="bolao-jogos-lista" class="space-y-4">
+                <p class="text-slate-300 text-sm font-bold text-center py-10">Carregando jogos...</p>
+            </div>
+        </section>
+
     </main>
+
+    <!-- MODAL: DEFINIR PLACAR OFICIAL -->
+    <div id="modal-bolao-placar" class="fixed inset-0 z-[130] bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center p-6">
+        <div class="bg-white w-full max-w-md p-8 rounded-[2rem] shadow-2xl relative animate-fade-in">
+            <button onclick="document.getElementById('modal-bolao-placar').classList.add('hidden')" class="absolute top-5 right-5 p-2 text-slate-300 hover:text-slate-500"><i data-lucide="x" class="w-6 h-6"></i></button>
+            <h3 class="font-display font-black text-2xl mb-1 text-slate-900">⚽ Placar Oficial</h3>
+            <p class="text-xs text-slate-400 font-bold uppercase tracking-widest mb-6" id="placar-modal-adversario">Brasil vs ?</p>
+            <div class="flex items-center gap-4 justify-center mb-8">
+                <div class="text-center">
+                    <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">🇧🇷 Brasil</p>
+                    <input type="number" id="placar-brasil" min="0" value="0" class="w-20 p-4 text-center text-2xl font-black bg-slate-50 border-2 border-brand-200 focus:border-brand-500 rounded-2xl outline-none">
+                </div>
+                <span class="text-3xl font-black text-slate-300 mt-5">×</span>
+                <div class="text-center">
+                    <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2" id="placar-adv-label">?</p>
+                    <input type="number" id="placar-adversario" min="0" value="0" class="w-20 p-4 text-center text-2xl font-black bg-slate-50 border-2 border-slate-200 focus:border-slate-400 rounded-2xl outline-none">
+                </div>
+            </div>
+            <button onclick="encerrarJogo()" class="w-full py-5 bg-slate-900 text-white rounded-2xl font-black text-sm shadow-xl active:scale-95">ENCERRAR JOGO E APURAR</button>
+        </div>
+    </div>
+
+    <!-- MODAL: VENCEDORES DO BOLÃO -->
+    <div id="modal-bolao-vencedores" class="fixed inset-0 z-[130] bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center p-4">
+        <div class="bg-white w-full max-w-lg p-6 lg:p-8 rounded-[2rem] shadow-2xl relative animate-fade-in flex flex-col max-h-[85vh]">
+            <button onclick="document.getElementById('modal-bolao-vencedores').classList.add('hidden')" class="absolute top-5 right-5 p-2 text-slate-300 hover:text-slate-500"><i data-lucide="x" class="w-6 h-6"></i></button>
+            <h3 class="font-display font-black text-2xl mb-1 text-slate-900">🏆 Vencedores!</h3>
+            <p class="text-xs text-slate-400 font-bold uppercase tracking-widest mb-6" id="vencedores-modal-title">Palpites Corretos</p>
+            <div id="vencedores-lista" class="space-y-3 overflow-y-auto flex-1 pr-2 no-scrollbar"></div>
+            <button onclick="document.getElementById('modal-bolao-vencedores').classList.add('hidden')" class="mt-6 w-full py-4 bg-slate-100 text-slate-600 rounded-2xl font-black text-sm">FECHAR</button>
+        </div>
+    </div>
+
 
     <!-- ORDER DETAIL MODAL -->
     <div id="modal-order"
@@ -1097,7 +1186,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getFirestore, doc, onSnapshot, updateDoc, setDoc, collection, query, orderBy, limit, deleteDoc, getDoc, writeBatch } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getFirestore, doc, onSnapshot, updateDoc, setDoc, collection, query, orderBy, limit, deleteDoc, getDoc, writeBatch, addDoc, getDocs, where } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
         import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
 
         const firebaseConfig = {
@@ -1118,7 +1207,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const ADMIN_PASS  = 'prime2026';
         const SESSION_KEY = 'prime_admin_auth';
 
-        let state = { config: null, pedidos: [], products: [], cremes: [], coberturas: [], cupons: [], pontosConfig: {} };
+        let state = { config: null, pedidos: [], products: [], cremes: [], coberturas: [], cupons: [], pontosConfig: {}, bolaoJogos: [] };
         let currentFidPhone = "";
 
         // --- CORE ADMIN INIT ---
@@ -1203,6 +1292,12 @@ document.addEventListener('DOMContentLoaded', function() {
                     state.cupons = snap.docs.map(d => ({ docId: d.id, ...d.data() }));
                     renderCupons();
                 }, (err) => console.error("Erro snapshot cupons:", err));
+
+                onSnapshot(query(collection(db, 'copa_jogos'), orderBy('criadoEm', 'desc')), (snap) => {
+                    state.bolaoJogos = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+                    renderBolaoJogos();
+                }, (err) => console.error("Erro snapshot copa_jogos:", err));
+
 
                 const qOrders = query(collection(db, 'pedidos'), orderBy('data', 'desc'), limit(1000));
                 let knownOrderIds = new Set();
@@ -1966,6 +2061,10 @@ document.addEventListener('DOMContentLoaded', function() {
             if (themeCheckbox) {
                 themeCheckbox.checked = state.config.themeFestaJunina === true;
             }
+            const bolaoCheckbox = document.getElementById('conf-bolao-ativo');
+            if (bolaoCheckbox) {
+                bolaoCheckbox.checked = state.config.bolaoAtivo === true;
+            }
             if (state.config.promocoes) {
                 const promAtiva = document.getElementById('prom-ativa');
                 if (promAtiva) promAtiva.checked = state.config.promocoes.ativa || false;
@@ -2388,7 +2487,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 pixKey: document.getElementById('conf-pix-key').value,
                 pixName: document.getElementById('conf-pix-name').value,
                 waitTime: document.getElementById('conf-wait-time').value,
-                themeFestaJunina: document.getElementById('conf-theme-festajunina') ? document.getElementById('conf-theme-festajunina').checked : false
+                themeFestaJunina: document.getElementById('conf-theme-festajunina') ? document.getElementById('conf-theme-festajunina').checked : false,
+                bolaoAtivo: document.getElementById('conf-bolao-ativo') ? document.getElementById('conf-bolao-ativo').checked : false
             };
             await updateDoc(doc(db, 'loja', 'config'), data);
             toast("Configurações Globais Salvas!");
@@ -2618,6 +2718,197 @@ document.addEventListener('DOMContentLoaded', function() {
         if (sessionStorage.getItem('prime_admin_auth') === '1') {
             initAdmin();
         }
+
+        // ============================================================
+        //  BOLÃO DA COPA — FUNÇÕES DO ADMIN
+        // ============================================================
+
+        let _bolaoJogoAtual = null; // jogo selecionado para definir placar
+
+        function statusLabel(status) {
+            if (status === 'aberto') return '<span class="px-2 py-0.5 rounded-lg bg-green-100 text-green-700 font-black text-[10px] uppercase">Aberto</span>';
+            if (status === 'fechado') return '<span class="px-2 py-0.5 rounded-lg bg-amber-100 text-amber-700 font-black text-[10px] uppercase">Fechado</span>';
+            return '<span class="px-2 py-0.5 rounded-lg bg-slate-100 text-slate-500 font-black text-[10px] uppercase">Encerrado</span>';
+        }
+
+        function renderBolaoJogos() {
+            const container = document.getElementById('bolao-jogos-lista');
+            if (!container) return;
+            if (!state.bolaoJogos || state.bolaoJogos.length === 0) {
+                container.innerHTML = '<p class="text-slate-300 text-sm font-bold text-center py-16">Nenhum jogo cadastrado ainda. Clique em "+ Cadastrar Jogo".</p>';
+                return;
+            }
+            container.innerHTML = state.bolaoJogos.map(jogo => {
+                const dataFmt = jogo.data ? new Date(jogo.data).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' }) : '—';
+                const placarStr = jogo.status === 'encerrado' ? `<span class="text-brand-600 font-black">${jogo.gols_brasil} × ${jogo.gols_adversario}</span>` : '';
+                return `
+                <div class="bg-white border border-slate-100 rounded-2xl shadow-sm p-5 flex flex-col lg:flex-row lg:items-center gap-4 lg:gap-0">
+                    <div class="flex-1 space-y-1">
+                        <div class="flex items-center gap-3">
+                            <span class="text-lg font-black text-slate-800">🇧🇷 Brasil vs ${jogo.adversario || '?'}</span>
+                            ${statusLabel(jogo.status)}
+                        </div>
+                        <p class="text-xs text-slate-400 font-bold">${dataFmt} ${placarStr ? '• Resultado: ' + placarStr : ''}</p>
+                    </div>
+                    <div class="flex flex-wrap gap-2 lg:ml-6">
+                        ${jogo.status === 'aberto' ? `<button onclick="fecharPalpites('${jogo.id}')" class="px-4 py-2 rounded-xl bg-amber-50 text-amber-700 border border-amber-100 font-black text-xs active:scale-95 transition-all">Fechar Palpites</button>` : ''}
+                        ${jogo.status !== 'encerrado' ? `<button onclick="abrirModalPlacar('${jogo.id}')" class="px-4 py-2 rounded-xl bg-slate-900 text-white font-black text-xs active:scale-95 transition-all">⚽ Definir Placar</button>` : ''}
+                        ${jogo.status === 'encerrado' ? `<button onclick="verVencedores('${jogo.id}')" class="px-4 py-2 rounded-xl bg-brand-50 text-brand-700 border border-brand-100 font-black text-xs active:scale-95 transition-all">🏆 Ver Vencedores</button>` : ''}
+                        <button onclick="deletarJogo('${jogo.id}')" class="px-3 py-2 rounded-xl bg-red-50 text-red-400 font-black text-xs active:scale-95 transition-all"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button>
+                    </div>
+                </div>`;
+            }).join('');
+            lucide.createIcons();
+        }
+
+        window.showBolaoNovoJogoForm = () => {
+            document.getElementById('bolao-adversario').value = '';
+            document.getElementById('bolao-data').value = '';
+            document.getElementById('bolao-novo-jogo-form').classList.remove('hidden');
+            document.getElementById('bolao-adversario').focus();
+        };
+
+        window.salvarNovoJogo = async () => {
+            const adversario = document.getElementById('bolao-adversario').value.trim();
+            const data = document.getElementById('bolao-data').value;
+            if (!adversario) { toast('Digite o nome do adversário', 'error'); return; }
+            try {
+                await addDoc(collection(db, 'copa_jogos'), {
+                    adversario,
+                    data: data || '',
+                    status: 'aberto',
+                    gols_brasil: 0,
+                    gols_adversario: 0,
+                    criadoEm: new Date().toISOString()
+                });
+                document.getElementById('bolao-novo-jogo-form').classList.add('hidden');
+                toast('Jogo cadastrado! Palpites abertos 🎉');
+            } catch(e) {
+                console.error(e);
+                toast('Erro ao cadastrar jogo', 'error');
+            }
+        };
+
+        window.fecharPalpites = async (jogoId) => {
+            if (!confirm('Fechar palpites para este jogo? Os clientes não poderão mais palpitar.')) return;
+            try {
+                await updateDoc(doc(db, 'copa_jogos', jogoId), { status: 'fechado' });
+                toast('Palpites fechados!');
+            } catch(e) { toast('Erro ao fechar palpites', 'error'); }
+        };
+
+        window.abrirModalPlacar = (jogoId) => {
+            const jogo = state.bolaoJogos.find(j => j.id === jogoId);
+            if (!jogo) return;
+            _bolaoJogoAtual = jogo;
+            document.getElementById('placar-modal-adversario').textContent = `Brasil vs ${jogo.adversario}`;
+            document.getElementById('placar-adv-label').textContent = jogo.adversario;
+            document.getElementById('placar-brasil').value = jogo.gols_brasil || 0;
+            document.getElementById('placar-adversario').value = jogo.gols_adversario || 0;
+            document.getElementById('modal-bolao-placar').classList.remove('hidden');
+        };
+
+        window.encerrarJogo = async () => {
+            if (!_bolaoJogoAtual) return;
+            const golsBrasil = parseInt(document.getElementById('placar-brasil').value) || 0;
+            const golsAdv = parseInt(document.getElementById('placar-adversario').value) || 0;
+            if (!confirm(`Confirmar resultado: Brasil ${golsBrasil} × ${golsAdv} ${_bolaoJogoAtual.adversario}? Esta ação não pode ser desfeita.`)) return;
+
+            try {
+                // Atualiza o jogo com o placar oficial e status encerrado
+                await updateDoc(doc(db, 'copa_jogos', _bolaoJogoAtual.id), {
+                    status: 'encerrado',
+                    gols_brasil: golsBrasil,
+                    gols_adversario: golsAdv
+                });
+
+                // Apura os vencedores: busca todos os palpites deste jogo
+                const palpitesSnap = await getDocs(query(collection(db, 'copa_palpites'), where('jogoId', '==', _bolaoJogoAtual.id)));
+                
+                const batch = writeBatch(db);
+                let totalAcertou = 0;
+                palpitesSnap.forEach(pDoc => {
+                    const p = pDoc.data();
+                    const acertou = p.palpite_brasil === golsBrasil && p.palpite_adversario === golsAdv;
+                    if (acertou) totalAcertou++;
+                    batch.update(pDoc.ref, { acertou });
+                });
+                await batch.commit();
+
+                document.getElementById('modal-bolao-placar').classList.add('hidden');
+                toast(`Jogo encerrado! ${totalAcertou} acertou(aram) o placar 🏆`);
+                _bolaoJogoAtual = null;
+            } catch(e) {
+                console.error(e);
+                toast('Erro ao encerrar jogo', 'error');
+            }
+        };
+
+        window.verVencedores = async (jogoId) => {
+            const jogo = state.bolaoJogos.find(j => j.id === jogoId);
+            if (!jogo) return;
+
+            try {
+                const palpitesSnap = await getDocs(query(collection(db, 'copa_palpites'), where('jogoId', '==', jogoId)));
+                const todos = palpitesSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+                const vencedores = todos.filter(p => p.acertou);
+
+                document.getElementById('vencedores-modal-title').textContent = `Brasil ${jogo.gols_brasil} × ${jogo.gols_adversario} ${jogo.adversario} • ${vencedores.length} acertou(aram)`;
+
+                const lista = document.getElementById('vencedores-lista');
+                if (vencedores.length === 0) {
+                    lista.innerHTML = '<p class="text-center text-slate-300 font-bold py-8">Nenhum palpite correto para este jogo.</p>';
+                } else {
+                    lista.innerHTML = vencedores.map(v => `
+                        <div class="flex items-center gap-3 p-4 bg-slate-50 rounded-2xl">
+                            <div class="flex-1">
+                                <p class="font-black text-slate-800 text-sm">${v.nome || 'Sem nome'}</p>
+                                <p class="text-xs text-slate-400 font-bold">${v.telefone || ''} • Palpite: ${v.palpite_brasil} × ${v.palpite_adversario}</p>
+                            </div>
+                            <div class="flex gap-2">
+                                ${v.premiado ? '<span class="text-[10px] font-black text-green-600 bg-green-50 border border-green-100 px-2 py-1 rounded-lg">PREMIADO ✓</span>' : `<button onclick="creditarPontosBolao('${v.id}', '${v.telefone}', '${v.nome || ''}')" class="px-3 py-2 text-[10px] rounded-xl bg-brand-600 text-white font-black active:scale-95">+10 Pts</button>`}
+                                <a href="https://wa.me/55${(v.telefone||'').replace(/\D/g,'')}?text=${encodeURIComponent('🏆 Parabéns! Você acertou o placar do jogo Brasil × ' + jogo.adversario + '! Venha resgatar seu prêmio na Prime Açaí!')}" target="_blank" class="px-3 py-2 text-[10px] rounded-xl bg-green-500 text-white font-black active:scale-95">WhatsApp</a>
+                            </div>
+                        </div>
+                    `).join('');
+                }
+                document.getElementById('modal-bolao-vencedores').classList.remove('hidden');
+            } catch(e) {
+                console.error(e);
+                toast('Erro ao buscar vencedores', 'error');
+            }
+        };
+
+        window.creditarPontosBolao = async (palpiteDocId, telefone, nome) => {
+            const phoneKey = (telefone || '').replace(/\D/g, '');
+            if (!phoneKey) { toast('Telefone inválido', 'error'); return; }
+            try {
+                const docRef = doc(db, 'clientes_fidelidade', phoneKey);
+                const snap = await getDoc(docRef);
+                const d = snap.exists() ? snap.data() : {};
+                const ptAcai = (d.pontos_acai !== undefined && d.pontos_acai !== null) ? d.pontos_acai : ((d.pontos !== undefined && d.pontos !== null) ? d.pontos : 0);
+                await setDoc(docRef, { telefone: phoneKey, pontos_acai: ptAcai + 10, lastUpdate: new Date().toISOString() }, { merge: true });
+                // Marca como premiado
+                await updateDoc(doc(db, 'copa_palpites', palpiteDocId), { premiado: true });
+                toast(`+10 pts creditados para ${nome || telefone} 🏆`);
+                // Refresh vencedores view
+                const el = document.querySelector(`[onclick="creditarPontosBolao('${palpiteDocId}', '${telefone}', '${nome}')"]`);
+                if (el) el.outerHTML = '<span class="text-[10px] font-black text-green-600 bg-green-50 border border-green-100 px-2 py-1 rounded-lg">PREMIADO ✓</span>';
+            } catch(e) {
+                console.error(e);
+                toast('Erro ao creditar pontos', 'error');
+            }
+        };
+
+        window.deletarJogo = async (jogoId) => {
+            if (!confirm('Apagar este jogo? Os palpites serão mantidos no banco.')) return;
+            try {
+                await deleteDoc(doc(db, 'copa_jogos', jogoId));
+                toast('Jogo removido!');
+            } catch(e) { toast('Erro ao remover jogo', 'error'); }
+        };
+
+
 
     </script>
 </body>
