@@ -1690,6 +1690,13 @@ document.addEventListener('DOMContentLoaded', function() {
                                 ${faltamSorvete > 0 ? `Falta ${faltamSorvete.toFixed(2).replace('.', ',').replace(',00', '')} pts para o prêmio` : '🎉 PRÊMIO LIBERADO!'}
                             </p>
                         </div>
+                      `;
+                  }
+              } catch (e) {
+                  console.error("Erro ao atualizar fidelidade:", e);
+              }
+         };
+
          window.renderPromoDetails = (phoneKey, valorPromo) => {
              const el = document.getElementById('order-modal-promo-details');
              if (!el) return;
