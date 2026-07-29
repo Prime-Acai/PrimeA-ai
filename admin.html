@@ -1561,6 +1561,16 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         }
 
+        function escapeHTML(str) {
+            if (str === null || str === undefined) return '';
+            return String(str)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#039;');
+        }
+
         function renderPedidos() {
             const listAll = document.getElementById('all-orders-list');
             const listRecent = document.getElementById('recent-orders-list');
@@ -1597,8 +1607,8 @@ document.addEventListener('DOMContentLoaded', function() {
                           </div>
                           <div>
                                <h4 class="font-black text-slate-900 text-lg flex items-center gap-2 flex-wrap">
-                                   ${p.cliente || 'Sem Nome'} 
-                                   <span class="px-2 py-0.5 bg-slate-100 rounded-lg text-[10px] text-slate-400 font-bold uppercase tracking-wider group-hover:bg-white transition-colors">#${p.id.slice(-4)}</span>
+                                   ${escapeHTML(p.cliente || 'Sem Nome')} 
+                                   <span class="px-2 py-0.5 bg-slate-100 rounded-lg text-[10px] text-slate-400 font-bold uppercase tracking-wider group-hover:bg-white transition-colors">#${escapeHTML(p.id.slice(-4))}</span>
                                    ${promoBadge}
                                </h4>
                                <p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-1">${p.data ? new Date(p.data).toLocaleString('pt-BR') : 'Data Desconhecida'}</p>
@@ -1606,7 +1616,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     </div>
                     <div class="flex items-center gap-10">
                          <div class="text-right">
-                              <p class="text-[10px] font-black uppercase text-slate-400 mb-1 tracking-widest">${p.pagamento || 'N/A'} • ${p.delivery || 'Balcão/Retirada'}</p>
+                              <p class="text-[10px] font-black uppercase text-slate-400 mb-1 tracking-widest">${escapeHTML(p.pagamento || 'N/A')} • ${escapeHTML(p.delivery || 'Balcão/Retirada')}</p>
                               <p class="text-2xl font-display font-black text-slate-900 group-hover:text-brand-600 transition-colors">R$ ${(p.total || 0).toFixed(2).replace('.', ',')}</p>
                          </div>
                          <div class="flex items-center gap-2">
@@ -1632,7 +1642,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         <div class="flex items-center gap-4">
                             <div class="w-2 h-10 bg-brand-500 rounded-full"></div>
                             <div>
-                                 <h5 class="font-bold text-slate-800">${p.cliente || 'Sem Nome'}</h5>
+                                 <h5 class="font-bold text-slate-800">${escapeHTML(p.cliente || 'Sem Nome')}</h5>
                                  <p class="text-[9px] text-slate-400 font-bold uppercase tracking-widest">${p.data ? new Date(p.data).toLocaleTimeString('pt-BR') : '--:--'}</p>
                             </div>
                         </div>
@@ -1666,8 +1676,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 <div class="space-y-4">
                     <div class="p-5 bg-slate-50 rounded-2xl">
                         <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Cliente e Contato</p>
-                        <p class="font-bold text-slate-800">${p.cliente || 'Sem Nome'}</p>
-                        <p class="text-xs text-brand-600 font-bold">${p.telefone || 'Sem Telefone'}</p>
+                        <p class="font-bold text-slate-800">${escapeHTML(p.cliente || 'Sem Nome')}</p>
+                        <p class="text-xs text-brand-600 font-bold">${escapeHTML(p.telefone || 'Sem Telefone')}</p>
                     </div>
                     
                     ${promoStatusHtml}
@@ -1684,17 +1694,17 @@ document.addEventListener('DOMContentLoaded', function() {
                         ${(p.itens || []).map(i => `
                             <div class="p-4 bg-white border border-slate-100 rounded-2xl shadow-sm">
                                 <div class="flex justify-between mb-1">
-                                    <span class="font-black text-slate-800 text-sm">${i.qty}x ${i.name}</span>
-                                    <span class="font-bold text-brand-600 text-sm">R$ ${(i.price * i.qty).toFixed(2).replace('.', ',')}</span>
+                                    <span class="font-black text-slate-800 text-sm">${i.qty}x ${escapeHTML(i.name)}</span>
+                                    <span class="font-bold text-brand-600 text-sm">R$ ${((parseFloat(i.price) || 0) * i.qty).toFixed(2).replace('.', ',')}</span>
                                 </div>
-                                ${i.obs ? `<p class="text-[10px] text-slate-400 leading-tight italic pl-2 border-l-2 border-brand-100">${i.obs}</p>` : ''}
+                                ${i.obs ? `<p class="text-[10px] text-slate-400 leading-tight italic pl-2 border-l-2 border-brand-100">${escapeHTML(i.obs)}</p>` : ''}
                             </div>
                         `).join('')}
                     </div>
                     ${p.obsGeral ? `
                         <div class="p-5 bg-amber-50 rounded-2xl border border-amber-100">
                              <p class="text-[10px] font-black text-amber-600 uppercase tracking-widest mb-1">Observação do Cliente</p>
-                             <p class="text-sm text-slate-700 italic font-medium">"${p.obsGeral}"</p>
+                             <p class="text-sm text-slate-700 italic font-medium">"${escapeHTML(p.obsGeral)}"</p>
                         </div>
                     ` : ''}
                 </div>

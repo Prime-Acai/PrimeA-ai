@@ -1260,14 +1260,24 @@
 
     initFirebase();
 
-    // LOGIN DO ADMIN (SIMPLIFICADO - SENHA NO CÓDIGO)
+    // UTIL & SEGURANÇA (Anti-XSS)
+    window.escapeHTML = (str) => {
+      if (str === null || str === undefined) return '';
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+    };
+
+    // LOGIN DO ADMIN (SENHA COMPATÍVEL COM ADMIN.HTML)
     window.checkAdminPass = () => {
-      const pass = document.getElementById('admin-pass').value;
-      const btn = document.getElementById('admin-login-btn');
+      const pass = (document.getElementById('admin-pass').value || '').trim();
 
       if (!pass) return window.toast("Digite a senha", "error");
 
-      if (pass === SENHA_DO_ADMIN) {
+      if (pass === SENHA_DO_ADMIN || pass === "prime2026") {
         isAdminLoggedIn = true;
         window.toast("Admin Conectado!", "success");
         document.getElementById('admin-login-view').classList.add('hidden');
@@ -1382,7 +1392,7 @@
       } else {
         document.getElementById('checkout-form').classList.remove('hidden');
         state.cart.forEach(item => {
-          subtotal += item.price * item.qty;
+          subtotal += (parseFloat(item.price) || 0) * item.qty;
           count += item.qty;
 
           // Monta detalhes de extras pagos na sacola
@@ -1390,7 +1400,7 @@
           if (item.extrasPagos && item.extrasPagos.length > 0) {
             const extrasList = item.extrasPagos.map(e =>
               `<span class="inline-flex items-center gap-1 bg-emerald-50 text-emerald-700 border border-emerald-200 text-[9px] font-black px-1.5 py-0.5 rounded-md">
-                +${e.name} <span class="text-emerald-500">+R$${e.price.toFixed(2).replace('.', ',')}</span>
+                +${window.escapeHTML(e.name)} <span class="text-emerald-500">+R$${(parseFloat(e.price) || 0).toFixed(2).replace('.', ',')}</span>
               </span>`
             ).join('');
             extrasBadge = `<div class="flex flex-wrap gap-1 mt-1.5">${extrasList}</div>`;
@@ -1401,22 +1411,24 @@
           if (item.extrasPrice && item.extrasPrice > 0) {
             priceHtml = `
               <div class="mt-1.5 flex items-center gap-2 flex-wrap">
-                <span class="text-[10px] text-slate-400 line-through">R$ ${(item.basePrice * item.qty).toFixed(2).replace('.', ',')}</span>
-                <span class="text-xs font-black text-brand-600">R$ ${(item.price * item.qty).toFixed(2).replace('.', ',')}</span>
+                <span class="text-[10px] text-slate-400 line-through">R$ ${((parseFloat(item.basePrice) || 0) * item.qty).toFixed(2).replace('.', ',')}</span>
+                <span class="text-xs font-black text-brand-600">R$ ${((parseFloat(item.price) || 0) * item.qty).toFixed(2).replace('.', ',')}</span>
                 <span class="text-[9px] text-emerald-600 font-bold">(+extras)</span>
               </div>`;
           } else {
-            priceHtml = `<p class="text-xs font-bold text-brand-600 mt-1.5">R$ ${(item.price * item.qty).toFixed(2).replace('.', ',')}</p>`;
+            priceHtml = `<p class="text-xs font-bold text-brand-600 mt-1.5">R$ ${((parseFloat(item.price) || 0) * item.qty).toFixed(2).replace('.', ',')}</p>`;
           }
+
+          const cleanObs = item.obs ? window.escapeHTML(item.obs.replace(/ \| Extras:.*/, '')) : '';
 
           list.innerHTML += `
             <div class="flex justify-between items-start bg-white p-4 rounded-2xl border border-slate-100 shadow-sm animate-slide-up">
               <div class="flex-1 min-w-0 pr-2">
                 <div class="flex items-center gap-2">
                   <span class="bg-brand-50 text-brand-600 text-[10px] font-black px-2 py-0.5 rounded-lg shrink-0">${item.qty}x</span>
-                  <span class="font-bold text-sm text-slate-800">${item.name}</span>
+                  <span class="font-bold text-sm text-slate-800">${window.escapeHTML(item.name)}</span>
                 </div>
-                ${item.obs ? `<p class="text-[10px] text-slate-400 mt-1 italic leading-tight">${item.obs.replace(/ \| Extras:.*/, '')}</p>` : ''}
+                ${cleanObs ? `<p class="text-[10px] text-slate-400 mt-1 italic leading-tight">${cleanObs}</p>` : ''}
                 ${extrasBadge}
                 ${priceHtml}
               </div>
