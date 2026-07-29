@@ -1050,9 +1050,12 @@
     };
 
     const DEFAULT_ITEMS = [
-      { name: "Copo Pequeno 300ml", description: "3 Compl. + 1 Fruta + 1 Creme", price: 13.00, available: true, limits: { adicional: 3, fruta: 1, cobertura: 1 }, image: "copo_prime_acai_1.jpg" },
-      { name: "Copo Médio 400ml", description: "3 Compl. + 1 Fruta + 2 Cremes", price: 16.00, available: true, limits: { adicional: 3, fruta: 1, cobertura: 2 }, image: "ChatGPT Image 5 de fev. de 2026, 22_25_09.jpg" },
-      { name: "Copo Grande 500ml", description: "4 Compl. + 2 Frutas + 2 Cremes", price: 20.00, available: true, limits: { adicional: 4, fruta: 2, cobertura: 2 }, image: "ChatGPT Image 5 de fev. de 2026, 22_24_02.jpg" },
+      { name: "Copo Pequeno 300ml", category: "acai", description: "3 Compl. + 1 Fruta + 1 Creme", price: 13.00, available: true, limits: { adicional: 3, fruta: 1, cobertura: 1 }, image: "copo_prime_acai_1.jpg" },
+      { name: "Copo Médio 400ml", category: "acai", description: "3 Compl. + 1 Fruta + 2 Cremes", price: 16.00, available: true, limits: { adicional: 3, fruta: 1, cobertura: 2 }, image: "ChatGPT Image 5 de fev. de 2026, 22_25_09.jpg" },
+      { name: "Copo Grande 500ml", category: "acai", description: "4 Compl. + 2 Frutas + 2 Cremes", price: 20.00, available: true, limits: { adicional: 4, fruta: 2, cobertura: 2 }, image: "ChatGPT Image 5 de fev. de 2026, 22_24_02.jpg" },
+      { name: "Bolo no Pote Ninho c/ Nutella", category: "doces", description: "Delicioso bolo no pote artesanal", price: 12.00, available: true, hasComplements: false },
+      { name: "Brownie Especial", category: "doces", description: "Brownie artesanal com pedaços de chocolate", price: 10.00, available: true, hasComplements: false },
+      { name: "Pudim Tradicional", category: "doces", description: "Fatia cremosa de pudim de leite", price: 8.00, available: true, hasComplements: false }
     ];
 
     const DEFAULT_ACCOMPANIMENTS = {
@@ -1073,7 +1076,8 @@
         accompaniments: { frutas: [], adicionais: [], coberturas: [] }, // Initialize with empty arrays
         pixKey: "89988171689",
         pixName: "Paulo Cunha da Silva",
-        zones: []
+        zones: [],
+        adicionaisExtras: [] // Adicionais pagos: [{name, price, available}]
       },
       products: [],
       cremes: [],
@@ -1192,6 +1196,10 @@
             if (!state.config.accompaniments) state.config.accompaniments = { frutas: [], adicionais: [], coberturas: [], doces: [] };
             if (data.accompaniments) {
               state.config.accompaniments = data.accompaniments;
+            }
+            // Carrega adicionais extras pagos
+            if (data.adicionaisExtras) {
+              state.config.adicionaisExtras = data.adicionaisExtras;
             }
 
             // Atualiza mensagem de fidelidade
@@ -1376,17 +1384,43 @@
         state.cart.forEach(item => {
           subtotal += item.price * item.qty;
           count += item.qty;
+
+          // Monta detalhes de extras pagos na sacola
+          let extrasBadge = '';
+          if (item.extrasPagos && item.extrasPagos.length > 0) {
+            const extrasList = item.extrasPagos.map(e =>
+              `<span class="inline-flex items-center gap-1 bg-emerald-50 text-emerald-700 border border-emerald-200 text-[9px] font-black px-1.5 py-0.5 rounded-md">
+                +${e.name} <span class="text-emerald-500">+R$${e.price.toFixed(2).replace('.', ',')}</span>
+              </span>`
+            ).join('');
+            extrasBadge = `<div class="flex flex-wrap gap-1 mt-1.5">${extrasList}</div>`;
+          }
+
+          // Linha de preço com breakdown se tiver extras
+          let priceHtml = '';
+          if (item.extrasPrice && item.extrasPrice > 0) {
+            priceHtml = `
+              <div class="mt-1.5 flex items-center gap-2 flex-wrap">
+                <span class="text-[10px] text-slate-400 line-through">R$ ${(item.basePrice * item.qty).toFixed(2).replace('.', ',')}</span>
+                <span class="text-xs font-black text-brand-600">R$ ${(item.price * item.qty).toFixed(2).replace('.', ',')}</span>
+                <span class="text-[9px] text-emerald-600 font-bold">(+extras)</span>
+              </div>`;
+          } else {
+            priceHtml = `<p class="text-xs font-bold text-brand-600 mt-1.5">R$ ${(item.price * item.qty).toFixed(2).replace('.', ',')}</p>`;
+          }
+
           list.innerHTML += `
             <div class="flex justify-between items-start bg-white p-4 rounded-2xl border border-slate-100 shadow-sm animate-slide-up">
-              <div>
+              <div class="flex-1 min-w-0 pr-2">
                 <div class="flex items-center gap-2">
-                  <span class="bg-brand-50 text-brand-600 text-[10px] font-black px-2 py-0.5 rounded-lg">${item.qty}x</span>
+                  <span class="bg-brand-50 text-brand-600 text-[10px] font-black px-2 py-0.5 rounded-lg shrink-0">${item.qty}x</span>
                   <span class="font-bold text-sm text-slate-800">${item.name}</span>
                 </div>
-                ${item.obs ? `<p class="text-[10px] text-slate-400 mt-1 italic leading-tight max-w-[200px]">${item.obs}</p>` : ''}
-                <p class="text-xs font-bold text-brand-600 mt-1.5">R$ ${(item.price * item.qty).toFixed(2).replace('.', ',')}</p>
+                ${item.obs ? `<p class="text-[10px] text-slate-400 mt-1 italic leading-tight">${item.obs.replace(/ \| Extras:.*/, '')}</p>` : ''}
+                ${extrasBadge}
+                ${priceHtml}
               </div>
-              <div class="flex items-center bg-slate-50 rounded-xl h-9 border border-slate-200">
+              <div class="flex items-center bg-slate-50 rounded-xl h-9 border border-slate-200 shrink-0">
                 <button onclick="window.modCartItem(${item.id}, -1)" class="w-9 active:text-red-500 font-bold">-</button>
                 <button onclick="window.modCartItem(${item.id}, 1)" class="w-9 active:text-green-500 font-bold">+</button>
               </div>
@@ -1489,18 +1523,42 @@
     };
 
     // --- LÓGICA COPO PERSONALIZADO ---
+
+    // Calcula o total de extras pagos selecionados no modal
+    window.calcExtrasPrice = () => {
+      let total = 0;
+      document.querySelectorAll('.extra-pago-checkbox:checked').forEach(cb => {
+        total += parseFloat(cb.dataset.price) || 0;
+      });
+      return total;
+    };
+
+    window.onExtraPagoChange = () => {
+      if (!state.currentCopo) return;
+      const basePrice = parseFloat(state.currentCopo.price) || 0;
+      const extrasPrice = window.calcExtrasPrice();
+      const total = (basePrice + extrasPrice) * state.copoQty;
+      document.getElementById('copo-total-price').innerText = `R$ ${total.toFixed(2).replace('.', ',')}`;
+    };
+
     window.openCopoModal = (idx) => {
-      const item = state.products[idx]; // Changed from state.config.sizes[index]
+      const productsToRender = (state.products && state.products.length > 0) ? state.products : DEFAULT_ITEMS;
+      const item = productsToRender[idx];
+      if (!item) return;
       state.currentCopo = item;
       state.copoQty = 1;
       document.getElementById('copo-modal-title').innerText = item.name;
 
       const limitsContainer = document.getElementById('copo-limits-summary');
       limitsContainer.innerHTML = '';
-      const limits = item.limits;
+      const limits = item.limits || {};
       const badgeClass = "text-[10px] font-bold px-2 py-1 rounded-lg border bg-slate-50 border-slate-200 text-slate-500 uppercase tracking-wide";
 
-      if (item.category !== 'sorvete') {
+      if (item.category === 'doces') {
+        limitsContainer.innerHTML = `<span class="text-[10px] font-bold px-2.5 py-1 rounded-lg border bg-pink-50 border-pink-200 text-pink-600 uppercase tracking-wide flex items-center gap-1">🍬 Doce Artesanal</span>`;
+      } else if (item.category === 'sorvete') {
+        if (item.allowCob) limitsContainer.innerHTML = `<span class="text-[10px] font-bold px-2.5 py-1 rounded-lg border bg-indigo-50 border-indigo-200 text-indigo-600 uppercase tracking-wide flex items-center gap-1">🍦 Permite Coberturas</span>`;
+      } else {
         if (limits.adicional) limitsContainer.innerHTML += `<span class="${badgeClass}">${limits.adicional} Complementos</span>`;
         if (limits.fruta) limitsContainer.innerHTML += `<span class="${badgeClass}">${limits.fruta} ${limits.fruta > 1 ? 'Frutas' : 'Fruta'}</span>`;
         if (limits.cobertura) limitsContainer.innerHTML += `<span class="${badgeClass}">${limits.cobertura} ${limits.cobertura > 1 ? 'Cremes' : 'Creme'}</span>`;
@@ -1508,14 +1566,14 @@
       }
 
       document.getElementById('copo-qty-display').innerText = "1";
-      document.getElementById('copo-total-price').innerText = `R$ ${item.price.toFixed(2).replace('.', ',')}`;
+      document.getElementById('copo-total-price').innerText = `R$ ${(parseFloat(item.price) || 0).toFixed(2).replace('.', ',')}`;
 
       const container = document.getElementById('copo-options-container');
       container.innerHTML = "";
 
       const renderSection = (title, options, type) => {
         let html = `<div class="mb-6"><h4 class="text-sm font-black text-slate-700 uppercase mb-3 flex items-center gap-2"><div class="w-1.5 h-4 bg-brand-500 rounded-full"></div>${title}</h4><div class="grid grid-cols-2 gap-3">`;
-        const availableOptions = options.filter(o => o.available);
+        const availableOptions = (options || []).filter(o => o.available);
         if (availableOptions.length === 0) { html += `<p class="text-xs text-slate-400 italic p-2">Indisponível.</p>`; } else {
           availableOptions.forEach(opt => {
             html += `
@@ -1535,13 +1593,59 @@
         return html;
       };
 
+      // Seção de adicionais PAGOS (com preço)
+      const renderExtrasSection = (extras) => {
+        const available = extras.filter(e => e.available !== false);
+        if (available.length === 0) return '';
+        let html = `
+          <div class="mb-6">
+            <div class="flex items-center gap-2 mb-3">
+              <div class="w-1.5 h-4 bg-emerald-500 rounded-full"></div>
+              <h4 class="text-sm font-black text-slate-700 uppercase">Adicionais <span class="text-emerald-600">(+$)</span></h4>
+              <span class="text-[9px] font-bold text-emerald-600 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full uppercase tracking-wide">Cobrado à parte</span>
+            </div>
+            <div class="grid grid-cols-2 gap-3">`;
+        available.forEach(extra => {
+          const price = parseFloat(extra.price) || 0;
+          const priceStr = price.toFixed(2).replace('.', ',');
+          html += `
+            <label class="cursor-pointer relative group">
+              <input type="checkbox" class="extra-pago-checkbox hidden" value="${extra.name}" data-price="${price}" onchange="window.onExtraPagoChange()">
+              <div class="p-3 bg-emerald-50/60 border border-emerald-200 rounded-xl text-xs font-bold text-slate-600 transition-all hover:bg-white hover:border-emerald-400 hover:shadow-sm">
+                <div class="flex items-center justify-between mb-1">
+                  <span>${extra.name}</span>
+                  <div class="w-4 h-4 rounded-full border border-emerald-300 flex items-center justify-center bg-white group-active:scale-90 shrink-0">
+                    <i data-lucide="check" class="check-icon-extra w-3 h-3 text-emerald-600 opacity-0 transform scale-50 transition-all stroke-[4]"></i>
+                  </div>
+                </div>
+                <span class="text-emerald-600 font-black text-[11px]">+ R$ ${priceStr}</span>
+              </div>
+            </label>`;
+        });
+        html += `</div></div>`;
+        return html;
+      };
+
       if (item.hasComplements === false) {
-        container.innerHTML += `<div class="p-6 text-center text-slate-400 text-xs italic bg-slate-50 rounded-2xl border border-slate-100">Item sem acompanhamentos.</div>`;
+        container.innerHTML += `<div class="p-6 text-center text-slate-400 text-xs italic bg-slate-50 rounded-2xl border border-slate-100">Item pronto para consumo (sem acompanhamentos inclusos).</div>`;
       } else if (item.category === 'sorvete') {
         if (item.allowCob) {
           container.innerHTML += renderSection("Coberturas (Caldas)", state.coberturas, "cobertura_real");
         } else {
           container.innerHTML += `<div class="p-6 text-center text-slate-400 text-xs italic bg-slate-50 rounded-2xl border border-slate-100">Não há acompanhamentos selecionáveis para este item.</div>`;
+        }
+      } else if (item.category === 'doces') {
+        let hasAnyDoceOption = false;
+        if (state.config.accompaniments && state.config.accompaniments.doces && state.config.accompaniments.doces.length > 0) {
+          container.innerHTML += renderSection("Doces", state.config.accompaniments.doces || [], "doce");
+          hasAnyDoceOption = true;
+        }
+        if (state.coberturas && state.coberturas.length > 0) {
+          container.innerHTML += renderSection("Coberturas (Caldas)", state.coberturas || [], "cobertura_real");
+          hasAnyDoceOption = true;
+        }
+        if (!hasAnyDoceOption) {
+          container.innerHTML += `<div class="p-6 text-center text-slate-400 text-xs italic bg-slate-50 rounded-2xl border border-slate-100">Doce pronto para consumo!</div>`;
         }
       } else {
         container.innerHTML += renderSection("Frutas", state.config.accompaniments.frutas || [], "fruta");
@@ -1550,6 +1654,33 @@
         container.innerHTML += renderSection("Coberturas (Caldas)", state.coberturas || [], "cobertura_real");
         container.innerHTML += renderSection("Doces", state.config.accompaniments.doces || [], "doce");
       }
+
+      // Sempre mostra adicionais pagos (se houver), independente da categoria
+      const extrasConfig = state.config.adicionaisExtras || [];
+      if (extrasConfig.length > 0) {
+        container.innerHTML += renderExtrasSection(extrasConfig);
+      }
+
+      // CSS inline para o efeito de check nos extras pagos
+      document.querySelectorAll('.extra-pago-checkbox').forEach(cb => {
+        cb.addEventListener('change', function() {
+          const icons = this.parentElement.querySelectorAll('.check-icon-extra');
+          icons.forEach(ic => {
+            ic.style.opacity = this.checked ? '1' : '0';
+            ic.style.transform = this.checked ? 'scale(1)' : 'scale(0.5)';
+          });
+          const wrapper = this.parentElement.querySelector('div');
+          if (wrapper) {
+            if (this.checked) {
+              wrapper.style.backgroundColor = '#ecfdf5';
+              wrapper.style.borderColor = '#10b981';
+            } else {
+              wrapper.style.backgroundColor = '';
+              wrapper.style.borderColor = '';
+            }
+          }
+        });
+      });
 
       document.getElementById('copo-modal').classList.remove('hidden');
       window.refreshIcons();
@@ -1562,7 +1693,7 @@
 
     window.checkCopoLimits = (checkbox) => {
       const type = checkbox.dataset.type;
-      const rawLimit = state.currentCopo.limits[type];
+      const rawLimit = (state.currentCopo.limits || {})[type];
       const limit = (rawLimit === undefined || rawLimit === null) ? 99 : parseInt(rawLimit);
       const allCheckboxesOfType = document.querySelectorAll(`.limit-specific[data-type="${type}"]`);
       const checkedCount = Array.from(allCheckboxesOfType).filter(cb => cb.checked).length;
@@ -1578,7 +1709,8 @@
       document.getElementById('copo-qty-display').innerText = state.copoQty;
       if (state.currentCopo) {
         const price = parseFloat(state.currentCopo.price) || 0;
-        const total = price * state.copoQty;
+        const extrasPrice = window.calcExtrasPrice();
+        const total = (price + extrasPrice) * state.copoQty;
         document.getElementById('copo-total-price').innerText = `R$ ${total.toFixed(2).replace('.', ',')}`;
       }
     };
@@ -1586,10 +1718,12 @@
     window.addCopoToCart = () => {
       if (!state.currentCopo) return;
       const checkboxes = document.querySelectorAll('.option-checkbox:checked');
+      const extraCheckboxes = document.querySelectorAll('.extra-pago-checkbox:checked');
       
       let needsConfirm = true;
       if (state.currentCopo.hasComplements === false) needsConfirm = false;
       if (state.currentCopo.category === 'sorvete' && !state.currentCopo.allowCob) needsConfirm = false;
+      if (state.currentCopo.category === 'doces') needsConfirm = false;
 
       if (checkboxes.length === 0 && needsConfirm) { if (!confirm("Tem certeza que quer o copo sem acompanhamentos?")) return; }
 
@@ -1606,6 +1740,15 @@
         if (groups[type]) groups[type].push(cb.value);
       });
 
+      // Coleta extras pagos
+      let extrasPagos = [];
+      let extrasPrice = 0;
+      extraCheckboxes.forEach(cb => {
+        const price = parseFloat(cb.dataset.price) || 0;
+        extrasPagos.push({ name: cb.value, price });
+        extrasPrice += price;
+      });
+
       let sections = [];
       if (groups.fruta.length > 0) sections.push(`Frutas: ${groups.fruta.join(', ')}`);
       if (groups.adicional.length > 0) sections.push(`Adicionais: ${groups.adicional.join(', ')}`);
@@ -1615,10 +1758,22 @@
 
       let obsText = sections.length > 0 ? sections.join(' | ') : "Sem acompanhamentos";
 
+      // Adiciona os extras pagos na obs
+      if (extrasPagos.length > 0) {
+        const extrasText = extrasPagos.map(e => `${e.name} (+R$ ${e.price.toFixed(2).replace('.', ',')})`).join(', ');
+        obsText += (sections.length > 0 ? ' | ' : '') + `Extras: ${extrasText}`;
+      }
+
+      const basePrice = parseFloat(state.currentCopo.price) || 0;
+      const finalPrice = basePrice + extrasPrice;
+
       state.cart.push({
         id: Date.now() + Math.random(),
         name: state.currentCopo.name,
-        price: state.currentCopo.price,
+        price: finalPrice,
+        basePrice: basePrice,
+        extrasPrice: extrasPrice,
+        extrasPagos: extrasPagos,
         obs: obsText,
         qty: state.copoQty
       });
@@ -1645,7 +1800,7 @@
       if (!grid) return;
       grid.innerHTML = "";
 
-      const productsToRender = state.products && state.products.length > 0 ? state.products : [];
+      const productsToRender = (state.products && state.products.length > 0) ? state.products : DEFAULT_ITEMS;
       const filtered = productsToRender.filter(p => {
         if (state.activeCategory === 'acai') return !p.category || p.category === 'acai';
         return p.category === state.activeCategory;
@@ -1670,7 +1825,7 @@
 
       filtered.forEach((item) => {
         if (item.available === false) return;
-        const origIdx = state.products.indexOf(item);
+        const origIdx = productsToRender.indexOf(item);
         const div = document.createElement('div');
         div.style.animationDelay = `${origIdx * 0.1}s`;
         let imageHTML = '';
