@@ -796,15 +796,68 @@
           </div>
         </div>
 
-        <div class="space-y-4">
-          <h3 class="text-xs font-black text-slate-400 uppercase tracking-widest flex items-center gap-2"><i
-              data-lucide="map-pin" class="w-4 h-4 text-brand-500"></i> Retirada</h3>
-          <div class="p-4 bg-brand-50 border border-brand-100 rounded-2xl flex items-center gap-3">
-            <div class="bg-brand-500 text-white p-2 rounded-xl shadow-sm"><i data-lucide="store" class="w-5 h-5"></i>
+        <!-- TIPO DE ENTREGA / RETIRADA -->
+        <div class="space-y-4" id="delivery-selection-wrapper">
+          <div id="delivery-pickup-only-box" class="space-y-2">
+            <h3 class="text-xs font-black text-slate-400 uppercase tracking-widest flex items-center gap-2"><i
+                data-lucide="map-pin" class="w-4 h-4 text-brand-500"></i> Retirada</h3>
+            <div class="p-4 bg-brand-50 border border-brand-100 rounded-2xl flex items-center gap-3">
+              <div class="bg-brand-500 text-white p-2 rounded-xl shadow-sm"><i data-lucide="store" class="w-5 h-5"></i>
+              </div>
+              <div>
+                <p class="font-bold text-slate-700 text-sm">Retirar na Loja</p>
+                <p class="text-xs text-slate-500 font-medium">O pedido deve ser retirado no balcão.</p>
+              </div>
             </div>
-            <div>
-              <p class="font-bold text-slate-700 text-sm">Retirar na Loja</p>
-              <p class="text-xs text-slate-500 font-medium">O pedido deve ser retirado no balcão.</p>
+          </div>
+
+          <!-- MODO DUPLO (QUANDO DELIVERY ESTIVER ATIVADO PELO ADMIN) -->
+          <div id="delivery-toggle-container" class="hidden space-y-4">
+            <h3 class="text-xs font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
+              <i data-lucide="bike" class="w-4 h-4 text-brand-500"></i> Como deseja receber?
+            </h3>
+            
+            <div class="grid grid-cols-2 gap-2.5">
+              <button type="button" onclick="window.setDeliveryType('Retirada')" id="btn-type-retirada"
+                class="p-3.5 rounded-2xl border-2 font-black text-xs transition-all flex flex-col items-center gap-1.5 active:scale-95 bg-brand-600 border-brand-600 text-white shadow-md shadow-brand-500/20">
+                <i data-lucide="store" class="w-5 h-5"></i>
+                <span>🏪 Retirar na Loja</span>
+              </button>
+              <button type="button" onclick="window.setDeliveryType('Entrega')" id="btn-type-entrega"
+                class="p-3.5 rounded-2xl border-2 font-black text-xs transition-all flex flex-col items-center gap-1.5 active:scale-95 bg-slate-50 border-slate-200 text-slate-700 hover:bg-slate-100">
+                <i data-lucide="bike" class="w-5 h-5"></i>
+                <span>🛵 Entrega (Delivery)</span>
+              </button>
+            </div>
+
+            <!-- FORMULÁRIO DE ENDEREÇO (APENAS QUANDO ENTREGA SELECIONADA) -->
+            <div id="delivery-address-form" class="hidden space-y-3 p-4 bg-emerald-50/60 border border-emerald-200/80 rounded-2xl animate-slide-up">
+              <div>
+                <label class="text-[10px] font-black uppercase tracking-wider text-emerald-800 block mb-1.5">Selecione seu Bairro / Região *</label>
+                <select id="delivery-bairro-select" onchange="window.handleBairroChange()"
+                  class="w-full p-3 bg-white rounded-xl text-xs font-bold border-2 border-emerald-200 focus:border-emerald-500 outline-none">
+                  <option value="" disabled selected>Escolha o bairro...</option>
+                </select>
+              </div>
+
+              <div class="grid grid-cols-3 gap-2">
+                <div class="col-span-2">
+                  <label class="text-[10px] font-black uppercase tracking-wider text-emerald-800 block mb-1">Rua / Endereço *</label>
+                  <input id="delivery-rua" placeholder="Nome da rua / avenida" oninput="window.saveFormData(); window.validateCheckout()"
+                    class="w-full p-3 bg-white rounded-xl text-xs font-bold border-2 border-emerald-100 focus:border-emerald-500 outline-none">
+                </div>
+                <div>
+                  <label class="text-[10px] font-black uppercase tracking-wider text-emerald-800 block mb-1">Nº *</label>
+                  <input id="delivery-numero" placeholder="Nº" oninput="window.saveFormData(); window.validateCheckout()"
+                    class="w-full p-3 bg-white rounded-xl text-xs font-bold border-2 border-emerald-100 focus:border-emerald-500 outline-none text-center">
+                </div>
+              </div>
+
+              <div>
+                <label class="text-[10px] font-black uppercase tracking-wider text-emerald-800 block mb-1">Complemento / Ponto de Referência</label>
+                <input id="delivery-complemento" placeholder="Ex: Casa verde, próx. ao mercadinho" oninput="window.saveFormData()"
+                  class="w-full p-3 bg-white rounded-xl text-xs font-bold border-2 border-emerald-100 focus:border-emerald-500 outline-none">
+              </div>
             </div>
           </div>
         </div>
@@ -997,32 +1050,32 @@
     </div>
   </div>
 
-  <!-- =================== BOLÃO DA COPA =================== -->
+  <!-- =================== BOLÃO DE PALPITES =================== -->
   <!-- Floating button (only shown when bolaoAtivo) -->
   <button id="btn-bolao-float" onclick="window.abrirModalBolao()"
     class="hidden fixed bottom-24 right-4 z-50 flex items-center gap-2 px-4 py-3 bg-gradient-to-r from-yellow-400 to-yellow-500 text-slate-900 rounded-2xl font-black text-sm shadow-2xl shadow-yellow-400/40 active:scale-95 transition-all animate-bounce-slow">
-    🏆 Bolão da Copa
+    🏆 Bolão de Palpites
   </button>
 
   <!-- Bolão Modal -->
   <div id="modal-bolao" class="fixed inset-0 z-[200] bg-slate-900/70 backdrop-blur-sm hidden flex items-end lg:items-center justify-center p-0 lg:p-6">
-    <div class="bg-white w-full lg:max-w-md rounded-t-[2.5rem] lg:rounded-[2.5rem] shadow-2xl relative flex flex-col max-h-[92vh]">
+    <div class="bg-white w-full lg:max-w-2xl rounded-t-[2.5rem] lg:rounded-[2.5rem] shadow-2xl relative flex flex-col max-h-[92vh]">
       <!-- Header -->
-      <div class="p-6 lg:p-8 border-b border-slate-100">
-        <button onclick="document.getElementById('modal-bolao').classList.add('hidden')" class="absolute top-5 right-5 p-2 text-slate-300 hover:text-slate-500">
+      <div class="p-6 lg:p-8 border-b border-slate-100 bg-slate-50/50">
+        <button onclick="document.getElementById('modal-bolao').classList.add('hidden')" class="absolute top-6 right-6 p-2 text-slate-300 hover:text-slate-500">
           <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
         </button>
-        <div class="flex items-center gap-3 mb-1">
+        <div class="flex items-center gap-3">
           <span class="text-3xl">🏆</span>
           <div>
-            <h2 class="font-black text-xl text-slate-900">Bolão da Copa!</h2>
-            <p class="text-[11px] font-bold text-slate-400 uppercase tracking-widest">Chute o placar e ganhe pontos</p>
+            <h2 id="bolao-modal-title" class="font-black text-xl text-slate-900">Bolão de Palpites!</h2>
+            <p id="bolao-modal-sub" class="text-[11px] font-bold text-slate-400 uppercase tracking-widest">Escolha os jogos, dê seus chutes e ganhe pontos</p>
           </div>
         </div>
       </div>
 
       <!-- Body -->
-      <div id="bolao-modal-body" class="flex-1 overflow-y-auto p-6 lg:p-8 space-y-6">
+      <div id="bolao-modal-body" class="flex-1 overflow-y-auto p-4 lg:p-6 space-y-4 no-scrollbar">
         <p class="text-slate-300 text-sm font-bold text-center py-8">Carregando...</p>
       </div>
     </div>
@@ -1064,6 +1117,12 @@
       coberturas: [{ name: "Leite Ninho (Creme)", available: true }, { name: "Ovomaltine", available: true }, { name: "Morango (Creme)", available: true }, { name: "Cupuaçu", available: true }, { name: "Leite Condensado", available: true }]
     };
 
+    const DEFAULT_BAIRROS_ENTREGA = [
+      { id: 'b-aguabranca', nome: 'Bairro Água Branca', taxa: 3.00, ativo: true },
+      { id: 'b-curraiscentro', nome: 'Currais / Centro', taxa: 4.00, ativo: true },
+      { id: 'b-assentamento', nome: 'Assentamento', taxa: 5.00, ativo: true }
+    ];
+
     let state = {
       activeCategory: 'acai',
       cart: [],
@@ -1077,12 +1136,15 @@
         pixKey: "89988171689",
         pixName: "Paulo Cunha da Silva",
         zones: [],
+        deliveryAtivo: false,
+        bairrosEntrega: DEFAULT_BAIRROS_ENTREGA,
         adicionaisExtras: [] // Adicionais pagos: [{name, price, available}]
       },
       products: [],
       cremes: [],
       coberturas: [],
       deliveryType: "Retirada",
+      selectedBairro: null,
       paymentVerified: false,
       currentCopo: null,
       copoQty: 1,
@@ -1193,6 +1255,12 @@
             state.pontosValorReais = data.pontosValorReais || 0.50;
             state.fidelidadeAtiva = data.fidelidadeAtiva !== false;
             state.maisVendido = data.maisVendido || null;
+            if (data.deliveryAtivo !== undefined) {
+              state.config.deliveryAtivo = data.deliveryAtivo === true;
+            }
+            if (data.bairrosEntrega && Array.isArray(data.bairrosEntrega)) {
+              state.config.bairrosEntrega = data.bairrosEntrega;
+            }
             if (!state.config.accompaniments) state.config.accompaniments = { frutas: [], adicionais: [], coberturas: [], doces: [] };
             if (data.accompaniments) {
               state.config.accompaniments = data.accompaniments;
@@ -1202,10 +1270,14 @@
               state.config.adicionaisExtras = data.adicionaisExtras;
             }
 
-            // Atualiza mensagem de fidelidade
+            // Atualiza UI de entrega/retirada
+            if (window.updateDeliveryUI) window.updateDeliveryUI();
+
+            // Atualiza mensagem de fidelidade (respeita chave de ocultar pontos)
             const loyaltyAnnouncement = document.getElementById('loyalty-announcement');
             if (loyaltyAnnouncement) {
-              if (data.fidelidadeAtiva === false) {
+              const deveOcultarPontos = (data.fidelidadeAtiva === false) || (data.promocoes && data.promocoes.ocultarPontos === true);
+              if (deveOcultarPontos) {
                 loyaltyAnnouncement.classList.add('hidden');
               } else {
                 loyaltyAnnouncement.classList.remove('hidden');
@@ -1221,14 +1293,72 @@
               }
             }
 
-            // Atualiza mensagem de promoção
+            // Atualiza mensagem de promoção (Sorteio vs Cumulativo)
             const promoAnnouncement = document.getElementById('promocao-announcement');
             if (promoAnnouncement) {
               if (data.promocoes && data.promocoes.ativa) {
                 promoAnnouncement.classList.remove('hidden');
-                const promoText = document.getElementById('promocao-announcement-text');
-                if (promoText) {
-                  promoText.innerHTML = `<strong>${data.promocoes.mensagem}</strong><br>Brinde: ${data.promocoes.brinde}`;
+                const isSorteio = data.promocoes.tipo === 'sorteio' || (!data.promocoes.tipo && (data.promocoes.tituloSorteio || data.promocoes.premioSorteio));
+                
+                if (isSorteio) {
+                  const tit = data.promocoes.tituloSorteio || '🎉 Aniversário de 1 Ano';
+                  const premio = data.promocoes.premioSorteio || data.promocoes.brinde || 'Smartphone / Celular 📱';
+                  const dataSort = data.promocoes.dataSorteio || '11 de Outubro';
+                  const regra = data.promocoes.regraSorteio || data.promocoes.mensagemSorteio || 'A cada açaí comprado você ganha 1 cupom para concorrer!';
+                  
+                  promoAnnouncement.innerHTML = `
+                    <div class="absolute inset-0 bg-gradient-to-br from-amber-500 via-orange-500 to-yellow-600"></div>
+                    <div class="absolute inset-0 opacity-15" style="background-image: radial-gradient(circle at 2px 2px, white 1px, transparent 0); background-size: 18px 18px;"></div>
+                    <div class="absolute -top-8 -right-8 w-32 h-32 bg-yellow-200 rounded-full opacity-25 blur-2xl"></div>
+                    <div class="relative z-10 p-5">
+                      <div class="flex items-start justify-between gap-3 mb-2">
+                        <div class="flex items-center gap-3">
+                          <div class="w-11 h-11 bg-white/25 rounded-2xl flex items-center justify-center shrink-0 backdrop-blur-md border border-white/30 shadow-lg text-2xl">
+                            📱
+                          </div>
+                          <div>
+                            <span class="inline-flex items-center gap-1 bg-white/20 border border-white/30 text-white text-[9px] font-black uppercase tracking-widest px-2.5 py-1 rounded-full backdrop-blur-sm mb-1">
+                              ${window.escapeHTML(tit)}
+                            </span>
+                            <h3 class="font-display font-black text-white text-lg leading-tight">Sorteio: ${window.escapeHTML(premio)}</h3>
+                          </div>
+                        </div>
+                        <span class="text-3xl select-none leading-none">🎟️</span>
+                      </div>
+                      <div class="border-t border-white/20 my-2.5"></div>
+                      <div class="flex flex-col gap-1 text-white/95 text-xs font-semibold">
+                        <p class="flex items-center gap-1.5"><span class="bg-black/20 px-2.5 py-0.5 rounded-md text-[10px] font-black uppercase tracking-wider">🗓️ Sorteio: ${window.escapeHTML(dataSort)}</span></p>
+                        <p class="text-[11px] font-medium opacity-95 mt-1 leading-snug">${window.escapeHTML(regra)}</p>
+                      </div>
+                    </div>
+                  `;
+                } else {
+                  promoAnnouncement.innerHTML = `
+                    <div class="absolute inset-0 bg-gradient-to-br from-orange-500 via-red-500 to-rose-600"></div>
+                    <div class="absolute inset-0 opacity-10" style="background-image: radial-gradient(circle at 2px 2px, white 1px, transparent 0); background-size: 18px 18px;"></div>
+                    <div class="absolute -top-8 -right-8 w-32 h-32 bg-yellow-300 rounded-full opacity-20 blur-2xl"></div>
+                    <div class="relative z-10 p-5">
+                      <div class="flex items-start justify-between gap-3 mb-3">
+                        <div class="flex items-center gap-3">
+                          <div class="w-11 h-11 bg-white/25 rounded-2xl flex items-center justify-center shrink-0 backdrop-blur-md border border-white/30 shadow-lg">
+                            <i data-lucide="zap" class="w-5 h-5 text-yellow-200"></i>
+                          </div>
+                          <div>
+                            <span class="inline-flex items-center gap-1 bg-white/20 border border-white/30 text-white text-[9px] font-black uppercase tracking-widest px-2.5 py-1 rounded-full backdrop-blur-sm mb-1">
+                              🔥 Oferta Especial
+                            </span>
+                            <h3 class="font-display font-black text-white text-xl leading-tight">Promoção Ativa!</h3>
+                          </div>
+                        </div>
+                        <span class="text-4xl select-none leading-none">🎁</span>
+                      </div>
+                      <div class="border-t border-white/20 mb-3"></div>
+                      <p id="promocao-announcement-text" class="text-white/90 text-xs font-semibold leading-relaxed">
+                        <strong>${window.escapeHTML(data.promocoes.mensagem || '')}</strong><br>Brinde: ${window.escapeHTML(data.promocoes.brinde || '')}
+                      </p>
+                    </div>
+                  `;
+                  window.refreshIcons();
                 }
               } else {
                 promoAnnouncement.classList.add('hidden');
@@ -1452,35 +1582,86 @@
           `;
       }
 
-      let total = subtotal - discountVal;
+      // 🛵 CÁLCULO DE TAXA DE ENTREGA (SE ATIVADA)
+      let deliveryFee = 0;
+      let deliveryFeeHtml = '';
+      if (state.config.deliveryAtivo === true && state.deliveryType === 'Entrega') {
+          const selEl = document.getElementById('delivery-bairro-select');
+          const selBairroNome = selEl ? selEl.value : '';
+          const bairros = (state.config.bairrosEntrega || DEFAULT_BAIRROS_ENTREGA).filter(b => b.ativo !== false);
+          const foundB = bairros.find(b => b.nome === selBairroNome);
+
+          if (foundB) {
+              deliveryFee = parseFloat(foundB.taxa) || 0;
+              deliveryFeeHtml = `
+                  <div class="flex justify-between items-center text-xs font-bold text-emerald-600 mt-2 px-2">
+                      <span class="flex items-center gap-1"><i data-lucide="bike" class="w-3.5 h-3.5"></i> Taxa de Entrega (${window.escapeHTML(foundB.nome)})</span>
+                      <span>+ R$ ${deliveryFee.toFixed(2).replace('.', ',')}</span>
+                  </div>
+              `;
+          } else {
+              deliveryFeeHtml = `
+                  <div class="flex justify-between items-center text-xs font-bold text-slate-400 mt-2 px-2">
+                      <span class="flex items-center gap-1"><i data-lucide="bike" class="w-3.5 h-3.5"></i> Taxa de Entrega</span>
+                      <span class="text-[10px] italic">Selecione o bairro acima</span>
+                  </div>
+              `;
+          }
+      }
+
+      let total = subtotal - discountVal + deliveryFee;
       if (total < 0) total = 0;
 
-      // SEMPRE RETIRADA
       const totalStr = `R$ ${total.toFixed(2).replace('.', ',')}`;
       
       let promoHtml = '';
       if (state.config.promocoes && state.config.promocoes.ativa) {
           const promo = state.config.promocoes;
-          promoHtml = `
-          <div class="mt-4 relative overflow-hidden rounded-2xl">
-            <div class="absolute inset-0 bg-gradient-to-br from-orange-500 via-red-500 to-rose-600"></div>
-            <div class="absolute inset-0 opacity-10" style="background-image: radial-gradient(circle at 2px 2px, white 1px, transparent 0); background-size: 16px 16px;"></div>
-            <div class="absolute -top-4 -right-4 w-20 h-20 bg-yellow-300 rounded-full opacity-20 blur-xl"></div>
-            <div class="relative z-10 p-4 flex items-center gap-3">
-              <div class="w-9 h-9 bg-white/20 rounded-xl flex items-center justify-center shrink-0 border border-white/30">
-                <i data-lucide="zap" class="w-4 h-4 text-yellow-200"></i>
-              </div>
-              <div class="flex-1 min-w-0">
-                <p class="text-[9px] font-black text-white/70 uppercase tracking-widest flex items-center gap-1">🔥 Promoção Ativa</p>
-                <p class="text-xs text-white font-semibold leading-snug mt-0.5">Acumule <strong class="font-black">R$ ${promo.valor.toFixed(2).replace('.', ',')}</strong> e ganhe: <strong class="font-black uppercase">${promo.brinde}</strong></p>
-              </div>
-              <span class="text-2xl leading-none select-none">🎁</span>
-            </div>
-          </div>`;
+          const isSorteio = promo.tipo === 'sorteio' || (!promo.tipo && (promo.tituloSorteio || promo.premioSorteio));
+          if (isSorteio) {
+              const tit = promo.tituloSorteio || 'Sorteio de Aniversário';
+              const premio = promo.premioSorteio || promo.brinde || 'Smartphone / Celular 📱';
+              const dataSort = promo.dataSorteio || '11/10';
+              const regra = promo.regraSorteio || 'A cada açaí comprado você ganha 1 cupom para concorrer!';
+              promoHtml = `
+              <div class="mt-4 relative overflow-hidden rounded-2xl bg-gradient-to-r from-amber-500 via-orange-500 to-yellow-600 text-white p-4 shadow-lg shadow-amber-500/20">
+                <div class="flex items-center gap-3">
+                  <div class="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center shrink-0 border border-white/30 text-xl">
+                    🎟️
+                  </div>
+                  <div class="flex-1 min-w-0">
+                    <div class="flex items-center gap-1.5 flex-wrap">
+                      <span class="bg-black/20 text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full">${window.escapeHTML(tit)}</span>
+                      <span class="text-[10px] font-bold opacity-90">🗓️ ${window.escapeHTML(dataSort)}</span>
+                    </div>
+                    <p class="text-xs font-black leading-tight mt-1">Prêmio: ${window.escapeHTML(premio)}</p>
+                    <p class="text-[10px] font-medium opacity-95 mt-0.5 leading-snug">${window.escapeHTML(regra)}</p>
+                  </div>
+                </div>
+              </div>`;
+          } else {
+              promoHtml = `
+              <div class="mt-4 relative overflow-hidden rounded-2xl">
+                <div class="absolute inset-0 bg-gradient-to-br from-orange-500 via-red-500 to-rose-600"></div>
+                <div class="absolute inset-0 opacity-10" style="background-image: radial-gradient(circle at 2px 2px, white 1px, transparent 0); background-size: 16px 16px;"></div>
+                <div class="absolute -top-4 -right-4 w-20 h-20 bg-yellow-300 rounded-full opacity-20 blur-xl"></div>
+                <div class="relative z-10 p-4 flex items-center gap-3">
+                  <div class="w-9 h-9 bg-white/20 rounded-xl flex items-center justify-center shrink-0 border border-white/30">
+                    <i data-lucide="zap" class="w-4 h-4 text-yellow-200"></i>
+                  </div>
+                  <div class="flex-1 min-w-0">
+                    <p class="text-[9px] font-black text-white/70 uppercase tracking-widest flex items-center gap-1">🔥 Promoção Ativa</p>
+                    <p class="text-xs text-white font-semibold leading-snug mt-0.5">Acumule <strong class="font-black">R$ ${(promo.valor||0).toFixed(2).replace('.', ',')}</strong> e ganhe: <strong class="font-black uppercase">${window.escapeHTML(promo.brinde||'')}</strong></p>
+                  </div>
+                  <span class="text-2xl leading-none select-none">🎁</span>
+                </div>
+              </div>`;
+          }
       }
 
       const totalContainerHtml = `
           ${cupomDiscountHtml}
+          ${deliveryFeeHtml}
           <div class="flex justify-between items-center mt-3 pt-3 border-t border-slate-100 px-2">
               <span class="text-xs font-black text-slate-400 uppercase tracking-widest">Total Final</span>
               <span id="cart-total-value" class="font-display font-black text-xl text-brand-600">${totalStr}</span>
@@ -1504,7 +1685,80 @@
       window.refreshIcons();
     };
 
-    // Removed setDelivery since it's always pickup
+    window.updateDeliveryUI = () => {
+      const isDeliveryAtivo = state.config.deliveryAtivo === true;
+      const pickupOnlyBox = document.getElementById('delivery-pickup-only-box');
+      const toggleContainer = document.getElementById('delivery-toggle-container');
+      const bairroSelect = document.getElementById('delivery-bairro-select');
+
+      if (isDeliveryAtivo) {
+        if (pickupOnlyBox) pickupOnlyBox.classList.add('hidden');
+        if (toggleContainer) toggleContainer.classList.remove('hidden');
+
+        if (bairroSelect) {
+          const currentVal = bairroSelect.value;
+          const bairros = (state.config.bairrosEntrega || DEFAULT_BAIRROS_ENTREGA).filter(b => b.ativo !== false);
+          let options = '<option value="" disabled selected>Escolha o bairro...</option>';
+          bairros.forEach(b => {
+            const taxaFormatted = (parseFloat(b.taxa) || 0).toFixed(2).replace('.', ',');
+            options += `<option value="${window.escapeHTML(b.nome)}" data-taxa="${b.taxa}">${window.escapeHTML(b.nome)} (+ R$ ${taxaFormatted})</option>`;
+          });
+          bairroSelect.innerHTML = options;
+          if (currentVal) bairroSelect.value = currentVal;
+        }
+      } else {
+        if (pickupOnlyBox) pickupOnlyBox.classList.remove('hidden');
+        if (toggleContainer) toggleContainer.classList.add('hidden');
+        state.deliveryType = 'Retirada';
+      }
+    };
+
+    window.setDeliveryType = (type) => {
+      state.deliveryType = type;
+      const btnRetirada = document.getElementById('btn-type-retirada');
+      const btnEntrega = document.getElementById('btn-type-entrega');
+      const addressForm = document.getElementById('delivery-address-form');
+
+      if (type === 'Entrega') {
+        if (btnEntrega) {
+          btnEntrega.className = 'p-3.5 rounded-2xl border-2 font-black text-xs transition-all flex flex-col items-center gap-1.5 active:scale-95 bg-emerald-600 border-emerald-600 text-white shadow-md shadow-emerald-500/20';
+        }
+        if (btnRetirada) {
+          btnRetirada.className = 'p-3.5 rounded-2xl border-2 font-black text-xs transition-all flex flex-col items-center gap-1.5 active:scale-95 bg-slate-50 border-slate-200 text-slate-700 hover:bg-slate-100';
+        }
+        if (addressForm) addressForm.classList.remove('hidden');
+      } else {
+        if (btnRetirada) {
+          btnRetirada.className = 'p-3.5 rounded-2xl border-2 font-black text-xs transition-all flex flex-col items-center gap-1.5 active:scale-95 bg-brand-600 border-brand-600 text-white shadow-md shadow-brand-500/20';
+        }
+        if (btnEntrega) {
+          btnEntrega.className = 'p-3.5 rounded-2xl border-2 font-black text-xs transition-all flex flex-col items-center gap-1.5 active:scale-95 bg-slate-50 border-slate-200 text-slate-700 hover:bg-slate-100';
+        }
+        if (addressForm) addressForm.classList.add('hidden');
+      }
+
+      window.saveFormData();
+      window.renderCart();
+      window.validateCheckout();
+    };
+
+    window.handleBairroChange = () => {
+      const sel = document.getElementById('delivery-bairro-select');
+      if (sel) {
+        const selectedOption = sel.options[sel.selectedIndex];
+        if (selectedOption && selectedOption.value) {
+          state.selectedBairro = {
+            nome: selectedOption.value,
+            taxa: parseFloat(selectedOption.getAttribute('data-taxa')) || 0
+          };
+        } else {
+          state.selectedBairro = null;
+        }
+      }
+      window.saveFormData();
+      window.renderCart();
+      window.validateCheckout();
+    };
 
     window.handlePaymentChange = () => {
       const method = document.getElementById('payment-method').value;
@@ -1968,7 +2222,11 @@
         name: document.getElementById('client-name') ? document.getElementById('client-name').value : "",
         phone: document.getElementById('client-phone') ? document.getElementById('client-phone').value : "",
         payment: document.getElementById('payment-method') ? document.getElementById('payment-method').value : "",
-        deliveryType: "Retirada",
+        deliveryType: state.deliveryType || "Retirada",
+        bairro: document.getElementById('delivery-bairro-select') ? document.getElementById('delivery-bairro-select').value : "",
+        rua: document.getElementById('delivery-rua') ? document.getElementById('delivery-rua').value : "",
+        numero: document.getElementById('delivery-numero') ? document.getElementById('delivery-numero').value : "",
+        complemento: document.getElementById('delivery-complemento') ? document.getElementById('delivery-complemento').value : "",
         obs: document.getElementById('obs-input') ? document.getElementById('obs-input').value : ""
       };
       window.safeStorage.setItem('acai_form_data', JSON.stringify(data));
@@ -1983,6 +2241,17 @@
           if (document.getElementById('client-phone')) document.getElementById('client-phone').value = data.phone || '';
           if (document.getElementById('payment-method')) document.getElementById('payment-method').value = data.payment || '';
           if (document.getElementById('obs-input')) document.getElementById('obs-input').value = data.obs || '';
+          if (document.getElementById('delivery-rua')) document.getElementById('delivery-rua').value = data.rua || '';
+          if (document.getElementById('delivery-numero')) document.getElementById('delivery-numero').value = data.numero || '';
+          if (document.getElementById('delivery-complemento')) document.getElementById('delivery-complemento').value = data.complemento || '';
+
+          if (data.deliveryType && state.config.deliveryAtivo) {
+            window.setDeliveryType(data.deliveryType);
+          }
+          if (data.bairro && document.getElementById('delivery-bairro-select')) {
+            document.getElementById('delivery-bairro-select').value = data.bairro;
+            window.handleBairroChange();
+          }
 
           window.handlePaymentChange();
           window.validateCheckout();
@@ -1995,12 +2264,28 @@
       if (!btn) return;
       const isOpen = window.isStoreOpen();
       const nameEl = document.getElementById('client-name');
-      const name = nameEl ? nameEl.value : "";
+      const name = nameEl ? nameEl.value.trim() : "";
       const phoneEl = document.getElementById('client-phone');
-      const phone = phoneEl ? phoneEl.value : "";
+      const phone = phoneEl ? phoneEl.value.trim() : "";
       const methodEl = document.getElementById('payment-method');
       const method = methodEl ? methodEl.value : "";
       let ok = isOpen && state.cart.length > 0 && name && phone.length > 10 && method && state.paymentVerified;
+
+      // Validação obrigatória de endereço para Entrega
+      if (state.config.deliveryAtivo === true && state.deliveryType === 'Entrega') {
+        const selBairro = document.getElementById('delivery-bairro-select');
+        const ruaEl = document.getElementById('delivery-rua');
+        const numEl = document.getElementById('delivery-numero');
+
+        const hasBairro = selBairro && selBairro.value && selBairro.value.trim() !== '';
+        const hasRua = ruaEl && ruaEl.value && ruaEl.value.trim() !== '';
+        const hasNum = numEl && numEl.value && numEl.value.trim() !== '';
+
+        if (!hasBairro || !hasRua || !hasNum) {
+          ok = false;
+        }
+      }
+
       if (method === 'Pix' && pixTimerExpired) ok = false;
 
       btn.disabled = !ok;
@@ -2113,9 +2398,12 @@
             const acaiFinal = parseFloat(Number(ptAcai).toFixed(2));
             const sorvFinal = parseFloat(Number(ptSorvete).toFixed(2));
 
+            const ocultarPontos = !!(state.config && state.config.promocoes && state.config.promocoes.ocultarPontos === true);
+            const isFidAtiva = state.config && state.config.fidelidadeAtiva !== false && !ocultarPontos;
+
             const card = document.getElementById('loyalty-card');
             const hasPromo = !!(state.config && state.config.promocoes && state.config.promocoes.ativa);
-            const hasAny = ptAcai > 0 || ptSorvete > 0 || hasPromo;
+            const hasAny = (isFidAtiva && (ptAcai > 0 || ptSorvete > 0)) || hasPromo;
 
             if (!hasAny) {
                 card.classList.add('hidden');
@@ -2127,8 +2415,8 @@
 
             let html = '';
 
-            // Açaí card
-            if (ptAcai > 0 || ptSorvete === 0) {
+            // Açaí card (só se fidelidade não estiver ocultada)
+            if (isFidAtiva && (ptAcai > 0 || ptSorvete === 0)) {
                 const isPrizeAcai = ptAcai >= meta;
                 const pctAcai = Math.min(100, Math.round((ptAcai / meta) * 100));
                 if (isPrizeAcai) {
@@ -2153,8 +2441,8 @@
                 }
             }
 
-            // Sorvete/Picolé card
-            if (ptSorvete > 0) {
+            // Sorvete/Picolé card (só se fidelidade não estiver ocultada)
+            if (isFidAtiva && ptSorvete > 0) {
                 const isPrizeSorv = ptSorvete >= meta;
                 const pctSorv = Math.min(100, Math.round((ptSorvete / meta) * 100));
                 if (isPrizeSorv) {
@@ -2179,34 +2467,48 @@
                 }
             }
 
-            // Promoção card (Acima de 100)
+            // Promoção card (Sorteio vs Cumulativo)
             if (hasPromo) {
-                const promoMeta = parseFloat(state.config.promocoes.valor) || 100;
-                const isPrizePromo = valorPromo >= promoMeta;
-                const pctPromo = Math.min(100, Math.round((valorPromo / promoMeta) * 100));
+                const promo = state.config.promocoes;
+                const isSorteio = promo.tipo === 'sorteio' || (!promo.tipo && (promo.tituloSorteio || promo.premioSorteio));
                 
-                if (isPrizePromo) {
-                    html += `<div class="p-4 bg-gradient-to-br from-red-500 to-red-700 border border-red-400 rounded-2xl shadow-xl shadow-red-500/20 animate-pulse-slow">
-                      <div class="flex items-center gap-2 mb-1 justify-center">
-                        <span class="text-xl">🎁</span>
-                        <h4 class="text-sm font-black text-white uppercase tracking-widest text-center">PRÊMIO LIBERADO — PROMOÇÃO!</h4>
+                if (isSorteio) {
+                    html += `<div class="p-4 bg-gradient-to-br from-amber-50 to-orange-100 border border-amber-200 rounded-2xl animate-slide-up">
+                      <div class="flex items-center gap-2 mb-1">
+                        <span class="text-xl">🎟️</span>
+                        <h4 class="text-xs font-black text-amber-900 uppercase tracking-widest">${window.escapeHTML(promo.tituloSorteio || 'Sorteio de Aniversário')}</h4>
                       </div>
-                      <p class="text-xs text-red-100 font-bold text-center">Mostre no balcão para ganhar seu brinde: ${state.config.promocoes.brinde}! 🎉</p>
+                      <p class="text-xs text-amber-950 font-black">Prêmio: ${window.escapeHTML(promo.premioSorteio || promo.brinde || 'Smartphone / Celular 📱')}</p>
+                      <p class="text-[10px] text-amber-800 font-medium mt-1">🗓️ Sorteio no dia <strong>${window.escapeHTML(promo.dataSorteio || '11 de Outubro')}</strong>. Seu pedido garante seu cupom! 🎉</p>
                     </div>`;
                 } else {
-                    const valorPromoFmt = valorPromo.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
-                    const promoMetaFmt = promoMeta.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
-                    const faltaFmt = Math.max(0, promoMeta - valorPromo).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
-                    html += `<div class="p-4 bg-gradient-to-br from-red-50 to-red-100 border border-red-200 rounded-2xl animate-slide-up">
-                      <div class="flex items-center justify-between mb-2">
-                        <h4 class="text-xs font-black text-red-900 flex items-center gap-1.5">🎁 Promoção: ${state.config.promocoes.brinde}</h4>
-                        <span class="text-[10px] font-black text-red-600 bg-white px-2 py-0.5 rounded-md shadow-sm">${valorPromoFmt} / ${promoMetaFmt}</span>
-                      </div>
-                      <div class="w-full bg-red-200/60 rounded-full h-2 mb-2">
-                        <div class="bg-red-500 h-2 rounded-full transition-all duration-500" style="width:${pctPromo}%"></div>
-                      </div>
-                      <p class="text-[10px] text-red-700 font-medium">Você já gastou <strong>${valorPromoFmt}</strong>. Faltam apenas <strong class="text-red-600">${faltaFmt}</strong> para ganhar seu brinde! 🎁</p>
-                    </div>`;
+                    const promoMeta = parseFloat(promo.valor) || 100;
+                    const isPrizePromo = valorPromo >= promoMeta;
+                    const pctPromo = Math.min(100, Math.round((valorPromo / promoMeta) * 100));
+                    
+                    if (isPrizePromo) {
+                        html += `<div class="p-4 bg-gradient-to-br from-red-500 to-red-700 border border-red-400 rounded-2xl shadow-xl shadow-red-500/20 animate-pulse-slow">
+                          <div class="flex items-center gap-2 mb-1 justify-center">
+                            <span class="text-xl">🎁</span>
+                            <h4 class="text-sm font-black text-white uppercase tracking-widest text-center">PRÊMIO LIBERADO — PROMOÇÃO!</h4>
+                          </div>
+                          <p class="text-xs text-red-100 font-bold text-center">Mostre no balcão para ganhar seu brinde: ${window.escapeHTML(promo.brinde)}! 🎉</p>
+                        </div>`;
+                    } else {
+                        const valorPromoFmt = valorPromo.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+                        const promoMetaFmt = promoMeta.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+                        const faltaFmt = Math.max(0, promoMeta - valorPromo).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+                        html += `<div class="p-4 bg-gradient-to-br from-red-50 to-red-100 border border-red-200 rounded-2xl animate-slide-up">
+                          <div class="flex items-center justify-between mb-2">
+                            <h4 class="text-xs font-black text-red-900 flex items-center gap-1.5">🎁 Promoção: ${window.escapeHTML(promo.brinde)}</h4>
+                            <span class="text-[10px] font-black text-red-600 bg-white px-2 py-0.5 rounded-md shadow-sm">${valorPromoFmt} / ${promoMetaFmt}</span>
+                          </div>
+                          <div class="w-full bg-red-200/60 rounded-full h-2 mb-2">
+                            <div class="bg-red-500 h-2 rounded-full transition-all duration-500" style="width:${pctPromo}%"></div>
+                          </div>
+                          <p class="text-[10px] text-red-700 font-medium">Você já gastou <strong>${valorPromoFmt}</strong>. Faltam apenas <strong class="text-red-600">${faltaFmt}</strong> para ganhar seu brinde! 🎁</p>
+                        </div>`;
+                    }
                 }
             }
 
@@ -2224,6 +2526,28 @@
       if (!name) return window.toast('Digite seu nome para continuar.', 'error');
       if (!phone) return window.toast('Digite seu WhatsApp para continuar.', 'error');
 
+      const isEntrega = state.config.deliveryAtivo === true && state.deliveryType === 'Entrega';
+      let bairroNome = '';
+      let taxaEntrega = 0;
+      let rua = '';
+      let numero = '';
+      let complemento = '';
+
+      if (isEntrega) {
+        const bairroSelect = document.getElementById('delivery-bairro-select');
+        bairroNome = bairroSelect ? bairroSelect.value : '';
+        const bairros = (state.config.bairrosEntrega || DEFAULT_BAIRROS_ENTREGA).filter(b => b.ativo !== false);
+        const foundB = bairros.find(b => b.nome === bairroNome);
+        taxaEntrega = foundB ? (parseFloat(foundB.taxa) || 0) : 0;
+        rua = document.getElementById('delivery-rua') ? document.getElementById('delivery-rua').value.trim() : '';
+        numero = document.getElementById('delivery-numero') ? document.getElementById('delivery-numero').value.trim() : '';
+        complemento = document.getElementById('delivery-complemento') ? document.getElementById('delivery-complemento').value.trim() : '';
+
+        if (!bairroNome || !rua || !numero) {
+          return window.toast('Preencha seu endereço completo (Bairro, Rua e Número).', 'error');
+        }
+      }
+
       const btn = document.getElementById('btn-checkout');
       const originalHtml = btn.innerHTML;
       btn.innerHTML = 'Enviando Pedido...';
@@ -2236,37 +2560,64 @@
       
       const subTotalVal = state.cart.reduce((acc, i) => acc + (i.price * i.qty), 0);
       const discountVal = state.appliedCupom ? state.appliedCupom.valor : 0;
-      let totalVal = subTotalVal - discountVal;
+      let totalVal = subTotalVal - discountVal + (isEntrega ? taxaEntrega : 0);
       if (totalVal < 0) totalVal = 0;
 
       // Monta a mensagem do WhatsApp
       let paymentStatusFull = method;
       if (method === 'Pix') paymentStatusFull += " (Confirmado no Site ✅)";
 
-      let msg = `🥣 * NOVO PEDIDO - PRIME AÇAÍ *\n\n`;
-      msg += `👤 * Cliente:* ${name} \n`;
-      msg += `💳 * Pag:* ${paymentStatusFull} \n`;
-      msg += `🚶 * Retirada na Loja *\n`;
+      let msg = `🥣 *NOVO PEDIDO - PRIME AÇAÍ*\n\n`;
+      msg += `👤 *Cliente:* ${name}\n`;
+      msg += `📱 *WhatsApp:* ${phone}\n`;
+      msg += `💳 *Pagamento:* ${paymentStatusFull}\n`;
+
+      if (isEntrega) {
+        msg += `🛵 *Tipo:* Entrega (Delivery)\n`;
+        msg += `📍 *Bairro:* ${bairroNome} (Taxa: R$ ${taxaEntrega.toFixed(2).replace('.', ',')})\n`;
+        msg += `🏠 *Endereço:* ${rua}, Nº ${numero}\n`;
+        if (complemento) msg += `📌 *Ponto de Ref / Comp:* ${complemento}\n`;
+      } else {
+        msg += `🚶 *Tipo:* Retirada na Loja\n`;
+      }
+
       if (state.userOrderCount >= (state.pontosMeta || 10)) {
           msg += `\n🎁 *[ ALERTA ] CLIENTE VIP (${state.userOrderCount} PONTOS)* 🎉🎂\n_(Lembre-se de dar o brinde e resetar os pontos dele!)_\n`;
       }
-      msg += `\n * ITENS DO PEDIDO:*\n`;
+      msg += `\n*ITENS DO PEDIDO:*\n`;
       state.cart.forEach(i => {
-        msg += `▪️ ${i.qty}x ${i.name} \n`;
+        msg += `▪️ ${i.qty}x ${i.name}\n`;
         if (i.obs) msg += `   _(${i.obs})_\n`;
       });
-      if (obsGeneral) msg += `\n⚠️ * Obs Geral:* ${obsGeneral} \n`;
+      if (obsGeneral) msg += `\n⚠️ *Obs Geral:* ${obsGeneral}\n`;
       
       if (state.appliedCupom) {
-          msg += `\n🎟️ * Cupom Aplicado:* ${state.appliedCupom.codigo} (- R$ ${state.appliedCupom.valor.toFixed(2).replace('.', ',')})\n`;
+          msg += `\n🎟️ *Cupom Aplicado:* ${state.appliedCupom.codigo} (- R$ ${state.appliedCupom.valor.toFixed(2).replace('.', ',')})\n`;
+      }
+
+      if (isEntrega && taxaEntrega > 0) {
+          msg += `\n🛵 *Taxa de Entrega (${bairroNome}):* R$ ${taxaEntrega.toFixed(2).replace('.', ',')}\n`;
       }
       
       let brindeGanho = null;
+      let cupomSorteioInfo = null;
       if (state.config.promocoes && state.config.promocoes.ativa) {
-          const valorPromoAtual = (state.userPromoPoints || 0) + 5;
-          if (valorPromoAtual >= state.config.promocoes.valor) {
-              brindeGanho = state.config.promocoes.brinde;
-              msg += `\n🎁 * BRINDE GANHO:* ${brindeGanho}\n`;
+          const promo = state.config.promocoes;
+          const isSorteio = promo.tipo === 'sorteio' || (!promo.tipo && (promo.tituloSorteio || promo.premioSorteio));
+          if (isSorteio) {
+              const tit = promo.tituloSorteio || 'Aniversário de 1 Ano';
+              const premio = promo.premioSorteio || promo.brinde || 'Smartphone / Celular 📱';
+              const dataSort = promo.dataSorteio || '11 de Outubro';
+              cupomSorteioInfo = { campanha: tit, premio: premio, data: dataSort };
+              msg += `\n🎉 *SORTEIO DE ANIVERSÁRIO (${dataSort.toUpperCase()})* 📱\n`;
+              msg += `🎟️ *1x Cupom de Participação Gerado!*\n`;
+              msg += `🎁 *Concorrendo a:* ${premio}\n`;
+          } else {
+              const valorPromoAtual = (state.userPromoPoints || 0) + 5;
+              if (valorPromoAtual >= promo.valor) {
+                  brindeGanho = promo.brinde;
+                  msg += `\n🎁 *BRINDE GANHO:* ${brindeGanho}\n`;
+              }
           }
       }
       
@@ -2283,11 +2634,13 @@
           if (cat === 'sorvete') { pontosGanhosSorvete += pts; }
           else { pontosGanhosAcai += pts; }
       });
-      if (pontosGanhos > 0) {
+
+      const ocultarPontos = !!(state.config && state.config.promocoes && state.config.promocoes.ocultarPontos === true);
+      if (pontosGanhos > 0 && !ocultarPontos) {
           msg += `\n⭐ *+${pontosGanhosSorvete > 0 ? pontosGanhosSorvete.toString().replace('.', ',') + ' pts Sorvete' : ''}${pontosGanhosAcai > 0 && pontosGanhosSorvete > 0 ? ' | ' : ''}${pontosGanhosAcai > 0 ? pontosGanhosAcai.toString().replace('.', ',') + ' pts Açaí' : ''} Club Prime!*\n`;
       }
 
-      msg += `\n💰 * TOTAL FINAL: ${totalFinal}* `;
+      msg += `\n💰 *TOTAL FINAL: ${totalFinal}*`;
 
       // Snapshot do carrinho garantindo valores válidos para o Firestore (evita erros de undefined)
       const cartSnapshot = state.cart.map(i => ({
@@ -2306,15 +2659,26 @@
             cliente: name || 'Sem Nome',
             telefone: phone || '',
             pagamento: method || '',
+            subtotal: subTotalVal || 0,
             total: totalVal || 0,
             cupomInfo: state.appliedCupom ? state.appliedCupom : null,
             brindeGanho: brindeGanho,
-            pontosGanhos: pontosGanhos || 0,
+            cupomSorteio: cupomSorteioInfo,
+            pontosGanhos: (!ocultarPontos ? (pontosGanhos || 0) : 0),
             itens: cartSnapshot,
             obsGeral: obsGeneral,
             data: new Date().toISOString(),
             status: 'novo',
-            delivery: "Retirada",
+            delivery: isEntrega ? "Entrega" : "Retirada",
+            tipoEntrega: isEntrega ? "Entrega" : "Retirada",
+            taxaEntrega: isEntrega ? taxaEntrega : 0,
+            bairro: isEntrega ? bairroNome : "",
+            enderecoEntrega: isEntrega ? {
+              bairro: bairroNome,
+              rua: rua,
+              numero: numero,
+              complemento: complemento
+            } : null,
             isVIP: state.userOrderCount >= (state.pontosMeta || 10)
           });
           
@@ -2526,9 +2890,11 @@
     }
 
     // ============================================================
-    //  BOLÃO DA COPA — FUNÇÕES DO CLIENTE
+    //  BOLÃO DE PALPITES — CENTRAL DE JOGOS & MULTI-LIGAS (CLIENTE)
     // ============================================================
-    let _bolaoJogoAtivo = null; // jogo "aberto" em cache
+    let _bolaoJogosAbertos = [];
+    let _bolaoPalpitesUsuario = {};
+    let _bolaoClienteCampAtivo = 'todas';
 
     // Atualiza visibilidade do botão flutuante baseado na config
     function atualizarBotaoBolao() {
@@ -2543,159 +2909,270 @@
       }
     }
 
+    window.salvarDadosClienteBolao = () => {
+      const nome = (document.getElementById('bolao-client-name')?.value || '').trim();
+      const phone = (document.getElementById('bolao-client-phone')?.value || '').trim();
+      if (nome) window.safeStorage.setItem('acai_client_name', nome);
+      if (phone) window.safeStorage.setItem('acai_client_phone', phone);
+    };
+
     window.abrirModalBolao = async () => {
       if (!db || !firebaseConnected) { alert('Conectando... Tente novamente.'); return; }
       const modal = document.getElementById('modal-bolao');
       const body  = document.getElementById('bolao-modal-body');
       modal.classList.remove('hidden');
-      body.innerHTML = '<p class="text-slate-300 text-sm font-bold text-center py-8">Carregando...</p>';
+      body.innerHTML = '<p class="text-slate-300 text-sm font-bold text-center py-12">Carregando partidas disponíveis...</p>';
 
       try {
-        // Busca o jogo aberto mais recente
-        const jogosSnap = await db.collection('copa_jogos').where('status', '==', 'aberto').limit(1).get();
+        // Busca todos os jogos abertos
+        const jogosSnap = await db.collection('copa_jogos').where('status', '==', 'aberto').get();
         if (jogosSnap.empty) {
           body.innerHTML = `
-            <div class="text-center py-10">
-              <div class="text-5xl mb-4">⚽</div>
-              <p class="font-black text-slate-700 text-lg mb-2">Nenhum jogo aberto</p>
-              <p class="text-sm text-slate-400 font-medium">Assim que o próximo jogo do Brasil for cadastrado, o palpite estará disponível aqui!</p>
+            <div class="text-center py-12 space-y-3">
+              <div class="text-5xl mb-2">⚽</div>
+              <p class="font-black text-slate-700 text-lg">Nenhum jogo aberto no momento</p>
+              <p class="text-xs text-slate-400 font-medium max-w-sm mx-auto">Assim que novos jogos das ligas forem abertos para palpites, eles aparecerão aqui para você chutar!</p>
             </div>`;
           return;
         }
 
-        const jogoDoc = jogosSnap.docs[0];
-        _bolaoJogoAtivo = { id: jogoDoc.id, ...jogoDoc.data() };
-        const jogo = _bolaoJogoAtivo;
-        const dataFmt = jogo.data ? new Date(jogo.data).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' }) : '';
+        _bolaoJogosAbertos = jogosSnap.docs.map(d => ({ id: d.id, ...d.data() }));
 
-        // Recupera dados do formulário para pré-preencher
+        // Recupera dados salvos do cliente
         const savedName  = (document.getElementById('client-name')  ? document.getElementById('client-name').value  : '') || window.safeStorage.getItem('acai_client_name')  || '';
         const savedPhone = (document.getElementById('client-phone') ? document.getElementById('client-phone').value : '') || window.safeStorage.getItem('acai_client_phone') || '';
         const phoneKey = savedPhone.replace(/\D/g, '');
 
-        // Checa se o cliente já palpitou
-        let palpiteExistente = null;
+        _bolaoPalpitesUsuario = {};
         if (phoneKey && phoneKey.length >= 10) {
-          const palDoc = await db.collection('copa_palpites').doc(`${phoneKey}_${jogo.id}`).get();
-          if (palDoc.exists) palpiteExistente = palDoc.data();
+          try {
+            const palSnap = await db.collection('copa_palpites').where('telefone', '==', phoneKey).get();
+            palSnap.forEach(d => {
+              const p = d.data();
+              if (p.jogoId) _bolaoPalpitesUsuario[p.jogoId] = p;
+            });
+          } catch(err) { console.warn("Aviso ao carregar palpites:", err); }
         }
 
-        if (palpiteExistente) {
-          body.innerHTML = `
-            <div class="text-center space-y-4">
-              <div class="text-5xl">🎯</div>
-              <h3 class="font-black text-slate-800 text-lg">Seu palpite foi registrado!</h3>
-              <div class="bg-gradient-to-br from-brand-50 to-brand-100 border border-brand-200 rounded-2xl p-6">
-                <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">Brasil 🇧🇷 × ${jogo.adversario}</p>
-                <div class="flex items-center justify-center gap-4">
-                  <div class="text-center">
-                    <div class="text-4xl font-black text-brand-700">${palpiteExistente.palpite_brasil}</div>
-                    <p class="text-[10px] font-bold text-slate-400 mt-1">Brasil</p>
-                  </div>
-                  <span class="text-2xl font-black text-slate-300">×</span>
-                  <div class="text-center">
-                    <div class="text-4xl font-black text-slate-600">${palpiteExistente.palpite_adversario}</div>
-                    <p class="text-[10px] font-bold text-slate-400 mt-1">${jogo.adversario}</p>
-                  </div>
-                </div>
-                <p class="text-xs text-slate-400 font-medium mt-4">Boa sorte! 🤞 Acerte e ganhe +10 pontos no Club Prime.</p>
-              </div>
-              <p class="text-[10px] text-slate-300 font-bold">Os palpites fecharão quando o jogo começar.</p>
-            </div>`;
-          return;
-        }
-
-        // Formulário de palpite
-        body.innerHTML = `
-          <div class="space-y-5">
-            <div class="bg-gradient-to-br from-yellow-50 to-yellow-100 border border-yellow-200 rounded-2xl p-5 text-center">
-              <p class="text-[10px] font-black text-yellow-700 uppercase tracking-widest mb-2">🇧🇷 Brasil vs ${jogo.adversario}</p>
-              ${dataFmt ? `<p class="text-xs font-bold text-yellow-600">${dataFmt}</p>` : ''}
-              <p class="text-[10px] text-yellow-600 font-medium mt-2">Acerte o placar e ganhe <strong>+10 pontos</strong> no Club Prime!</p>
-            </div>
-
-            <div>
-              <label class="text-[10px] font-black uppercase tracking-widest text-slate-400 block mb-2">Seu Nome</label>
-              <input type="text" id="bolao-nome" value="${savedName}" placeholder="Nome completo" class="w-full p-4 bg-slate-50 rounded-2xl text-sm font-bold border-2 border-transparent focus:border-brand-500/30 outline-none transition-all">
-            </div>
-            <div>
-              <label class="text-[10px] font-black uppercase tracking-widest text-slate-400 block mb-2">Seu Telefone (WhatsApp)</label>
-              <input type="text" id="bolao-telefone" value="${savedPhone}" placeholder="(79) 99999-9999" maxlength="15" class="w-full p-4 bg-slate-50 rounded-2xl text-sm font-bold border-2 border-transparent focus:border-brand-500/30 outline-none transition-all">
-            </div>
-
-            <div>
-              <label class="text-[10px] font-black uppercase tracking-widest text-slate-400 block mb-3 text-center">Chute o Placar</label>
-              <div class="flex items-center justify-center gap-4">
-                <div class="text-center">
-                  <p class="text-xs font-black text-slate-500 mb-2">🇧🇷 Brasil</p>
-                  <input type="number" id="bolao-gols-brasil" min="0" max="20" value="1" class="w-20 p-4 text-center text-2xl font-black bg-slate-50 border-2 border-brand-200 focus:border-brand-500 rounded-2xl outline-none">
-                </div>
-                <span class="text-3xl font-black text-slate-200 mt-5">×</span>
-                <div class="text-center">
-                  <p class="text-xs font-black text-slate-500 mb-2">${jogo.adversario}</p>
-                  <input type="number" id="bolao-gols-adv" min="0" max="20" value="0" class="w-20 p-4 text-center text-2xl font-black bg-slate-50 border-2 border-slate-200 focus:border-slate-400 rounded-2xl outline-none">
-                </div>
-              </div>
-            </div>
-
-            <button onclick="window.enviarPalpite()" class="w-full py-5 bg-gradient-to-r from-yellow-400 to-yellow-500 text-slate-900 rounded-2xl font-black text-sm shadow-xl shadow-yellow-400/30 active:scale-95 transition-all">
-              🏆 Enviar Meu Palpite
-            </button>
-            <p class="text-[10px] text-center text-slate-300 font-bold">Apenas 1 palpite por telefone por jogo.</p>
-          </div>`;
+        renderBolaoClienteUI(savedName, savedPhone);
       } catch(e) {
         console.error('Erro ao carregar bolão:', e);
-        body.innerHTML = '<p class="text-red-400 text-sm font-bold text-center py-8">Erro ao carregar. Tente novamente.</p>';
+        body.innerHTML = '<p class="text-red-400 text-sm font-bold text-center py-12">Erro ao carregar os jogos. Tente novamente.</p>';
       }
     };
 
-    window.enviarPalpite = async () => {
-      const nome     = (document.getElementById('bolao-nome')?.value || '').trim();
-      const telefone = (document.getElementById('bolao-telefone')?.value || '').trim();
-      const golsBrasil = parseInt(document.getElementById('bolao-gols-brasil')?.value) || 0;
-      const golsAdv    = parseInt(document.getElementById('bolao-gols-adv')?.value) || 0;
+    function renderBolaoClienteUI(savedName = '', savedPhone = '') {
+      const body = document.getElementById('bolao-modal-body');
+      if (!body) return;
 
-      if (!nome) { alert('Por favor, informe seu nome.'); return; }
-      if (!telefone || telefone.replace(/\D/g, '').length < 10) { alert('Por favor, informe um telefone válido.'); return; }
-      if (!_bolaoJogoAtivo) { alert('Jogo não encontrado. Feche e reabra.'); return; }
+      const nameVal = (document.getElementById('bolao-client-name')?.value || savedName || '').trim();
+      const phoneVal = (document.getElementById('bolao-client-phone')?.value || savedPhone || '').trim();
 
+      // Identifica campeonatos únicos dos jogos abertos
+      const camps = ['todas', ...new Set(_bolaoJogosAbertos.map(j => j.campeonato || 'Bolão'))];
+
+      let listaFiltrada = _bolaoJogosAbertos.filter(j => {
+        if (_bolaoClienteCampAtivo !== 'todas' && (j.campeonato || 'Bolão') !== _bolaoClienteCampAtivo) return false;
+        return true;
+      });
+
+      body.innerHTML = `
+        <div class="space-y-4">
+          <!-- Box do Cliente -->
+          <div class="bg-slate-50 border border-slate-100 p-4 rounded-2xl space-y-2.5">
+            <div class="flex items-center justify-between">
+              <span class="text-[10px] font-black uppercase tracking-wider text-slate-400">Identificação para os Palpites</span>
+              <span class="text-[10px] font-bold text-amber-600">Pontos creditados no Club Prime</span>
+            </div>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+              <input type="text" id="bolao-client-name" value="${nameVal}" oninput="window.salvarDadosClienteBolao()" placeholder="Seu Nome Completo" class="w-full p-3 bg-white rounded-xl text-xs font-bold border border-slate-200 focus:border-brand-500 outline-none transition-all">
+              <input type="text" id="bolao-client-phone" value="${phoneVal}" oninput="window.salvarDadosClienteBolao()" onchange="window.recarregarPalpitesCliente(this.value)" placeholder="Seu WhatsApp (ex: 79 99999-9999)" maxlength="15" class="w-full p-3 bg-white rounded-xl text-xs font-bold border border-slate-200 focus:border-brand-500 outline-none transition-all">
+            </div>
+          </div>
+
+          <!-- Filtros de Campeonatos -->
+          ${camps.length > 2 ? `
+            <div class="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-1">
+              ${camps.map(c => {
+                const label = c === 'todas' ? `🌟 Todos (${_bolaoJogosAbertos.length})` : c;
+                const active = _bolaoClienteCampAtivo === c;
+                return `
+                  <button onclick="window.selecionarCampCliente('${c}')" class="px-3 py-1.5 rounded-full text-xs font-black whitespace-nowrap transition-all ${active ? 'bg-slate-900 text-white shadow-sm' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}">
+                    ${label}
+                  </button>
+                `;
+              }).join('')}
+            </div>
+          ` : ''}
+
+          <!-- Lista de Jogos Abertos -->
+          <div class="space-y-3" id="bolao-lista-jogos-cliente">
+            ${listaFiltrada.map(jogo => renderCardJogoCliente(jogo)).join('')}
+          </div>
+        </div>
+      `;
+    }
+
+    function formatarDataIsoCliente(dataIsoStr) {
+      if (!dataIsoStr) return '';
+      try {
+        const d = new Date(dataIsoStr);
+        return d.toLocaleString('pt-BR', { weekday: 'short', day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
+      } catch(e) { return dataIsoStr; }
+    }
+
+    function renderCardJogoCliente(jogo) {
+      const time1 = jogo.time1 || 'Brasil';
+      const time2 = jogo.time2 || jogo.adversario || 'Adversário';
+      const campeonato = jogo.campeonato || 'Bolão de Palpites';
+      const pontos = jogo.pontos || 10;
+      const dataFmt = formatarDataIsoCliente(jogo.data);
+      const extraInfo = [jogo.rodada, jogo.estadio ? `📍 ${jogo.estadio}` : ''].filter(Boolean).join(' • ');
+      const palpite = _bolaoPalpitesUsuario[jogo.id];
+
+      if (palpite) {
+        const pGols1 = (palpite.palpite_time1 !== undefined) ? palpite.palpite_time1 : palpite.palpite_brasil;
+        const pGols2 = (palpite.palpite_time2 !== undefined) ? palpite.palpite_time2 : palpite.palpite_adversario;
+
+        return `
+          <div class="bg-gradient-to-br from-emerald-50/60 to-emerald-100/40 border-2 border-emerald-200/80 rounded-2xl p-4 lg:p-5 space-y-3 transition-all" id="bolao-card-${jogo.id}">
+            <div class="flex items-center justify-between gap-2 flex-wrap">
+              <span class="text-[10px] font-black uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800">🏆 ${campeonato}</span>
+              ${extraInfo ? `<span class="text-[10px] font-bold text-emerald-700/70">${extraInfo}</span>` : ''}
+              <span class="text-[10px] font-bold text-emerald-700 bg-emerald-100 px-2.5 py-0.5 rounded-full flex items-center gap-1">✓ Palpite Registrado</span>
+            </div>
+            <div class="flex items-center justify-between gap-2">
+              <div class="flex items-center gap-2 font-black text-slate-800 text-sm sm:text-base flex-1 min-w-0">
+                <span class="truncate">${time1}</span>
+                <span class="text-emerald-700 bg-white border border-emerald-200 px-3 py-1 rounded-xl text-base font-black shrink-0 shadow-sm">${pGols1} × ${pGols2}</span>
+                <span class="truncate">${time2}</span>
+              </div>
+              <span class="text-xs font-bold text-emerald-600 shrink-0">Boa sorte! 🤞</span>
+            </div>
+            <p class="text-[10px] font-bold text-emerald-700/80">${dataFmt ? '📅 ' + dataFmt + ' • ' : ''}Acerte o placar para ganhar <strong>+${pontos} pontos</strong>!</p>
+          </div>`;
+      }
+
+      return `
+        <div class="bg-white border-2 border-slate-100 hover:border-yellow-300 rounded-2xl p-4 lg:p-5 space-y-3 shadow-sm hover:shadow-md transition-all" id="bolao-card-${jogo.id}">
+          <div class="flex items-center justify-between gap-2 flex-wrap">
+            <span class="text-[10px] font-black uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-yellow-100 text-yellow-800">🏆 ${campeonato}</span>
+            ${extraInfo ? `<span class="text-[10px] font-bold text-slate-400">${extraInfo}</span>` : ''}
+            <span class="text-[10px] font-black text-brand-600 bg-brand-50 px-2.5 py-0.5 rounded-full">+${pontos} pts</span>
+          </div>
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div class="space-y-0.5 flex-1 min-w-0">
+              <p class="font-black text-slate-900 text-sm sm:text-base truncate">${time1} <span class="text-slate-400 font-bold text-xs">vs</span> ${time2}</p>
+              ${dataFmt ? `<p class="text-[10px] font-bold text-slate-400">📅 ${dataFmt}</p>` : ''}
+            </div>
+            <div class="flex items-center gap-2 shrink-0">
+              <div class="flex items-center gap-1.5 bg-slate-50 border border-slate-200 p-1.5 rounded-2xl">
+                <div class="text-center">
+                  <span class="text-[9px] font-black text-slate-400 block truncate max-w-[48px]">${time1.substring(0,6)}</span>
+                  <input type="number" id="gols-1-${jogo.id}" min="0" max="20" value="0" class="w-12 h-9 text-center font-black text-lg bg-white rounded-xl border border-slate-200 focus:border-brand-500 outline-none">
+                </div>
+                <span class="font-black text-slate-300 mt-3">×</span>
+                <div class="text-center">
+                  <span class="text-[9px] font-black text-slate-400 block truncate max-w-[48px]">${time2.substring(0,6)}</span>
+                  <input type="number" id="gols-2-${jogo.id}" min="0" max="20" value="0" class="w-12 h-9 text-center font-black text-lg bg-white rounded-xl border border-slate-200 focus:border-slate-400 outline-none">
+                </div>
+              </div>
+              <button onclick="window.enviarPalpiteJogo('${jogo.id}')" id="btn-palpite-${jogo.id}" class="px-4 py-3.5 bg-gradient-to-r from-yellow-400 to-yellow-500 text-slate-950 font-black text-xs rounded-2xl shadow-md shadow-yellow-400/30 active:scale-95 hover:brightness-105 transition-all">
+                Chutar 🎯
+              </button>
+            </div>
+          </div>
+        </div>`;
+    }
+
+    window.selecionarCampCliente = (camp) => {
+      _bolaoClienteCampAtivo = camp;
+      const savedName = (document.getElementById('bolao-client-name')?.value || '').trim();
+      const savedPhone = (document.getElementById('bolao-client-phone')?.value || '').trim();
+      renderBolaoClienteUI(savedName, savedPhone);
+    };
+
+    window.recarregarPalpitesCliente = async (phoneVal) => {
+      const phoneKey = (phoneVal || '').replace(/\D/g, '');
+      if (phoneKey.length < 10) return;
+      try {
+        const palSnap = await db.collection('copa_palpites').where('telefone', '==', phoneKey).get();
+        _bolaoPalpitesUsuario = {};
+        palSnap.forEach(d => {
+          const p = d.data();
+          if (p.jogoId) _bolaoPalpitesUsuario[p.jogoId] = p;
+        });
+        const savedName = (document.getElementById('bolao-client-name')?.value || '').trim();
+        renderBolaoClienteUI(savedName, phoneVal);
+      } catch(e) { console.warn(e); }
+    };
+
+    window.enviarPalpiteJogo = async (jogoId) => {
+      const nome     = (document.getElementById('bolao-client-name')?.value || '').trim();
+      const telefone = (document.getElementById('bolao-client-phone')?.value || '').trim();
       const phoneKey = telefone.replace(/\D/g, '');
-      const docId = `${phoneKey}_${_bolaoJogoAtivo.id}`;
+
+      if (!nome) {
+        alert('Por favor, digite seu nome no topo antes de palpitar.');
+        document.getElementById('bolao-client-name')?.focus();
+        return;
+      }
+      if (!phoneKey || phoneKey.length < 10) {
+        alert('Por favor, digite seu WhatsApp no topo para registrar o palpite e receber os pontos.');
+        document.getElementById('bolao-client-phone')?.focus();
+        return;
+      }
+
+      const jogo = _bolaoJogosAbertos.find(j => j.id === jogoId);
+      if (!jogo) { alert('Jogo não encontrado.'); return; }
+
+      const gols1 = parseInt(document.getElementById(`gols-1-${jogoId}`)?.value) || 0;
+      const gols2 = parseInt(document.getElementById(`gols-2-${jogoId}`)?.value) || 0;
+
+      const btn = document.getElementById(`btn-palpite-${jogoId}`);
+      if (btn) {
+        btn.disabled = true;
+        btn.innerText = 'Enviando...';
+      }
+
+      const docId = `${phoneKey}_${jogoId}`;
+      const time1 = jogo.time1 || 'Brasil';
+      const time2 = jogo.time2 || jogo.adversario || 'Adversário';
+      const campeonato = jogo.campeonato || 'Bolão';
 
       try {
-        await db.collection('copa_palpites').doc(docId).set({
-          jogoId:             _bolaoJogoAtivo.id,
-          telefone:           phoneKey,
+        const dadosPalpite = {
+          jogoId,
+          telefone: phoneKey,
           nome,
-          palpite_brasil:     golsBrasil,
-          palpite_adversario: golsAdv,
-          acertou:            false,
-          premiado:           false,
-          dataEnvio:          new Date().toISOString()
-        });
+          campeonato,
+          time1,
+          time2,
+          palpite_time1: gols1,
+          palpite_time2: gols2,
+          palpite_brasil: gols1,
+          palpite_adversario: gols2,
+          acertou: false,
+          premiado: false,
+          dataEnvio: new Date().toISOString()
+        };
 
-        // Feedback
-        const body = document.getElementById('bolao-modal-body');
-        body.innerHTML = `
-          <div class="text-center py-8 space-y-4">
-            <div class="text-6xl">🎯</div>
-            <h3 class="font-black text-slate-800 text-xl">Palpite registrado!</h3>
-            <div class="bg-gradient-to-br from-brand-50 to-brand-100 border border-brand-200 rounded-2xl p-6">
-              <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">Seu chute</p>
-              <div class="flex items-center justify-center gap-4">
-                <div class="text-center"><div class="text-4xl font-black text-brand-700">${golsBrasil}</div><p class="text-[10px] font-bold text-slate-400 mt-1">Brasil</p></div>
-                <span class="text-2xl font-black text-slate-300">×</span>
-                <div class="text-center"><div class="text-4xl font-black text-slate-600">${golsAdv}</div><p class="text-[10px] font-bold text-slate-400 mt-1">${_bolaoJogoAtivo.adversario}</p></div>
-              </div>
-            </div>
-            <p class="text-sm text-slate-500 font-medium">Boa sorte, ${nome.split(' ')[0]}! 🤞<br>Acerte e ganhe +10 pontos no Club Prime.</p>
-          </div>`;
+        await db.collection('copa_palpites').doc(docId).set(dadosPalpite);
+        _bolaoPalpitesUsuario[jogoId] = dadosPalpite;
+
+        window.salvarDadosClienteBolao();
+
+        // Atualiza apenas o card do jogo
+        const cardEl = document.getElementById(`bolao-card-${jogoId}`);
+        if (cardEl) {
+          cardEl.outerHTML = renderCardJogoCliente(jogo);
+        }
       } catch(e) {
         console.error('Erro ao enviar palpite:', e);
-        if (e.code === 'already-exists' || e.message?.includes('already-exists')) {
-          alert('Você já enviou um palpite para este jogo!');
-        } else {
-          alert('Erro ao enviar. Verifique sua conexão e tente novamente.');
+        alert('Erro ao enviar palpite. Verifique sua conexão e tente novamente.');
+        if (btn) {
+          btn.disabled = false;
+          btn.innerText = 'Chutar 🎯';
         }
       }
     };
