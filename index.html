@@ -1304,7 +1304,8 @@
                   const tit = data.promocoes.tituloSorteio || '🎉 Aniversário de 1 Ano';
                   const premio = data.promocoes.premioSorteio || data.promocoes.brinde || 'Smartphone / Celular 📱';
                   const dataSort = data.promocoes.dataSorteio || '11 de Outubro';
-                  const regra = data.promocoes.regraSorteio || data.promocoes.mensagemSorteio || 'A cada açaí comprado você ganha 1 cupom para concorrer!';
+                  const regra = data.promocoes.regraSorteio || 'A cada açaí comprado você ganha 1 cupom para concorrer!';
+                  const msgCustom = data.promocoes.mensagemSorteio || '';
                   
                   promoAnnouncement.innerHTML = `
                     <div class="absolute inset-0 bg-gradient-to-br from-amber-500 via-orange-500 to-yellow-600"></div>
@@ -1328,7 +1329,7 @@
                       <div class="border-t border-white/20 my-2.5"></div>
                       <div class="flex flex-col gap-1 text-white/95 text-xs font-semibold">
                         <p class="flex items-center gap-1.5"><span class="bg-black/20 px-2.5 py-0.5 rounded-md text-[10px] font-black uppercase tracking-wider">🗓️ Sorteio: ${window.escapeHTML(dataSort)}</span></p>
-                        <p class="text-[11px] font-medium opacity-95 mt-1 leading-snug">${window.escapeHTML(regra)}</p>
+                        <p class="text-[11px] font-medium opacity-95 mt-1 leading-snug">${window.escapeHTML(msgCustom || regra)}</p>
                       </div>
                     </div>
                   `;

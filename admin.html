@@ -1515,6 +1515,37 @@ document.addEventListener('DOMContentLoaded', function() {
 
         let state = { config: null, pedidos: [], products: [], cremes: [], coberturas: [], cupons: [], pontosConfig: {}, bolaoJogos: [] };
         let currentFidPhone = "";
+        let currentPromoTipo = 'sorteio';
+        window.currentPromoTipo = currentPromoTipo;
+
+        window.setPromoTipo = (tipo) => {
+            currentPromoTipo = tipo;
+            window.currentPromoTipo = tipo;
+            const btnSorteio = document.getElementById('btn-prom-tipo-sorteio');
+            const btnCumulativa = document.getElementById('btn-prom-tipo-cumulativa');
+            const camposSorteio = document.getElementById('prom-campos-sorteio');
+            const camposCumulativa = document.getElementById('prom-campos-cumulativa');
+
+            if (tipo === 'sorteio') {
+                if (btnSorteio) {
+                    btnSorteio.className = 'p-4 rounded-2xl border-2 font-black text-xs transition-all flex flex-col items-start gap-1 bg-amber-500 border-amber-500 text-white shadow-md shadow-amber-500/20 active:scale-95';
+                }
+                if (btnCumulativa) {
+                    btnCumulativa.className = 'p-4 rounded-2xl border-2 font-black text-xs transition-all flex flex-col items-start gap-1 bg-slate-50 border-slate-200 text-slate-700 hover:bg-slate-100 active:scale-95';
+                }
+                if (camposSorteio) camposSorteio.classList.remove('hidden');
+                if (camposCumulativa) camposCumulativa.classList.add('hidden');
+            } else {
+                if (btnCumulativa) {
+                    btnCumulativa.className = 'p-4 rounded-2xl border-2 font-black text-xs transition-all flex flex-col items-start gap-1 bg-brand-600 border-brand-600 text-white shadow-md shadow-brand-500/20 active:scale-95';
+                }
+                if (btnSorteio) {
+                    btnSorteio.className = 'p-4 rounded-2xl border-2 font-black text-xs transition-all flex flex-col items-start gap-1 bg-slate-50 border-slate-200 text-slate-700 hover:bg-slate-100 active:scale-95';
+                }
+                if (camposSorteio) camposSorteio.classList.add('hidden');
+                if (camposCumulativa) camposCumulativa.classList.remove('hidden');
+            }
+        };
 
         // --- CORE ADMIN INIT ---
         async function initAdmin() {
@@ -2589,40 +2620,10 @@ document.addEventListener('DOMContentLoaded', function() {
             if (bolaoCheckbox) {
                 bolaoCheckbox.checked = state.config.bolaoAtivo === true;
             }
-            let currentPromoTipo = 'sorteio';
-
-            window.setPromoTipo = (tipo) => {
-                currentPromoTipo = tipo;
-                const btnSorteio = document.getElementById('btn-prom-tipo-sorteio');
-                const btnCumulativa = document.getElementById('btn-prom-tipo-cumulativa');
-                const camposSorteio = document.getElementById('prom-campos-sorteio');
-                const camposCumulativa = document.getElementById('prom-campos-cumulativa');
-
-                if (tipo === 'sorteio') {
-                    if (btnSorteio) {
-                        btnSorteio.className = 'p-4 rounded-2xl border-2 font-black text-xs transition-all flex flex-col items-start gap-1 bg-amber-500 border-amber-500 text-white shadow-md shadow-amber-500/20 active:scale-95';
-                    }
-                    if (btnCumulativa) {
-                        btnCumulativa.className = 'p-4 rounded-2xl border-2 font-black text-xs transition-all flex flex-col items-start gap-1 bg-slate-50 border-slate-200 text-slate-700 hover:bg-slate-100 active:scale-95';
-                    }
-                    if (camposSorteio) camposSorteio.classList.remove('hidden');
-                    if (camposCumulativa) camposCumulativa.classList.add('hidden');
-                } else {
-                    if (btnCumulativa) {
-                        btnCumulativa.className = 'p-4 rounded-2xl border-2 font-black text-xs transition-all flex flex-col items-start gap-1 bg-brand-600 border-brand-600 text-white shadow-md shadow-brand-500/20 active:scale-95';
-                    }
-                    if (btnSorteio) {
-                        btnSorteio.className = 'p-4 rounded-2xl border-2 font-black text-xs transition-all flex flex-col items-start gap-1 bg-slate-50 border-slate-200 text-slate-700 hover:bg-slate-100 active:scale-95';
-                    }
-                    if (camposSorteio) camposSorteio.classList.add('hidden');
-                    if (camposCumulativa) camposCumulativa.classList.remove('hidden');
-                }
-            };
-
             if (state.config.promocoes) {
                 const promo = state.config.promocoes;
                 const promAtiva = document.getElementById('prom-ativa');
-                if (promAtiva) promAtiva.checked = promo.ativa || false;
+                if (promAtiva) promAtiva.checked = promo.ativa === true;
 
                 const ocultarPontosCb = document.getElementById('prom-ocultar-pontos');
                 if (ocultarPontosCb) ocultarPontosCb.checked = promo.ocultarPontos === true;
@@ -2632,27 +2633,27 @@ document.addEventListener('DOMContentLoaded', function() {
 
                 // Campos Sorteio
                 const titSorteio = document.getElementById('prom-titulo-sorteio');
-                if (titSorteio) titSorteio.value = promo.tituloSorteio || '🎉 Aniversário de 1 Ano - Grande Sorteio!';
+                if (titSorteio) titSorteio.value = promo.tituloSorteio !== undefined ? promo.tituloSorteio : '🎉 Aniversário de 1 Ano - Grande Sorteio!';
 
                 const premioSorteio = document.getElementById('prom-premio-sorteio');
-                if (premioSorteio) premioSorteio.value = promo.premioSorteio || promo.brinde || 'Smartphone / Celular 📱';
+                if (premioSorteio) premioSorteio.value = promo.premioSorteio !== undefined ? promo.premioSorteio : (promo.brinde || 'Smartphone / Celular 📱');
 
                 const dataSorteio = document.getElementById('prom-data-sorteio');
-                if (dataSorteio) dataSorteio.value = promo.dataSorteio || '11 de Outubro';
+                if (dataSorteio) dataSorteio.value = promo.dataSorteio !== undefined ? promo.dataSorteio : '11 de Outubro';
 
                 const regraSorteio = document.getElementById('prom-regra-sorteio');
-                if (regraSorteio) regraSorteio.value = promo.regraSorteio || 'A cada açaí comprado você ganha 1 cupom para concorrer!';
+                if (regraSorteio) regraSorteio.value = promo.regraSorteio !== undefined ? promo.regraSorteio : 'A cada açaí comprado você ganha 1 cupom para concorrer!';
 
                 const msgSorteio = document.getElementById('prom-mensagem-sorteio');
-                if (msgSorteio) msgSorteio.value = promo.mensagemSorteio || promo.mensagem || 'Participe da comemoração de 1 ano da Prime Açaí! Compre seu açaí e concorra a um celular dia 11/10!';
+                if (msgSorteio) msgSorteio.value = promo.mensagemSorteio !== undefined ? promo.mensagemSorteio : (promo.mensagem || 'Participe da comemoração de 1 ano da Prime Açaí! Compre seu açaí e concorra a um celular dia 11/10!');
 
                 // Campos Cumulativa
                 const promValor = document.getElementById('prom-valor');
-                if (promValor) promValor.value = promo.valor || '';
+                if (promValor) promValor.value = promo.valor !== undefined ? promo.valor : '';
                 const promBrinde = document.getElementById('prom-brinde');
-                if (promBrinde) promBrinde.value = promo.brinde || '';
+                if (promBrinde) promBrinde.value = promo.brinde !== undefined ? promo.brinde : '';
                 const promMsg = document.getElementById('prom-mensagem');
-                if (promMsg) promMsg.value = promo.mensagem || '';
+                if (promMsg) promMsg.value = promo.mensagem !== undefined ? promo.mensagem : '';
             } else {
                 setPromoTipo('sorteio');
             }
@@ -3154,32 +3155,39 @@ document.addEventListener('DOMContentLoaded', function() {
         };
 
         window.savePromocoesConfig = async () => {
-            const isSorteio = currentPromoTipo === 'sorteio';
-            const premioSorteio = document.getElementById('prom-premio-sorteio') ? document.getElementById('prom-premio-sorteio').value.trim() : '';
-            const brindeCumulativo = document.getElementById('prom-brinde') ? document.getElementById('prom-brinde').value.trim() : '';
-            const msgSorteio = document.getElementById('prom-mensagem-sorteio') ? document.getElementById('prom-mensagem-sorteio').value.trim() : '';
-            const msgCumulativa = document.getElementById('prom-mensagem') ? document.getElementById('prom-mensagem').value.trim() : '';
+            try {
+                const tipo = window.currentPromoTipo || currentPromoTipo || 'sorteio';
+                const isSorteio = tipo === 'sorteio';
+                const premioSorteio = document.getElementById('prom-premio-sorteio') ? document.getElementById('prom-premio-sorteio').value.trim() : '';
+                const brindeCumulativo = document.getElementById('prom-brinde') ? document.getElementById('prom-brinde').value.trim() : '';
+                const msgSorteio = document.getElementById('prom-mensagem-sorteio') ? document.getElementById('prom-mensagem-sorteio').value.trim() : '';
+                const msgCumulativa = document.getElementById('prom-mensagem') ? document.getElementById('prom-mensagem').value.trim() : '';
 
-            const data = {
-                ativa: document.getElementById('prom-ativa') ? document.getElementById('prom-ativa').checked : false,
-                tipo: currentPromoTipo,
-                ocultarPontos: document.getElementById('prom-ocultar-pontos') ? document.getElementById('prom-ocultar-pontos').checked : false,
-                
-                // Campos Sorteio / Aniversário
-                tituloSorteio: document.getElementById('prom-titulo-sorteio') ? document.getElementById('prom-titulo-sorteio').value.trim() : '🎉 Aniversário de 1 Ano - Grande Sorteio!',
-                premioSorteio: premioSorteio || 'Smartphone / Celular 📱',
-                dataSorteio: document.getElementById('prom-data-sorteio') ? document.getElementById('prom-data-sorteio').value.trim() : '11 de Outubro',
-                regraSorteio: document.getElementById('prom-regra-sorteio') ? document.getElementById('prom-regra-sorteio').value.trim() : 'A cada açaí comprado você ganha 1 cupom para concorrer!',
-                mensagemSorteio: msgSorteio || 'Compre seu açaí e concorra a 1 Celular no aniversário de 1 ano da loja dia 11/10!',
+                const data = {
+                    ativa: document.getElementById('prom-ativa') ? document.getElementById('prom-ativa').checked : false,
+                    tipo: tipo,
+                    ocultarPontos: document.getElementById('prom-ocultar-pontos') ? document.getElementById('prom-ocultar-pontos').checked : false,
+                    
+                    // Campos Sorteio / Aniversário
+                    tituloSorteio: document.getElementById('prom-titulo-sorteio') ? document.getElementById('prom-titulo-sorteio').value.trim() : '🎉 Aniversário de 1 Ano - Grande Sorteio!',
+                    premioSorteio: premioSorteio || 'Smartphone / Celular 📱',
+                    dataSorteio: document.getElementById('prom-data-sorteio') ? document.getElementById('prom-data-sorteio').value.trim() : '11 de Outubro',
+                    regraSorteio: document.getElementById('prom-regra-sorteio') ? document.getElementById('prom-regra-sorteio').value.trim() : 'A cada açaí comprado você ganha 1 cupom para concorrer!',
+                    mensagemSorteio: msgSorteio || 'Participe da comemoração de 1 ano da Prime Açaí! Compre seu açaí e concorra a um celular dia 11/10!',
 
-                // Campos Cumulativa (compatibilidade)
-                valor: parseFloat(document.getElementById('prom-valor') ? document.getElementById('prom-valor').value : 0) || 0,
-                brinde: isSorteio ? premioSorteio : brindeCumulativo,
-                mensagem: isSorteio ? msgSorteio : msgCumulativa
-            };
-            await updateDoc(doc(db, 'loja', 'config'), { promocoes: data });
-            if (state.config) state.config.promocoes = data;
-            toast("Configuração da Promoção Salva com Sucesso!");
+                    // Campos Cumulativa (compatibilidade)
+                    valor: parseFloat(document.getElementById('prom-valor') ? document.getElementById('prom-valor').value : 0) || 0,
+                    brinde: isSorteio ? (premioSorteio || 'Smartphone / Celular 📱') : brindeCumulativo,
+                    mensagem: isSorteio ? (msgSorteio || 'Participe da comemoração de 1 ano da Prime Açaí!') : msgCumulativa
+                };
+
+                await setDoc(doc(db, 'loja', 'config'), { promocoes: data }, { merge: true });
+                if (state.config) state.config.promocoes = data;
+                toast("Configuração da Promoção Salva com Sucesso!");
+            } catch (e) {
+                console.error("Erro ao salvar promoção:", e);
+                toast("Erro ao salvar promoção: " + (e.message || e), "error");
+            }
         };
 
         // --- TOGGLE FIDELIDADE ---
