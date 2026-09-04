@@ -105,6 +105,19 @@
   </script>
 
   <style>
+    .display-none {
+      display: none !important;
+    }
+
+    .checkout-step {
+      display: none;
+    }
+
+    .checkout-step.step-ativo {
+      display: block !important;
+      animation: slideUp 0.3s ease-out forwards;
+    }
+
     body {
       background-color: #f8fafc;
       -webkit-tap-highlight-color: transparent;
@@ -757,116 +770,216 @@
     onclick="window.toggleCart(false)"></div>
   <div id="cart-drawer"
     class="fixed top-0 right-0 bottom-0 z-[70] w-full max-w-md bg-white shadow-2xl translate-x-full transition-transform duration-300 flex flex-col">
-    <!-- ... (Conteúdo do Carrinho igual ao anterior) ... -->
+    <!-- Header com Stepper de Progresso -->
     <div
-      class="px-6 py-6 border-b border-slate-50 flex items-center justify-between bg-white/90 backdrop-blur-md sticky top-0 z-10 safe-pt">
-      <div>
-        <h2 class="font-display font-black text-2xl text-slate-900 tracking-tight">Sua Sacola</h2>
-        <p class="text-xs text-slate-400 font-medium">Confira seus copos montados</p>
+      class="px-6 py-5 border-b border-slate-100 bg-white/95 backdrop-blur-md sticky top-0 z-10 safe-pt">
+      <div class="flex items-center justify-between mb-4">
+        <div>
+          <h2 id="cart-drawer-title" class="font-display font-black text-2xl text-slate-900 tracking-tight">Sua Sacola</h2>
+          <p id="cart-drawer-subtitle" class="text-xs text-slate-400 font-medium">Confira seus copos montados</p>
+        </div>
+        <button onclick="window.toggleCart(false)"
+          class="p-2.5 bg-slate-50 hover:bg-slate-100 active:bg-slate-200 rounded-full transition-colors" title="Fechar">
+          <i data-lucide="x" class="w-5 h-5 text-slate-500"></i>
+        </button>
       </div>
-      <button onclick="window.toggleCart(false)"
-        class="p-3 bg-slate-50 active:bg-slate-100 rounded-full transition-colors"><i data-lucide="x"
-          class="w-6 h-6 text-slate-500"></i></button>
+
+      <!-- Stepper: 3 Etapas -->
+      <div class="relative flex items-center justify-between px-3">
+        <div class="absolute left-8 right-8 top-4 h-0.5 bg-slate-200 -z-0">
+          <div id="checkout-progress-bar" class="h-full bg-brand-600 transition-all duration-300" style="width: 0%;"></div>
+        </div>
+
+        <!-- Passo 1 -->
+        <button type="button" onclick="window.goToCheckoutStep(1)" id="step-badge-1"
+          class="relative z-10 flex flex-col items-center gap-1 group focus:outline-none">
+          <div class="step-num w-8 h-8 rounded-full flex items-center justify-center font-black text-xs transition-all bg-brand-600 text-white shadow-md shadow-brand-500/20">1</div>
+          <span class="step-label text-[10px] font-black uppercase tracking-wider text-brand-600">Resumo</span>
+        </button>
+
+        <!-- Passo 2 -->
+        <button type="button" onclick="window.goToCheckoutStep(2)" id="step-badge-2"
+          class="relative z-10 flex flex-col items-center gap-1 group focus:outline-none">
+          <div class="step-num w-8 h-8 rounded-full flex items-center justify-center font-black text-xs transition-all bg-slate-100 text-slate-400">2</div>
+          <span class="step-label text-[10px] font-bold uppercase tracking-wider text-slate-400">Retirada</span>
+        </button>
+
+        <!-- Passo 3 -->
+        <button type="button" onclick="window.goToCheckoutStep(3)" id="step-badge-3"
+          class="relative z-10 flex flex-col items-center gap-1 group focus:outline-none">
+          <div class="step-num w-8 h-8 rounded-full flex items-center justify-center font-black text-xs transition-all bg-slate-100 text-slate-400">3</div>
+          <span class="step-label text-[10px] font-bold uppercase tracking-wider text-slate-400">Pagamento</span>
+        </button>
+      </div>
     </div>
 
+    <!-- Conteúdo dos Steps -->
     <div class="flex-1 overflow-y-auto p-6 space-y-6 bg-slate-50/50 no-scrollbar">
-      <div id="cart-items" class="space-y-4"></div>
 
-      <div id="checkout-form" class="hidden space-y-6 bg-white p-6 rounded-[2.5rem] border border-slate-100 shadow-sm">
-        <div class="space-y-4">
-          <h3 class="text-xs font-black text-slate-400 uppercase tracking-widest flex items-center gap-2"><i
-              data-lucide="user" class="w-4 h-4 text-brand-500"></i> Seus Dados</h3>
-          <div class="space-y-3">
-            <input id="client-name"
-              class="w-full p-4 bg-slate-50 rounded-2xl text-sm font-bold border-2 border-transparent focus:border-brand-500/20 focus:bg-white outline-none transition-all"
-              placeholder="Nome Completo" oninput="window.saveFormData()">
-            <input id="client-phone"
-              class="w-full p-4 bg-slate-50 rounded-2xl text-sm font-bold border-2 border-transparent focus:border-brand-500/20 focus:bg-white outline-none transition-all"
-              placeholder="Telefone (WhatsApp)" maxlength="15">
-            <div id="loyalty-card" class="hidden mt-3 p-4 bg-gradient-to-br from-brand-50 to-brand-100 border border-brand-200 rounded-2xl animate-slide-up">
-              <div class="flex items-center justify-between mb-2">
-                <h4 class="text-xs font-black text-brand-900 uppercase tracking-widest flex items-center gap-1.5"><i data-lucide="award" class="w-4 h-4 text-brand-600"></i> Cartão Fidelidade</h4>
-                <span id="loyalty-count" class="text-xs font-bold text-brand-600 bg-white px-2 py-0.5 rounded-md shadow-sm">0/10</span>
-              </div>
-              <p class="text-[10px] text-brand-700 font-medium mb-3 leading-tight">Complete 10 pedidos para ganhar um prêmio especial na sua próxima compra!</p>
-              <div class="flex gap-1 justify-between" id="loyalty-dots">
-                 <!-- dots generated via js -->
-              </div>
-            </div>
+      <!-- STEP 1: RESUMO -->
+      <div id="checkout-step-1" class="checkout-step step-ativo space-y-4">
+        <!-- Lista de copos montados -->
+        <div id="cart-items" class="space-y-4"></div>
+
+        <!-- Status do Cartão Fidelidade -->
+        <div id="loyalty-card" class="mt-3 p-4 bg-gradient-to-br from-brand-50 to-brand-100 border border-brand-200 rounded-2xl animate-slide-up overflow-hidden max-w-full box-border shadow-sm">
+          <div class="flex items-center justify-between mb-2">
+            <h4 class="text-xs font-black text-brand-900 uppercase tracking-widest flex items-center gap-1.5">
+              <i data-lucide="award" class="w-4 h-4 text-brand-600"></i> Cartão Fidelidade
+            </h4>
+            <span id="loyalty-count" class="text-xs font-bold text-brand-600 bg-white px-2 py-0.5 rounded-md shadow-sm">0/10</span>
+          </div>
+          <p id="loyalty-desc" class="text-[10px] text-brand-700 font-medium mb-2 leading-tight">Complete seus pedidos para ganhar um prêmio especial na sua próxima compra!</p>
+          <div class="w-full bg-brand-200/60 rounded-full h-2.5 mb-3 overflow-hidden">
+            <div id="loyalty-progress-bar" class="bg-brand-600 h-full rounded-full transition-all duration-500" style="width: 0%;"></div>
+          </div>
+          <div class="w-full overflow-hidden" id="loyalty-dots">
+             <!-- dots generated via js -->
           </div>
         </div>
+      </div>
 
-        <!-- TIPO DE ENTREGA / RETIRADA -->
-        <div class="space-y-4" id="delivery-selection-wrapper">
-          <div id="delivery-pickup-only-box" class="space-y-2">
-            <h3 class="text-xs font-black text-slate-400 uppercase tracking-widest flex items-center gap-2"><i
-                data-lucide="map-pin" class="w-4 h-4 text-brand-500"></i> Retirada</h3>
-            <div class="p-4 bg-brand-50 border border-brand-100 rounded-2xl flex items-center gap-3">
-              <div class="bg-brand-500 text-white p-2 rounded-xl shadow-sm"><i data-lucide="store" class="w-5 h-5"></i>
+      <!-- STEP 2: ENTREGA / RETIRADA -->
+      <div id="checkout-step-2" class="checkout-step display-none space-y-5">
+        <button type="button" onclick="window.goToCheckoutStep(1)"
+          class="inline-flex items-center gap-1.5 text-xs font-bold text-slate-500 hover:text-slate-800 transition-colors">
+          <i data-lucide="arrow-left" class="w-4 h-4"></i> Voltar ao Resumo
+        </button>
+
+        <div class="space-y-4 bg-white p-6 rounded-[2.5rem] border border-slate-100 shadow-sm">
+          <!-- Identificação do Cliente -->
+          <div class="space-y-4">
+            <h3 class="text-xs font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
+              <i data-lucide="user" class="w-4 h-4 text-brand-500"></i> Seus Dados
+            </h3>
+            <div class="space-y-3">
+              <div>
+                <label class="text-[10px] font-bold text-slate-400 block mb-1">Nome Completo *</label>
+                <input id="client-name"
+                  class="w-full p-4 bg-slate-50 rounded-2xl text-sm font-bold border-2 border-transparent focus:border-brand-500/20 focus:bg-white outline-none transition-all"
+                  placeholder="Nome Completo" oninput="window.saveFormData(); window.validateCheckout();">
               </div>
               <div>
-                <p class="font-bold text-slate-700 text-sm">Retirar na Loja</p>
-                <p class="text-xs text-slate-500 font-medium">O pedido deve ser retirado no balcão.</p>
+                <label class="text-[10px] font-bold text-slate-400 block mb-1">Telefone (WhatsApp) *</label>
+                <input id="client-phone"
+                  class="w-full p-4 bg-slate-50 rounded-2xl text-sm font-bold border-2 border-transparent focus:border-brand-500/20 focus:bg-white outline-none transition-all"
+                  placeholder="(00) 00000-0000" maxlength="15">
               </div>
             </div>
           </div>
 
-          <!-- MODO DUPLO (QUANDO DELIVERY ESTIVER ATIVADO PELO ADMIN) -->
-          <div id="delivery-toggle-container" class="hidden space-y-4">
-            <h3 class="text-xs font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
-              <i data-lucide="bike" class="w-4 h-4 text-brand-500"></i> Como deseja receber?
-            </h3>
-            
-            <div class="grid grid-cols-2 gap-2.5">
-              <button type="button" onclick="window.setDeliveryType('Retirada')" id="btn-type-retirada"
-                class="p-3.5 rounded-2xl border-2 font-black text-xs transition-all flex flex-col items-center gap-1.5 active:scale-95 bg-brand-600 border-brand-600 text-white shadow-md shadow-brand-500/20">
-                <i data-lucide="store" class="w-5 h-5"></i>
-                <span>🏪 Retirar na Loja</span>
-              </button>
-              <button type="button" onclick="window.setDeliveryType('Entrega')" id="btn-type-entrega"
-                class="p-3.5 rounded-2xl border-2 font-black text-xs transition-all flex flex-col items-center gap-1.5 active:scale-95 bg-slate-50 border-slate-200 text-slate-700 hover:bg-slate-100">
-                <i data-lucide="bike" class="w-5 h-5"></i>
-                <span>🛵 Entrega (Delivery)</span>
-              </button>
-            </div>
-
-            <!-- FORMULÁRIO DE ENDEREÇO (APENAS QUANDO ENTREGA SELECIONADA) -->
-            <div id="delivery-address-form" class="hidden space-y-3 p-4 bg-emerald-50/60 border border-emerald-200/80 rounded-2xl animate-slide-up">
-              <div>
-                <label class="text-[10px] font-black uppercase tracking-wider text-emerald-800 block mb-1.5">Selecione seu Bairro / Região *</label>
-                <select id="delivery-bairro-select" onchange="window.handleBairroChange()"
-                  class="w-full p-3 bg-white rounded-xl text-xs font-bold border-2 border-emerald-200 focus:border-emerald-500 outline-none">
-                  <option value="" disabled selected>Escolha o bairro...</option>
-                </select>
-              </div>
-
-              <div class="grid grid-cols-3 gap-2">
-                <div class="col-span-2">
-                  <label class="text-[10px] font-black uppercase tracking-wider text-emerald-800 block mb-1">Rua / Endereço *</label>
-                  <input id="delivery-rua" placeholder="Nome da rua / avenida" oninput="window.saveFormData(); window.validateCheckout()"
-                    class="w-full p-3 bg-white rounded-xl text-xs font-bold border-2 border-emerald-100 focus:border-emerald-500 outline-none">
+          <!-- Tipo de Entrega / Retirada & Bairro -->
+          <div class="space-y-4 pt-2 border-t border-slate-100" id="delivery-selection-wrapper">
+            <div id="delivery-pickup-only-box" class="space-y-2">
+              <h3 class="text-xs font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
+                <i data-lucide="map-pin" class="w-4 h-4 text-brand-500"></i> Retirada
+              </h3>
+              <div class="p-4 bg-brand-50 border border-brand-100 rounded-2xl flex items-center gap-3">
+                <div class="bg-brand-500 text-white p-2 rounded-xl shadow-sm"><i data-lucide="store" class="w-5 h-5"></i>
                 </div>
                 <div>
-                  <label class="text-[10px] font-black uppercase tracking-wider text-emerald-800 block mb-1">Nº *</label>
-                  <input id="delivery-numero" placeholder="Nº" oninput="window.saveFormData(); window.validateCheckout()"
-                    class="w-full p-3 bg-white rounded-xl text-xs font-bold border-2 border-emerald-100 focus:border-emerald-500 outline-none text-center">
+                  <p class="font-bold text-slate-700 text-sm">Retirar na Loja</p>
+                  <p class="text-xs text-slate-500 font-medium">O pedido deve ser retirado no balcão.</p>
                 </div>
               </div>
+            </div>
 
-              <div>
-                <label class="text-[10px] font-black uppercase tracking-wider text-emerald-800 block mb-1">Complemento / Ponto de Referência</label>
-                <input id="delivery-complemento" placeholder="Ex: Casa verde, próx. ao mercadinho" oninput="window.saveFormData()"
-                  class="w-full p-3 bg-white rounded-xl text-xs font-bold border-2 border-emerald-100 focus:border-emerald-500 outline-none">
+            <!-- MODO DUPLO (QUANDO DELIVERY ESTIVER ATIVADO PELO ADMIN) -->
+            <div id="delivery-toggle-container" class="hidden space-y-4">
+              <h3 class="text-xs font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
+                <i data-lucide="bike" class="w-4 h-4 text-brand-500"></i> Como deseja receber?
+              </h3>
+              
+              <div class="grid grid-cols-2 gap-2.5">
+                <button type="button" onclick="window.setDeliveryType('Retirada')" id="btn-type-retirada"
+                  class="p-3.5 rounded-2xl border-2 font-black text-xs transition-all flex flex-col items-center gap-1.5 active:scale-95 bg-brand-600 border-brand-600 text-white shadow-md shadow-brand-500/20">
+                  <i data-lucide="store" class="w-5 h-5"></i>
+                  <span>🏪 Retirar na Loja</span>
+                </button>
+                <button type="button" onclick="window.setDeliveryType('Entrega')" id="btn-type-entrega"
+                  class="p-3.5 rounded-2xl border-2 font-black text-xs transition-all flex flex-col items-center gap-1.5 active:scale-95 bg-slate-50 border-slate-200 text-slate-700 hover:bg-slate-100">
+                  <i data-lucide="bike" class="w-5 h-5"></i>
+                  <span>🛵 Entrega (Delivery)</span>
+                </button>
+              </div>
+
+              <!-- FORMULÁRIO DE ENDEREÇO (APENAS QUANDO ENTREGA SELECIONADA) -->
+              <div id="delivery-address-form" class="hidden space-y-3 p-4 bg-emerald-50/60 border border-emerald-200/80 rounded-2xl animate-slide-up">
+                <div>
+                  <label class="text-[10px] font-black uppercase tracking-wider text-emerald-800 block mb-1.5">Selecione seu Bairro / Região *</label>
+                  <select id="delivery-bairro-select" onchange="window.handleBairroChange()"
+                    class="w-full p-3 bg-white rounded-xl text-xs font-bold border-2 border-emerald-200 focus:border-emerald-500 outline-none">
+                    <option value="" disabled selected>Escolha o bairro...</option>
+                  </select>
+                </div>
+
+                <div class="grid grid-cols-3 gap-2">
+                  <div class="col-span-2">
+                    <label class="text-[10px] font-black uppercase tracking-wider text-emerald-800 block mb-1">Rua / Endereço *</label>
+                    <input id="delivery-rua" placeholder="Nome da rua / avenida" oninput="window.saveFormData(); window.validateCheckout()"
+                      class="w-full p-3 bg-white rounded-xl text-xs font-bold border-2 border-emerald-100 focus:border-emerald-500 outline-none">
+                  </div>
+                  <div>
+                    <label class="text-[10px] font-black uppercase tracking-wider text-emerald-800 block mb-1">Nº *</label>
+                    <input id="delivery-numero" placeholder="Nº" oninput="window.saveFormData(); window.validateCheckout()"
+                      class="w-full p-3 bg-white rounded-xl text-xs font-bold border-2 border-emerald-100 focus:border-emerald-500 outline-none text-center">
+                  </div>
+                </div>
+
+                <div>
+                  <label class="text-[10px] font-black uppercase tracking-wider text-emerald-800 block mb-1">Complemento / Ponto de Referência</label>
+                  <input id="delivery-complemento" placeholder="Ex: Casa verde, próx. ao mercadinho" oninput="window.saveFormData()"
+                    class="w-full p-3 bg-white rounded-xl text-xs font-bold border-2 border-emerald-100 focus:border-emerald-500 outline-none">
+                </div>
               </div>
             </div>
           </div>
         </div>
 
-        <div class="space-y-4">
-          <h3 class="text-xs font-black text-slate-400 uppercase tracking-widest flex items-center gap-2"><i
-              data-lucide="credit-card" class="w-4 h-4 text-brand-500"></i> Pagamento</h3>
-          <select id="payment-method"
-            class="w-full p-4 bg-slate-50 rounded-2xl text-sm font-bold border-2 border-transparent focus:bg-white focus:border-brand-500/20 outline-none transition-all"
+        <!-- Botão Avançar para Pagamento no corpo do Step 2 -->
+        <div class="pt-2">
+          <button type="button" onclick="window.goToCheckoutStep(3)" id="btn-step2-advance"
+            class="w-full py-4 rounded-2xl bg-brand-600 hover:bg-brand-700 text-white font-black text-sm shadow-xl shadow-brand-500/20 flex items-center justify-center gap-2 active:scale-95 transition-all">
+            <span>Avançar para Pagamento</span>
+            <i data-lucide="arrow-right" class="w-5 h-5"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- STEP 3: PAGAMENTO -->
+      <div id="checkout-step-3" class="checkout-step display-none space-y-5">
+        <button type="button" onclick="window.goToCheckoutStep(2)"
+          class="inline-flex items-center gap-1.5 text-xs font-bold text-slate-500 hover:text-slate-800 transition-colors">
+          <i data-lucide="arrow-left" class="w-4 h-4"></i> Voltar para Retirada
+        </button>
+
+        <div class="space-y-4 bg-white p-6 rounded-[2.5rem] border border-slate-100 shadow-sm">
+          <h3 class="text-xs font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
+            <i data-lucide="credit-card" class="w-4 h-4 text-brand-500"></i> Escolha a Forma de Pagamento
+          </h3>
+
+          <!-- Opções visuais: Pix, Dinheiro, Cartão -->
+          <div class="grid grid-cols-3 gap-2" id="payment-options-grid">
+            <button type="button" onclick="window.selectPaymentOption('Pix')" id="btn-pay-pix"
+              class="payment-option-btn p-3 rounded-2xl border-2 border-brand-600 bg-brand-50 text-brand-700 font-black shadow-md shadow-brand-500/10 flex flex-col items-center gap-1 transition-all active:scale-95 scale-[1.02] ring-2 ring-brand-500/20">
+              <span class="text-xl">⚡</span>
+              <span class="text-xs font-black">Pix</span>
+              <span class="text-[8px] font-black text-amber-800 bg-amber-100 px-1 py-0.5 rounded leading-tight border border-amber-300/70">+ Comprovante</span>
+            </button>
+            <button type="button" onclick="window.selectPaymentOption('Dinheiro')" id="btn-pay-dinheiro"
+              class="payment-option-btn p-3 rounded-2xl border-2 border-slate-200 bg-slate-50 hover:bg-slate-100 text-slate-600 font-bold flex flex-col items-center gap-1.5 transition-all active:scale-95">
+              <span class="text-xl">💵</span>
+              <span class="text-xs font-black">Dinheiro</span>
+            </button>
+            <button type="button" onclick="window.selectPaymentOption('Cartão')" id="btn-pay-cartao"
+              class="payment-option-btn p-3 rounded-2xl border-2 border-slate-200 bg-slate-50 hover:bg-slate-100 text-slate-600 font-bold flex flex-col items-center gap-1.5 transition-all active:scale-95">
+              <span class="text-xl">💳</span>
+              <span class="text-xs font-black">Cartão</span>
+            </button>
+          </div>
+
+          <!-- Select oculto para compatibilidade total -->
+          <select id="payment-method" class="hidden"
             onchange="window.handlePaymentChange(); window.saveFormData()">
             <option value="" disabled selected>Forma de pagamento...</option>
             <option value="Pix">Pix (Copia e Cola)</option>
@@ -874,8 +987,19 @@
             <option value="Cartão">Cartão na Retirada</option>
           </select>
 
+          <!-- Bloco do Pix -->
           <div id="pix-area"
             class="hidden bg-brand-50 p-5 rounded-3xl border border-brand-100 text-center animate-slide-up">
+            
+            <!-- ALERTA DE COMPROVANTE OBRIGATÓRIO -->
+            <div class="mb-4 p-3.5 bg-amber-500/15 border-2 border-amber-500/50 rounded-2xl flex items-center gap-3 text-left shadow-sm">
+              <span class="text-2xl shrink-0">⚠️</span>
+              <div class="min-w-0">
+                <p class="text-[11px] font-black text-amber-950 uppercase tracking-wider leading-tight">Envio de Comprovante Obrigatório</p>
+                <p class="text-[10px] font-bold text-amber-900 leading-snug mt-0.5">É <strong>obrigatório enviar o comprovante do Pix no WhatsApp</strong> para que seu pedido seja confirmado e preparado!</p>
+              </div>
+            </div>
+
             <p class="text-[10px] font-black text-brand-900 uppercase mb-1 tracking-widest">Titular: Paulo Cunha da Silva</p>
             <p class="text-[10px] font-black text-brand-900 uppercase mb-3 tracking-widest">Chave Pix</p>
             <div class="flex gap-2 mb-3">
@@ -884,7 +1008,7 @@
               <button onclick="window.copyPix()"
                 class="px-5 bg-brand-600 text-white rounded-xl font-black text-xs uppercase tracking-widest shadow-lg shadow-brand-500/20 active:scale-95 transition-all outline-none">COPIAR</button>
             </div>
-            <p class="text-[10px] text-slate-500 font-medium mb-4">Copie a chave, pague o Pix e clique em <strong class="text-green-600">"Já Paguei!"</strong> para confirmar.</p>
+            <p class="text-[10px] text-slate-500 font-medium mb-4">Copie a chave, realize o Pix e clique em <strong class="text-green-600">"Já Paguei!"</strong>. Envie o comprovante na conversa.</p>
 
             <!-- ⏱ CRONÔMETRO PIX -->
             <div id="pix-timer-container" class="hidden">
@@ -894,9 +1018,9 @@
                 <p id="pix-timer-sub" class="text-[9px] text-slate-400 font-medium">Pague antes que o tempo acabe</p>
               </div>
               <button id="btn-pix-confirm" onclick="window.confirmPixPayment()"
-                class="w-full py-3.5 bg-green-500 text-white rounded-2xl font-black text-sm uppercase tracking-widest shadow-lg shadow-green-500/20 active:scale-95 transition-all flex items-center justify-center gap-2 mb-2">
+                class="w-full py-3.5 bg-green-500 hover:bg-green-600 text-white rounded-2xl font-black text-xs uppercase tracking-widest shadow-lg shadow-green-500/20 active:scale-95 transition-all flex items-center justify-center gap-2 mb-2">
                 <i data-lucide="check-circle-2" class="w-5 h-5"></i>
-                Já Paguei! Ir Buscar
+                Já Paguei! Mandar Comprovante no Zap
               </button>
               <div id="pix-expired-msg" class="hidden mt-2 p-4 bg-red-50 rounded-2xl border border-red-200 text-left">
                 <p class="text-sm font-black text-red-600 mb-1 flex items-center gap-2"><i data-lucide="x-circle" class="w-4 h-4 shrink-0"></i>Pedido Cancelado</p>
@@ -909,19 +1033,39 @@
       </div>
     </div>
 
+    <!-- Footer Fixo do Drawer -->
     <div class="p-6 border-t border-slate-100 bg-white z-20 shadow-[0_-10px_60px_-15px_rgba(0,0,0,0.1)] safe-pb">
-      <div class="flex justify-between items-end mb-5">
+      <div class="flex justify-between items-end mb-4">
         <span class="text-xs font-black text-slate-400 uppercase tracking-widest">Total Geral</span>
         <span id="cart-total" class="text-3xl font-display font-black text-slate-900 tracking-tight">R$ 0,00</span>
       </div>
-      <button onclick="window.sendOrder()" id="btn-checkout"
-        class="w-full py-5 rounded-2xl bg-gradient-to-r from-whatsapp-500 to-whatsapp-600 text-white font-black text-sm shadow-xl flex items-center justify-center gap-3 transition-all active:scale-95 disabled:opacity-50 disabled:grayscale"
-        disabled>
-        <div class="relative z-10 flex items-center gap-2">
-          <i data-lucide="message-circle" class="w-6 h-6 fill-white/20"></i>
-          <span>Finalizar no WhatsApp</span>
-        </div>
-      </button>
+
+      <!-- Botões de Ação do Footer vinculados ao Step Ativo -->
+      <div id="drawer-footer-actions">
+        <!-- Step 1 Footer -->
+        <button type="button" onclick="window.goToCheckoutStep(2)" id="footer-btn-step-1"
+          class="w-full py-4 rounded-2xl bg-brand-600 hover:bg-brand-700 text-white font-black text-sm shadow-xl shadow-brand-500/20 flex items-center justify-center gap-2 active:scale-95 transition-all">
+          <span>Avançar para Retirada</span>
+          <i data-lucide="arrow-right" class="w-5 h-5"></i>
+        </button>
+
+        <!-- Step 2 Footer -->
+        <button type="button" onclick="window.goToCheckoutStep(3)" id="footer-btn-step-2"
+          class="display-none w-full py-4 rounded-2xl bg-brand-600 hover:bg-brand-700 text-white font-black text-sm shadow-xl shadow-brand-500/20 flex items-center justify-center gap-2 active:scale-95 transition-all">
+          <span>Avançar para Pagamento</span>
+          <i data-lucide="arrow-right" class="w-5 h-5"></i>
+        </button>
+
+        <!-- Step 3 Footer (ID btn-checkout para compatibilidade total com sendOrder) -->
+        <button onclick="window.sendOrder()" id="btn-checkout"
+          class="display-none w-full py-5 rounded-2xl bg-gradient-to-r from-whatsapp-500 to-whatsapp-600 text-white font-black text-sm shadow-xl flex items-center justify-center gap-3 transition-all active:scale-95 disabled:opacity-50 disabled:grayscale"
+          disabled>
+          <div class="relative z-10 flex items-center gap-2">
+            <i data-lucide="message-circle" class="w-6 h-6 fill-white/20"></i>
+            <span>Finalizar no WhatsApp</span>
+          </div>
+        </button>
+      </div>
     </div>
   </div>
 
@@ -1041,6 +1185,15 @@
             <p class="text-[10px] text-red-600 font-black uppercase tracking-wide leading-tight">Passado esse tempo, o pedido será cancelado e o produto descartado.</p>
           </div>
         </div>
+        <!-- ALERTA EXTRA SE PAGAMENTO FOR PIX -->
+        <div id="modal-pix-receipt-alert" class="hidden bg-emerald-50 border-2 border-emerald-300 rounded-2xl p-3.5 text-left flex items-start gap-2.5">
+          <span class="text-xl shrink-0 mt-0.5">📎</span>
+          <div>
+            <p class="text-[11px] font-black text-emerald-950 uppercase tracking-wide leading-tight">Obrigatório Enviar Comprovante</p>
+            <p class="text-[10px] font-bold text-emerald-800 leading-snug mt-0.5">Como você escolheu <strong>Pix</strong>, não esqueça de anexar o comprovante na conversa do WhatsApp para confirmação do pedido!</p>
+          </div>
+        </div>
+
         <button id="btn-go-whatsapp" onclick="window.goToWhatsApp()"
           class="w-full py-4 bg-gradient-to-r from-whatsapp-500 to-whatsapp-600 text-white rounded-2xl font-black text-sm shadow-xl shadow-green-500/20 flex items-center justify-center gap-3 active:scale-95 transition-all">
           <i data-lucide="message-circle" class="w-5 h-5 fill-white/20"></i>
@@ -1146,6 +1299,7 @@
       deliveryType: "Retirada",
       selectedBairro: null,
       paymentVerified: false,
+      checkoutStep: 1,
       currentCopo: null,
       copoQty: 1,
       userOrderCount: 0,
@@ -1477,6 +1631,7 @@
       const drawer = document.getElementById('cart-drawer');
       const back = document.getElementById('cart-backdrop');
       if (show) {
+        window.goToCheckoutStep(1);
         window.renderCart();
         back.classList.remove('invisible', 'opacity-0');
         drawer.classList.remove('translate-x-full');
@@ -1519,9 +1674,7 @@
 
       if (state.cart.length === 0) {
         list.innerHTML = `<div class="flex flex-col items-center justify-center py-10 opacity-50"><i data-lucide="shopping-cart" class="w-12 h-12 text-slate-300 mb-2"></i><p class="text-sm font-bold text-slate-400">Sua sacola está vazia</p></div>`;
-        document.getElementById('checkout-form').classList.add('hidden');
       } else {
-        document.getElementById('checkout-form').classList.remove('hidden');
         state.cart.forEach(item => {
           subtotal += (parseFloat(item.price) || 0) * item.qty;
           count += item.qty;
@@ -1682,7 +1835,300 @@
         badge.className = `absolute -top-1 -right-1 bg-brand-600 text-white text-[9px] font-bold w-5 h-5 flex items-center justify-center rounded-full border-2 border-white transform transition-transform shadow-sm ${count > 0 ? 'scale-100' : 'scale-0'}`;
       }
 
+      window.renderLoyaltyStatus();
+      window.updateStepUI();
       window.validateCheckout();
+      window.refreshIcons();
+    };
+
+    window.goToCheckoutStep = (step) => {
+      if (step === 1) {
+        state.checkoutStep = 1;
+        window.updateStepUI();
+        return;
+      }
+
+      if (step === 2) {
+        if (!state.cart || state.cart.length === 0) {
+          return window.toast('Sua sacola está vazia! Adicione itens primeiro.', 'error');
+        }
+        if (!window.isStoreOpen()) {
+          return window.toast('A loja está fechada no momento.', 'error');
+        }
+        state.checkoutStep = 2;
+        window.updateStepUI();
+        return;
+      }
+
+      if (step === 3) {
+        if (!state.cart || state.cart.length === 0) {
+          return window.toast('Sua sacola está vazia!', 'error');
+        }
+        const nameEl = document.getElementById('client-name');
+        const name = nameEl ? nameEl.value.trim() : '';
+        const phoneEl = document.getElementById('client-phone');
+        const phone = phoneEl ? phoneEl.value.trim() : '';
+
+        if (!name) {
+          if (nameEl) nameEl.focus();
+          return window.toast('Por favor, informe seu nome completo.', 'error');
+        }
+        if (!phone || phone.replace(/\D/g, '').length < 10) {
+          if (phoneEl) phoneEl.focus();
+          return window.toast('Por favor, informe seu WhatsApp com DDD.', 'error');
+        }
+
+        // Se Entrega estiver selecionada, valida endereço completo
+        if (state.config.deliveryAtivo === true && state.deliveryType === 'Entrega') {
+          const selBairro = document.getElementById('delivery-bairro-select');
+          const ruaEl = document.getElementById('delivery-rua');
+          const numEl = document.getElementById('delivery-numero');
+
+          const hasBairro = selBairro && selBairro.value && selBairro.value.trim() !== '';
+          const hasRua = ruaEl && ruaEl.value && ruaEl.value.trim() !== '';
+          const hasNum = numEl && numEl.value && numEl.value.trim() !== '';
+
+          if (!hasBairro) {
+            if (selBairro) selBairro.focus();
+            return window.toast('Por favor, selecione seu bairro para entrega.', 'error');
+          }
+          if (!hasRua || !hasNum) {
+            if (ruaEl && !hasRua) ruaEl.focus();
+            else if (numEl) numEl.focus();
+            return window.toast('Por favor, preencha rua e número para entrega.', 'error');
+          }
+        }
+
+        state.checkoutStep = 3;
+        window.updateStepUI();
+
+        // Step 3 (Pagamento): Mostra as opções (Pix, Dinheiro, Cartão). Se for Pix, renderiza a chave e inicia o timer.
+        const currentMethod = document.getElementById('payment-method') ? document.getElementById('payment-method').value : '';
+        if (currentMethod === 'Pix' || !currentMethod) {
+          window.selectPaymentOption('Pix');
+        } else {
+          window.selectPaymentOption(currentMethod);
+        }
+      }
+    };
+
+    window.updateStepUI = () => {
+      const step = state.checkoutStep || 1;
+      const step1 = document.getElementById('checkout-step-1');
+      const step2 = document.getElementById('checkout-step-2');
+      const step3 = document.getElementById('checkout-step-3');
+
+      if (step1) {
+        if (step === 1) {
+          step1.classList.remove('display-none');
+          step1.classList.add('step-ativo');
+        } else {
+          step1.classList.add('display-none');
+          step1.classList.remove('step-ativo');
+        }
+      }
+
+      if (step2) {
+        if (step === 2) {
+          step2.classList.remove('display-none');
+          step2.classList.add('step-ativo');
+        } else {
+          step2.classList.add('display-none');
+          step2.classList.remove('step-ativo');
+        }
+      }
+
+      if (step3) {
+        if (step === 3) {
+          step3.classList.remove('display-none');
+          step3.classList.add('step-ativo');
+        } else {
+          step3.classList.add('display-none');
+          step3.classList.remove('step-ativo');
+        }
+      }
+
+      // Stepper Badges
+      for (let i = 1; i <= 3; i++) {
+        const badge = document.getElementById(`step-badge-${i}`);
+        if (!badge) continue;
+        const numDiv = badge.querySelector('.step-num');
+        const label = badge.querySelector('.step-label');
+
+        if (i < step) {
+          if (numDiv) {
+            numDiv.innerHTML = '<i data-lucide="check" class="w-3.5 h-3.5"></i>';
+            numDiv.className = 'step-num w-8 h-8 rounded-full flex items-center justify-center font-black text-xs transition-all bg-emerald-500 text-white shadow-sm';
+          }
+          if (label) label.className = 'step-label text-[10px] font-bold uppercase tracking-wider text-emerald-600';
+        } else if (i === step) {
+          if (numDiv) {
+            numDiv.innerHTML = i.toString();
+            numDiv.className = 'step-num w-8 h-8 rounded-full flex items-center justify-center font-black text-xs transition-all bg-brand-600 text-white shadow-md shadow-brand-500/20 scale-105';
+          }
+          if (label) label.className = 'step-label text-[10px] font-black uppercase tracking-wider text-brand-600';
+        } else {
+          if (numDiv) {
+            numDiv.innerHTML = i.toString();
+            numDiv.className = 'step-num w-8 h-8 rounded-full flex items-center justify-center font-black text-xs transition-all bg-slate-100 text-slate-400';
+          }
+          if (label) label.className = 'step-label text-[10px] font-bold uppercase tracking-wider text-slate-400';
+        }
+      }
+
+      // Linha de progresso
+      const progressBar = document.getElementById('checkout-progress-bar');
+      if (progressBar) {
+        if (step === 1) progressBar.style.width = '0%';
+        else if (step === 2) progressBar.style.width = '50%';
+        else if (step === 3) progressBar.style.width = '100%';
+      }
+
+      // Títulos
+      const titleEl = document.getElementById('cart-drawer-title');
+      const subEl = document.getElementById('cart-drawer-subtitle');
+      if (titleEl && subEl) {
+        if (step === 1) {
+          titleEl.innerText = 'Sua Sacola';
+          subEl.innerText = 'Confira seus copos montados';
+        } else if (step === 2) {
+          titleEl.innerText = 'Retirada / Entrega';
+          subEl.innerText = 'Identificação e local de recebimento';
+        } else if (step === 3) {
+          titleEl.innerText = 'Pagamento';
+          subEl.innerText = 'Escolha como prefere pagar';
+        }
+      }
+
+      // Botões de ação no footer
+      const fBtn1 = document.getElementById('footer-btn-step-1');
+      const fBtn2 = document.getElementById('footer-btn-step-2');
+      const fBtn3 = document.getElementById('btn-checkout');
+
+      if (fBtn1) fBtn1.classList.toggle('display-none', step !== 1);
+      if (fBtn2) fBtn2.classList.toggle('display-none', step !== 2);
+      if (fBtn3) fBtn3.classList.toggle('display-none', step !== 3);
+
+      const isCartEmpty = !state.cart || state.cart.length === 0;
+      if (fBtn1) fBtn1.disabled = isCartEmpty;
+      const bStep1 = document.getElementById('btn-step1-advance');
+      if (bStep1) bStep1.disabled = isCartEmpty;
+
+      window.validateCheckout();
+      window.refreshIcons();
+    };
+
+    window.selectPaymentOption = (method) => {
+      const sel = document.getElementById('payment-method');
+      if (sel) sel.value = method;
+
+      const opts = [
+        { id: 'btn-pay-pix', key: 'Pix' },
+        { id: 'btn-pay-dinheiro', key: 'Dinheiro' },
+        { id: 'btn-pay-cartao', key: 'Cartão' }
+      ];
+
+      opts.forEach(opt => {
+        const btn = document.getElementById(opt.id);
+        if (!btn) return;
+        if (opt.key === method) {
+          btn.className = 'payment-option-btn p-3 rounded-2xl border-2 border-brand-600 bg-brand-50 text-brand-700 font-black shadow-md shadow-brand-500/10 flex flex-col items-center gap-1.5 transition-all active:scale-95 scale-[1.02] ring-2 ring-brand-500/20';
+        } else {
+          btn.className = 'payment-option-btn p-3 rounded-2xl border-2 border-slate-200 bg-slate-50 hover:bg-slate-100 text-slate-600 font-bold flex flex-col items-center gap-1.5 transition-all active:scale-95';
+        }
+      });
+
+      const pixArea = document.getElementById('pix-area');
+      state.paymentVerified = method && method !== 'Pix';
+
+      if (method === 'Pix') {
+        if (pixArea) {
+          pixArea.classList.remove('hidden', 'display-none');
+          const keyEl = document.getElementById('pix-key');
+          if (keyEl) keyEl.value = state.config.pixKey;
+        }
+        window.startPixTimer();
+      } else {
+        if (pixArea) pixArea.classList.add('hidden', 'display-none');
+        window.stopPixTimer();
+      }
+
+      window.saveFormData();
+      window.validateCheckout();
+    };
+
+    window.renderLoyaltyStatus = () => {
+      const card = document.getElementById('loyalty-card');
+      if (!card) return;
+      if (state.config && state.config.fidelidadeAtiva === false) {
+        card.classList.add('display-none');
+        return;
+      }
+      card.classList.remove('display-none', 'hidden');
+
+      const phoneInput = document.getElementById('client-phone');
+      const phone = (phoneInput && phoneInput.value.trim()) ? phoneInput.value.trim() : '';
+      if (phone.length >= 14) {
+        window.checkUserFidelidade(phone);
+        return;
+      }
+
+      const meta = state.pontosMeta || 10;
+      card.className = 'mt-3 p-4 bg-gradient-to-br from-brand-50 to-brand-100 border border-brand-200 rounded-2xl animate-slide-up overflow-hidden max-w-full box-border shadow-sm';
+
+      let dotsContent = '';
+      if (meta <= 10) {
+        dotsContent = '<div class="grid grid-cols-5 gap-1.5 w-full">';
+        for (let i = 1; i <= meta; i++) {
+          const isPrize = (i === meta);
+          dotsContent += `
+            <div class="h-8 rounded-xl border border-brand-200 bg-white/95 flex flex-col items-center justify-center text-[10px] font-black text-brand-600 shadow-sm transition-all">
+              <span>${isPrize ? '🎁' : i}</span>
+            </div>`;
+        }
+        dotsContent += '</div>';
+      } else {
+        const q1 = Math.round(meta * 0.25);
+        const q2 = Math.round(meta * 0.5);
+        const q3 = Math.round(meta * 0.75);
+        const milestones = [
+          { pts: q1, icon: '⭐', label: `${q1} pts` },
+          { pts: q2, icon: '⭐', label: `${q2} pts` },
+          { pts: q3, icon: '⭐', label: `${q3} pts` },
+          { pts: meta, icon: '🏆', label: `${meta} pts` }
+        ];
+        dotsContent = '<div class="grid grid-cols-2 gap-2 w-full">';
+        milestones.forEach((m, idx) => {
+          const isLast = idx === milestones.length - 1;
+          dotsContent += `
+            <div class="flex items-center gap-2 p-2 rounded-xl bg-white/95 border border-brand-200 shadow-sm overflow-hidden">
+              <span class="text-sm shrink-0">${m.icon}</span>
+              <div class="min-w-0">
+                <p class="text-[10px] font-black text-brand-900 truncate">${m.label}</p>
+                <p class="text-[8px] font-bold ${isLast ? 'text-amber-600' : 'text-brand-500'} uppercase">${isLast ? 'Prêmio Final' : 'Meta Parcial'}</p>
+              </div>
+            </div>`;
+        });
+        dotsContent += '</div>';
+      }
+
+      card.innerHTML = `
+        <div class="flex items-center justify-between mb-2">
+          <h4 class="text-xs font-black text-brand-900 uppercase tracking-widest flex items-center gap-1.5">
+            <i data-lucide="award" class="w-4 h-4 text-brand-600"></i> Cartão Fidelidade
+          </h4>
+          <span id="loyalty-count" class="text-xs font-bold text-brand-600 bg-white px-2 py-0.5 rounded-md shadow-sm">0/${meta} pts</span>
+        </div>
+        <p id="loyalty-desc" class="text-[10px] text-brand-700 font-medium mb-2 leading-tight">
+          Junte <strong>${meta} pontos</strong> para ganhar seu prêmio especial! Informe seu WhatsApp para pontuar.
+        </p>
+        <div class="w-full bg-brand-200/60 rounded-full h-2.5 mb-2.5 overflow-hidden">
+          <div id="loyalty-progress-bar" class="bg-brand-600 h-full rounded-full transition-all duration-500" style="width: 0%;"></div>
+        </div>
+        <div id="loyalty-dots" class="w-full overflow-hidden">
+          ${dotsContent}
+        </div>
+      `;
       window.refreshIcons();
     };
 
@@ -1763,21 +2209,7 @@
 
     window.handlePaymentChange = () => {
       const method = document.getElementById('payment-method').value;
-      const pixArea = document.getElementById('pix-area');
-      state.paymentVerified = method && method !== 'Pix';
-
-      if (method === 'Pix') {
-        if (pixArea) {
-          pixArea.classList.remove('hidden');
-          const keyEl = document.getElementById('pix-key');
-          if (keyEl) keyEl.value = state.config.pixKey;
-        }
-        window.startPixTimer();
-      } else {
-        if (pixArea) pixArea.classList.add('hidden');
-        window.stopPixTimer();
-      }
-      window.validateCheckout();
+      window.selectPaymentOption(method);
     };
 
     window.copyPix = () => {
@@ -2213,7 +2645,7 @@
         if (rawPhone.length >= 14) {
             window.checkUserFidelidade(rawPhone);
         } else {
-            document.getElementById('loyalty-card').classList.add('hidden');
+            window.renderLoyaltyStatus();
         }
       });
     };
@@ -2254,7 +2686,16 @@
             window.handleBairroChange();
           }
 
-          window.handlePaymentChange();
+          if (data.payment) {
+            window.selectPaymentOption(data.payment);
+          } else {
+            window.handlePaymentChange();
+          }
+
+          if (data.phone && data.phone.length >= 14) {
+            window.checkUserFidelidade(data.phone);
+          }
+
           window.validateCheckout();
         } catch (e) { }
       }
@@ -2262,7 +2703,8 @@
 
     window.validateCheckout = () => {
       const btn = document.getElementById('btn-checkout');
-      if (!btn) return;
+      const btnStep3 = document.getElementById('btn-checkout-step3');
+      if (!btn && !btnStep3) return;
       const isOpen = window.isStoreOpen();
       const nameEl = document.getElementById('client-name');
       const name = nameEl ? nameEl.value.trim() : "";
@@ -2270,7 +2712,7 @@
       const phone = phoneEl ? phoneEl.value.trim() : "";
       const methodEl = document.getElementById('payment-method');
       const method = methodEl ? methodEl.value : "";
-      let ok = isOpen && state.cart.length > 0 && name && phone.length > 10 && method && state.paymentVerified;
+      let ok = isOpen && state.cart.length > 0 && name && phone.replace(/\D/g, '').length >= 10 && method;
 
       // Validação obrigatória de endereço para Entrega
       if (state.config.deliveryAtivo === true && state.deliveryType === 'Entrega') {
@@ -2289,19 +2731,31 @@
 
       if (method === 'Pix' && pixTimerExpired) ok = false;
 
-      btn.disabled = !ok;
+      let btnText = "Finalizar no WhatsApp";
       if (!isOpen) { 
-        if (btn.querySelector("span")) btn.querySelector("span").innerText = "Loja Fechada"; 
+        btnText = "Loja Fechada"; 
       }
       else if (state.cart.length === 0) { 
-        if (btn.querySelector("span")) btn.querySelector("span").innerText = "Sacola Vazia"; 
+        btnText = "Sacola Vazia"; 
       }
       else if (method === 'Pix' && pixTimerExpired) {
-        if (btn.querySelector("span")) btn.querySelector("span").innerText = "Pix Expirado ⏰";
+        btnText = "Pix Expirado ⏰";
       }
-      else { 
-        if (btn.querySelector("span")) btn.querySelector("span").innerText = "Finalizar no WhatsApp"; 
-      }
+
+      [btn, btnStep3].forEach(b => {
+        if (!b) return;
+        b.disabled = !ok;
+        const span = b.querySelector("span");
+        if (span) span.innerText = btnText;
+      });
+
+      // Sincroniza botões de avanço do Step 1
+      const isCartEmpty = !state.cart || state.cart.length === 0;
+      const fBtn1 = document.getElementById('footer-btn-step-1');
+      const bStep1 = document.getElementById('btn-step1-advance');
+      if (fBtn1) fBtn1.disabled = isCartEmpty || !isOpen;
+      if (bStep1) bStep1.disabled = isCartEmpty || !isOpen;
+
       window.refreshIcons();
     };
 
@@ -2407,12 +2861,12 @@
             const hasAny = (isFidAtiva && (ptAcai > 0 || ptSorvete > 0)) || hasPromo;
 
             if (!hasAny) {
-                card.classList.add('hidden');
+                window.renderLoyaltyStatus();
                 return;
             }
 
-            card.classList.remove('hidden');
-            card.className = 'mt-3 space-y-3';
+            card.classList.remove('hidden', 'display-none');
+            card.className = 'mt-3 space-y-3 overflow-hidden max-w-full box-border';
 
             let html = '';
 
@@ -2421,7 +2875,7 @@
                 const isPrizeAcai = ptAcai >= meta;
                 const pctAcai = Math.min(100, Math.round((ptAcai / meta) * 100));
                 if (isPrizeAcai) {
-                    html += `<div class="p-4 bg-gradient-to-br from-brand-500 to-brand-700 border border-brand-400 rounded-2xl shadow-xl shadow-brand-500/20 animate-pulse-slow">
+                    html += `<div class="p-4 bg-gradient-to-br from-brand-500 to-brand-700 border border-brand-400 rounded-2xl shadow-xl shadow-brand-500/20 animate-pulse-slow overflow-hidden max-w-full box-border">
                       <div class="flex items-center gap-2 mb-1 justify-center">
                         <span class="text-xl">🫐</span>
                         <h4 class="text-sm font-black text-white uppercase tracking-widest text-center">PRÊMIO LIBERADO — AÇAÍ!</h4>
@@ -2429,15 +2883,53 @@
                       <p class="text-xs text-brand-100 font-bold text-center">Mostre no balcão para ganhar um açaí grátis! 🎉</p>
                     </div>`;
                 } else {
-                    html += `<div class="p-4 bg-gradient-to-br from-brand-50 to-brand-100 border border-brand-200 rounded-2xl">
+                    let subMilestones = '';
+                    if (meta <= 10) {
+                      subMilestones = '<div class="grid grid-cols-5 gap-1.5 w-full mt-2.5">';
+                      for (let i = 1; i <= meta; i++) {
+                        const isFilled = i <= ptAcai;
+                        const isPrize = (i === meta);
+                        subMilestones += `
+                          <div class="h-8 rounded-xl border ${isFilled ? 'bg-brand-600 border-brand-600 text-white shadow-sm font-black' : 'bg-white/90 border-brand-200 text-brand-400 font-medium'} flex items-center justify-center text-[10px]">
+                            ${isFilled ? (isPrize ? '🎁' : '✓') : (isPrize ? '🎁' : i)}
+                          </div>`;
+                      }
+                      subMilestones += '</div>';
+                    } else {
+                      const q1 = Math.round(meta * 0.25);
+                      const q2 = Math.round(meta * 0.5);
+                      const q3 = Math.round(meta * 0.75);
+                      const milestones = [
+                        { pts: q1, icon: ptAcai >= q1 ? '✅' : '⭐', label: `${q1} pts`, reached: ptAcai >= q1 },
+                        { pts: q2, icon: ptAcai >= q2 ? '✅' : '⭐', label: `${q2} pts`, reached: ptAcai >= q2 },
+                        { pts: q3, icon: ptAcai >= q3 ? '✅' : '⭐', label: `${q3} pts`, reached: ptAcai >= q3 },
+                        { pts: meta, icon: ptAcai >= meta ? '🏆' : '🎁', label: `${meta} pts`, reached: ptAcai >= meta }
+                      ];
+                      subMilestones = '<div class="grid grid-cols-2 gap-2 w-full mt-2.5">';
+                      milestones.forEach((m, idx) => {
+                        const isLast = idx === milestones.length - 1;
+                        subMilestones += `
+                          <div class="flex items-center gap-2 p-2 rounded-xl ${m.reached ? 'bg-brand-100/90 border-brand-300 font-black' : 'bg-white/90 border-brand-200'} border shadow-sm overflow-hidden">
+                            <span class="text-sm shrink-0">${m.icon}</span>
+                            <div class="min-w-0">
+                              <p class="text-[10px] font-black text-brand-900 truncate">${m.label}</p>
+                              <p class="text-[8px] font-bold ${m.reached ? 'text-brand-700' : (isLast ? 'text-amber-600' : 'text-slate-400')} uppercase">${m.reached ? 'Conquistado!' : (isLast ? 'Prêmio Final' : 'Meta Parcial')}</p>
+                            </div>
+                          </div>`;
+                      });
+                      subMilestones += '</div>';
+                    }
+
+                    html += `<div class="p-4 bg-gradient-to-br from-brand-50 to-brand-100 border border-brand-200 rounded-2xl overflow-hidden max-w-full box-border shadow-sm">
                       <div class="flex items-center justify-between mb-2">
                         <h4 class="text-xs font-black text-brand-900 flex items-center gap-1.5">🫐 Club Prime Açaí</h4>
                         <span class="text-[10px] font-black text-brand-600 bg-white px-2 py-0.5 rounded-md shadow-sm">${acaiFinal}/${meta} pts</span>
                       </div>
-                      <div class="w-full bg-brand-200/60 rounded-full h-2 mb-1.5">
-                        <div class="bg-brand-600 h-2 rounded-full transition-all duration-500" style="width:${pctAcai}%"></div>
+                      <div class="w-full bg-brand-200/60 rounded-full h-2.5 mb-1.5 overflow-hidden">
+                        <div class="bg-brand-600 h-full rounded-full transition-all duration-500" style="width:${pctAcai}%"></div>
                       </div>
-                      <p class="text-[10px] text-brand-700 font-medium">Você tem <strong>${acaiFinal} pts</strong>. Junte mais ${ parseFloat(Number(meta - ptAcai).toFixed(2)) } para o prêmio! 🫐</p>
+                      <p class="text-[10px] text-brand-700 font-medium leading-tight">Você tem <strong>${acaiFinal} pts</strong>. Junte mais ${ parseFloat(Number(meta - ptAcai).toFixed(2)) } para o prêmio! 🫐</p>
+                      ${subMilestones}
                     </div>`;
                 }
             }
@@ -2447,7 +2939,7 @@
                 const isPrizeSorv = ptSorvete >= meta;
                 const pctSorv = Math.min(100, Math.round((ptSorvete / meta) * 100));
                 if (isPrizeSorv) {
-                    html += `<div class="p-4 bg-gradient-to-br from-indigo-500 to-indigo-700 border border-indigo-400 rounded-2xl shadow-xl shadow-indigo-500/20 animate-pulse-slow">
+                    html += `<div class="p-4 bg-gradient-to-br from-indigo-500 to-indigo-700 border border-indigo-400 rounded-2xl shadow-xl shadow-indigo-500/20 animate-pulse-slow overflow-hidden max-w-full box-border">
                       <div class="flex items-center gap-2 mb-1 justify-center">
                         <span class="text-xl">🍦</span>
                         <h4 class="text-sm font-black text-white uppercase tracking-widest text-center">PRÊMIO LIBERADO — SORVETE!</h4>
@@ -2455,15 +2947,15 @@
                       <p class="text-xs text-indigo-100 font-bold text-center">Mostre no balcão para ganhar um sorvete/picolé grátis! 🎉</p>
                     </div>`;
                 } else {
-                    html += `<div class="p-4 bg-gradient-to-br from-indigo-50 to-indigo-100 border border-indigo-200 rounded-2xl">
+                    html += `<div class="p-4 bg-gradient-to-br from-indigo-50 to-indigo-100 border border-indigo-200 rounded-2xl overflow-hidden max-w-full box-border shadow-sm">
                       <div class="flex items-center justify-between mb-2">
                         <h4 class="text-xs font-black text-indigo-900 flex items-center gap-1.5">🍦 Club Prime Sorvete</h4>
                         <span class="text-[10px] font-black text-indigo-600 bg-white px-2 py-0.5 rounded-md shadow-sm">${sorvFinal}/${meta} pts</span>
                       </div>
-                      <div class="w-full bg-indigo-200/60 rounded-full h-2 mb-1.5">
-                        <div class="bg-indigo-600 h-2 rounded-full transition-all duration-500" style="width:${pctSorv}%"></div>
+                      <div class="w-full bg-indigo-200/60 rounded-full h-2.5 mb-1.5 overflow-hidden">
+                        <div class="bg-indigo-600 h-full rounded-full transition-all duration-500" style="width:${pctSorv}%"></div>
                       </div>
-                      <p class="text-[10px] text-indigo-700 font-medium">Você tem <strong>${sorvFinal} pts</strong>. Junte mais ${ parseFloat(Number(meta - ptSorvete).toFixed(2)) } para o prêmio! 🍦</p>
+                      <p class="text-[10px] text-indigo-700 font-medium leading-tight">Você tem <strong>${sorvFinal} pts</strong>. Junte mais ${ parseFloat(Number(meta - ptSorvete).toFixed(2)) } para o prêmio! 🍦</p>
                     </div>`;
                 }
             }
@@ -2474,13 +2966,13 @@
                 const isSorteio = promo.tipo === 'sorteio' || (!promo.tipo && (promo.tituloSorteio || promo.premioSorteio));
                 
                 if (isSorteio) {
-                    html += `<div class="p-4 bg-gradient-to-br from-amber-50 to-orange-100 border border-amber-200 rounded-2xl animate-slide-up">
+                    html += `<div class="p-4 bg-gradient-to-br from-amber-50 to-orange-100 border border-amber-200 rounded-2xl animate-slide-up overflow-hidden max-w-full box-border shadow-sm">
                       <div class="flex items-center gap-2 mb-1">
                         <span class="text-xl">🎟️</span>
-                        <h4 class="text-xs font-black text-amber-900 uppercase tracking-widest">${window.escapeHTML(promo.tituloSorteio || 'Sorteio de Aniversário')}</h4>
+                        <h4 class="text-xs font-black text-amber-900 uppercase tracking-widest break-words">${window.escapeHTML(promo.tituloSorteio || 'Sorteio de Aniversário')}</h4>
                       </div>
-                      <p class="text-xs text-amber-950 font-black">Prêmio: ${window.escapeHTML(promo.premioSorteio || promo.brinde || 'Smartphone / Celular 📱')}</p>
-                      <p class="text-[10px] text-amber-800 font-medium mt-1">🗓️ Sorteio no dia <strong>${window.escapeHTML(promo.dataSorteio || '11 de Outubro')}</strong>. Seu pedido garante seu cupom! 🎉</p>
+                      <p class="text-xs text-amber-950 font-black break-words">Prêmio: ${window.escapeHTML(promo.premioSorteio || promo.brinde || 'Smartphone / Celular 📱')}</p>
+                      <p class="text-[10px] text-amber-800 font-medium mt-1 leading-tight">🗓️ Sorteio no dia <strong>${window.escapeHTML(promo.dataSorteio || '11 de Outubro')}</strong>. Seu pedido garante seu cupom! 🎉</p>
                     </div>`;
                 } else {
                     const promoMeta = parseFloat(promo.valor) || 100;
@@ -2488,7 +2980,7 @@
                     const pctPromo = Math.min(100, Math.round((valorPromo / promoMeta) * 100));
                     
                     if (isPrizePromo) {
-                        html += `<div class="p-4 bg-gradient-to-br from-red-500 to-red-700 border border-red-400 rounded-2xl shadow-xl shadow-red-500/20 animate-pulse-slow">
+                        html += `<div class="p-4 bg-gradient-to-br from-red-500 to-red-700 border border-red-400 rounded-2xl shadow-xl shadow-red-500/20 animate-pulse-slow overflow-hidden max-w-full box-border">
                           <div class="flex items-center gap-2 mb-1 justify-center">
                             <span class="text-xl">🎁</span>
                             <h4 class="text-sm font-black text-white uppercase tracking-widest text-center">PRÊMIO LIBERADO — PROMOÇÃO!</h4>
@@ -2499,15 +2991,15 @@
                         const valorPromoFmt = valorPromo.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
                         const promoMetaFmt = promoMeta.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
                         const faltaFmt = Math.max(0, promoMeta - valorPromo).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
-                        html += `<div class="p-4 bg-gradient-to-br from-red-50 to-red-100 border border-red-200 rounded-2xl animate-slide-up">
+                        html += `<div class="p-4 bg-gradient-to-br from-red-50 to-red-100 border border-red-200 rounded-2xl animate-slide-up overflow-hidden max-w-full box-border shadow-sm">
                           <div class="flex items-center justify-between mb-2">
-                            <h4 class="text-xs font-black text-red-900 flex items-center gap-1.5">🎁 Promoção: ${window.escapeHTML(promo.brinde)}</h4>
-                            <span class="text-[10px] font-black text-red-600 bg-white px-2 py-0.5 rounded-md shadow-sm">${valorPromoFmt} / ${promoMetaFmt}</span>
+                            <h4 class="text-xs font-black text-red-900 flex items-center gap-1.5 min-w-0 break-words">🎁 Promoção: ${window.escapeHTML(promo.brinde)}</h4>
+                            <span class="text-[10px] font-black text-red-600 bg-white px-2 py-0.5 rounded-md shadow-sm shrink-0">${valorPromoFmt} / ${promoMetaFmt}</span>
                           </div>
-                          <div class="w-full bg-red-200/60 rounded-full h-2 mb-2">
-                            <div class="bg-red-500 h-2 rounded-full transition-all duration-500" style="width:${pctPromo}%"></div>
+                          <div class="w-full bg-red-200/60 rounded-full h-2.5 mb-2 overflow-hidden">
+                            <div class="bg-red-500 h-full rounded-full transition-all duration-500" style="width:${pctPromo}%"></div>
                           </div>
-                          <p class="text-[10px] text-red-700 font-medium">Você já gastou <strong>${valorPromoFmt}</strong>. Faltam apenas <strong class="text-red-600">${faltaFmt}</strong> para ganhar seu brinde! 🎁</p>
+                          <p class="text-[10px] text-red-700 font-medium leading-tight">Você já gastou <strong>${valorPromoFmt}</strong>. Faltam apenas <strong class="text-red-600">${faltaFmt}</strong> para ganhar seu brinde! 🎁</p>
                         </div>`;
                     }
                 }
@@ -2550,9 +3042,14 @@
       }
 
       const btn = document.getElementById('btn-checkout');
-      const originalHtml = btn.innerHTML;
-      btn.innerHTML = 'Enviando Pedido...';
-      btn.disabled = true;
+      const btnStep3 = document.getElementById('btn-checkout-step3');
+      const originalHtml = btn ? btn.innerHTML : '';
+      [btn, btnStep3].forEach(b => {
+        if (b) {
+          b.innerHTML = 'Enviando Pedido...';
+          b.disabled = true;
+        }
+      });
 
       const method = document.getElementById('payment-method').value;
       const obsGeneral = document.getElementById('obs-input').value;
@@ -2566,12 +3063,15 @@
 
       // Monta a mensagem do WhatsApp
       let paymentStatusFull = method;
-      if (method === 'Pix') paymentStatusFull += " (Confirmado no Site ✅)";
+      if (method === 'Pix') paymentStatusFull = "Pix ⚡ (⚠️ OBRIGATÓRIO ENVIAR COMPROVANTE ABAIXO 📎)";
 
       let msg = `🥣 *NOVO PEDIDO - PRIME AÇAÍ*\n\n`;
       msg += `👤 *Cliente:* ${name}\n`;
       msg += `📱 *WhatsApp:* ${phone}\n`;
       msg += `💳 *Pagamento:* ${paymentStatusFull}\n`;
+      if (method === 'Pix') {
+        msg += `📎 *AVISO:* _Pagamento via Pix. Estou enviando o comprovante nesta conversa para confirmação do pedido!_\n`;
+      }
 
       if (isEntrega) {
         msg += `🛵 *Tipo:* Entrega (Delivery)\n`;
@@ -2642,6 +3142,9 @@
       }
 
       msg += `\n💰 *TOTAL FINAL: ${totalFinal}*`;
+      if (method === 'Pix') {
+        msg += `\n\n⚠️ *LEMBRETE OBRIGATÓRIO:* Por favor, anexe a foto ou print do seu comprovante Pix nesta conversa para que a loja inicie o preparo do seu pedido imediatamente! 📱⚡\n`;
+      }
 
       // Snapshot do carrinho garantindo valores válidos para o Firestore (evita erros de undefined)
       const cartSnapshot = state.cart.map(i => ({
@@ -2729,7 +3232,9 @@
       saveCart();
       window.stopPixTimer();
 
-      btn.innerHTML = 'Pedido Enviado! ✅';
+      [btn, btnStep3].forEach(b => {
+        if (b) b.innerHTML = 'Pedido Enviado! ✅';
+      });
       window.toast("Pedido enviado! ✅");
 
       // Guarda a URL do WhatsApp para abrir após o aviso de retirada
@@ -2827,6 +3332,9 @@
         const wt = state.config.waitTime ? state.config.waitTime.trim() : '';
         waitEl.innerText = wt ? wt : 'alguns';
       }
+      const isPix = document.getElementById('payment-method')?.value === 'Pix';
+      const pixAlert = document.getElementById('modal-pix-receipt-alert');
+      if (pixAlert) pixAlert.classList.toggle('hidden', !isPix);
       if (modal) {
         modal.classList.remove('hidden');
         window.refreshIcons();
