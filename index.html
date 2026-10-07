@@ -1483,8 +1483,16 @@
       userOrderCount: 0,
       appliedCupom: null,
       pontosConfig: {},
-      pontosMeta: 10
+      pontosMeta: 10,
+      fidelidadeAtiva: true
     };
+
+    function isFidelidadeAtiva() {
+      if (state.fidelidadeAtiva === false) return false;
+      if (state.config && state.config.fidelidadeAtiva === false) return false;
+      if (state.config && state.config.promocoes && state.config.promocoes.ocultarPontos === true) return false;
+      return true;
+    }
 
     let db, auth;
     let globalStatusDocRef = null;
@@ -1618,7 +1626,7 @@
             state.pontosConfig = data.pontosConfig || {};
             state.pontosMeta = data.pontosMeta || 10;
             state.pontosValorReais = data.pontosValorReais || 0.50;
-            state.fidelidadeAtiva = data.fidelidadeAtiva !== false;
+            state.fidelidadeAtiva = (data.fidelidadeAtiva !== false) && !(data.promocoes && data.promocoes.ocultarPontos === true);
             state.maisVendido = data.maisVendido || null;
             if (data.deliveryAtivo !== undefined) {
               state.config.deliveryAtivo = data.deliveryAtivo === true;
@@ -1638,10 +1646,10 @@
             // Atualiza UI de entrega/retirada
             if (window.updateDeliveryUI) window.updateDeliveryUI();
 
-            // Atualiza mensagem de fidelidade (respeita chave de ocultar pontos)
+            // Atualiza mensagem de fidelidade (respeita chave de desativar/ocultar pontos)
             const loyaltyAnnouncement = document.getElementById('loyalty-announcement');
             if (loyaltyAnnouncement) {
-              const deveOcultarPontos = (data.fidelidadeAtiva === false) || (data.promocoes && data.promocoes.ocultarPontos === true);
+              const deveOcultarPontos = !isFidelidadeAtiva();
               if (deveOcultarPontos) {
                 loyaltyAnnouncement.classList.add('hidden');
               } else {
@@ -3372,9 +3380,13 @@
 
     window.checkUserFidelidade = async (phoneStr) => {
         if (!db) return;
-        if (state.fidelidadeAtiva === false) {
+        if (!isFidelidadeAtiva()) {
+            state.userOrderCount = 0;
             const card = document.getElementById('loyalty-card');
-            if (card) card.classList.add('hidden');
+            if (card) {
+                card.classList.add('hidden', 'display-none');
+                card.innerHTML = '';
+            }
             return;
         }
         try {
@@ -3611,7 +3623,7 @@
         msg += `🚶 *Tipo:* Retirada na Loja\n`;
       }
 
-      if (state.userOrderCount >= (state.pontosMeta || 10)) {
+      if (isFidelidadeAtiva() && state.userOrderCount >= (state.pontosMeta || 10)) {
           msg += `\n🎁 *[ ALERTA ] CLIENTE VIP (${state.userOrderCount} PONTOS)* 🎉🎂\n_(Lembre-se de dar o brinde e resetar os pontos dele!)_\n`;
       }
       msg += `\n*ITENS DO PEDIDO:*\n`;
@@ -3654,19 +3666,20 @@
       let pontosGanhos = 0;
       let pontosGanhosAcai = 0;
       let pontosGanhosSorvete = 0;
-      const pontosConfig = state.pontosConfig || {};
-      state.cart.forEach(item => {
-          const ptsPerUnit = pontosConfig[item.name] || 0;
-          const prodInfo = (state.products || []).find(p => p.name === item.name);
-          const cat = prodInfo ? prodInfo.category : 'acai';
-          const pts = ptsPerUnit * item.qty;
-          pontosGanhos += pts;
-          if (cat === 'sorvete') { pontosGanhosSorvete += pts; }
-          else { pontosGanhosAcai += pts; }
-      });
+      if (isFidelidadeAtiva()) {
+          const pontosConfig = state.pontosConfig || {};
+          state.cart.forEach(item => {
+              const ptsPerUnit = pontosConfig[item.name] || 0;
+              const prodInfo = (state.products || []).find(p => p.name === item.name);
+              const cat = prodInfo ? prodInfo.category : 'acai';
+              const pts = ptsPerUnit * item.qty;
+              pontosGanhos += pts;
+              if (cat === 'sorvete') { pontosGanhosSorvete += pts; }
+              else { pontosGanhosAcai += pts; }
+          });
+      }
 
-      const ocultarPontos = !!(state.config && state.config.promocoes && state.config.promocoes.ocultarPontos === true);
-      if (pontosGanhos > 0 && !ocultarPontos) {
+      if (isFidelidadeAtiva() && pontosGanhos > 0) {
           msg += `\n⭐ *+${pontosGanhosSorvete > 0 ? pontosGanhosSorvete.toString().replace('.', ',') + ' pts Sorvete' : ''}${pontosGanhosAcai > 0 && pontosGanhosSorvete > 0 ? ' | ' : ''}${pontosGanhosAcai > 0 ? pontosGanhosAcai.toString().replace('.', ',') + ' pts Açaí' : ''} Club Prime!*\n`;
       }
 
@@ -3697,7 +3710,7 @@
             cupomInfo: state.appliedCupom ? state.appliedCupom : null,
             brindeGanho: brindeGanho,
             cupomSorteio: cupomSorteioInfo,
-            pontosGanhos: (!ocultarPontos ? (pontosGanhos || 0) : 0),
+            pontosGanhos: isFidelidadeAtiva() ? (pontosGanhos || 0) : 0,
             itens: cartSnapshot,
             obsGeral: obsGeneral,
             data: new Date().toISOString(),
@@ -3712,11 +3725,12 @@
               numero: numero,
               complemento: complemento
             } : null,
-            isVIP: state.userOrderCount >= (state.pontosMeta || 10)
+            isVIP: isFidelidadeAtiva() ? (state.userOrderCount >= (state.pontosMeta || 10)) : false
           });
           
           let promoActive = state.config.promocoes && state.config.promocoes.ativa;
-          if (pontosGanhos > 0 || promoActive) {
+          const deveCreditarPontosFidelidade = isFidelidadeAtiva() && pontosGanhos > 0;
+          if (deveCreditarPontosFidelidade || promoActive) {
             try {
               const phoneKey = phone.replace(/\D/g, '');
               const fidRef = db.collection('clientes_fidelidade').doc(phoneKey);
@@ -3728,7 +3742,7 @@
                 lastUpdate: new Date().toISOString()
               };
 
-              if (pontosGanhos > 0) {
+              if (deveCreditarPontosFidelidade) {
                   const ptAcaiAtual = (existingData.pontos_acai !== undefined && existingData.pontos_acai !== null) ? existingData.pontos_acai : ((existingData.pontos !== undefined && existingData.pontos !== null) ? existingData.pontos : 0);
                   const ptSorveteAtual = (existingData.pontos_sorvete !== undefined && existingData.pontos_sorvete !== null) ? existingData.pontos_sorvete : 0;
                   updatePayload.pontos_acai = ptAcaiAtual + pontosGanhosAcai;
@@ -4023,7 +4037,7 @@
           <div class="bg-slate-50 border border-slate-100 p-4 rounded-2xl space-y-2.5">
             <div class="flex items-center justify-between">
               <span class="text-[10px] font-black uppercase tracking-wider text-slate-400">Identificação para os Palpites</span>
-              <span class="text-[10px] font-bold text-amber-600">Pontos creditados no Club Prime</span>
+              ${isFidelidadeAtiva() ? '<span class="text-[10px] font-bold text-amber-600">Pontos creditados no Club Prime</span>' : ''}
             </div>
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
               <input type="text" id="bolao-client-name" value="${nameVal}" oninput="window.salvarDadosClienteBolao()" placeholder="Seu Nome Completo" class="w-full p-3 bg-white rounded-xl text-xs font-bold border border-slate-200 focus:border-brand-500 outline-none transition-all">

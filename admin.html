@@ -915,7 +915,10 @@ document.addEventListener('DOMContentLoaded', function() {
         <section id="tab-fidelidade" class="tab-content space-y-8 animate-fade-in hidden">
             <header class="flex items-center justify-between flex-wrap gap-4">
                 <div>
-                    <h2 class="font-display font-black text-4xl text-slate-900 tracking-tight">Clube Prime</h2>
+                    <div class="flex items-center gap-3 flex-wrap">
+                        <h2 class="font-display font-black text-4xl text-slate-900 tracking-tight">Clube Prime</h2>
+                        <span id="fid-status-badge" class="hidden"></span>
+                    </div>
                     <p class="text-slate-400 font-medium">Cartão fidelidade e gestão de cupons</p>
                 </div>
                 <button id="btn-toggle-fidelidade" onclick="toggleFidelidade()"
@@ -2158,7 +2161,10 @@ document.addEventListener('DOMContentLoaded', function() {
                     ${promoStatusHtml}
 
                     <div id="order-modal-loyalty" class="p-5 bg-violet-50 rounded-2xl border border-violet-100">
-                        <p class="text-[10px] font-black text-violet-600 uppercase tracking-widest mb-2">✨ Clube Fidelidade</p>
+                        <div class="flex items-center justify-between mb-2">
+                            <p class="text-[10px] font-black text-violet-600 uppercase tracking-widest">✨ Clube Fidelidade</p>
+                            ${(state.config && state.config.fidelidadeAtiva === false) ? '<span class="text-[9px] font-black px-2 py-0.5 rounded-full bg-red-100 text-red-600 uppercase">Desativado na Loja</span>' : ''}
+                        </div>
                         <div id="order-modal-loyalty-details">
                             <p class="text-xs text-slate-400 italic">Consultando pontos do cliente...</p>
                         </div>
@@ -2214,7 +2220,15 @@ document.addEventListener('DOMContentLoaded', function() {
                     const faltamAcai = Math.max(0, meta - ptAcai);
                     const faltamSorvete = Math.max(0, meta - ptSorvete);
                     
+                    const isFidAtiva = state.config && state.config.fidelidadeAtiva !== false;
+                    const fidAvisoHtml = !isFidAtiva ? `
+                        <div class="mb-3 p-2.5 bg-red-50 border border-red-200 rounded-xl text-red-600 text-[10px] font-bold">
+                            ⚠️ Clube Fidelidade desativado na loja. Novos pedidos não acumulam pontos.
+                        </div>
+                    ` : '';
+
                     el.innerHTML = `
+                        ${fidAvisoHtml}
                         <div class="space-y-2 text-xs font-bold text-slate-700">
                             <div class="flex items-center justify-between">
                                 <span class="flex items-center gap-1">🫐 Açaí:</span>
@@ -3360,13 +3374,26 @@ document.addEventListener('DOMContentLoaded', function() {
         function updateFidelidadeToggle(isActive) {
             const btn = document.getElementById('btn-toggle-fidelidade');
             const label = document.getElementById('btn-fid-label');
-            if (!btn || !label) return;
-            if (isActive) {
-                label.innerText = 'Desativar';
-                btn.className = 'flex items-center gap-3 px-5 py-3 rounded-2xl border-2 border-red-200 text-red-500 font-black text-sm transition-all active:scale-95 hover:bg-red-50';
-            } else {
-                label.innerText = 'Ativar Club Prime';
-                btn.className = 'flex items-center gap-3 px-5 py-3 rounded-2xl border-2 border-green-200 text-green-600 font-black text-sm transition-all active:scale-95 hover:bg-green-50';
+            const badge = document.getElementById('fid-status-badge');
+            if (label) {
+                label.innerText = isActive ? 'Desativar' : 'Ativar Club Prime';
+            }
+            if (btn) {
+                if (isActive) {
+                    btn.className = 'flex items-center gap-3 px-5 py-3 rounded-2xl border-2 border-red-200 text-red-500 font-black text-sm transition-all active:scale-95 hover:bg-red-50';
+                } else {
+                    btn.className = 'flex items-center gap-3 px-5 py-3 rounded-2xl border-2 border-green-200 text-green-600 font-black text-sm transition-all active:scale-95 hover:bg-green-50';
+                }
+            }
+            if (badge) {
+                if (isActive) {
+                    badge.className = 'hidden';
+                    badge.innerHTML = '';
+                } else {
+                    badge.className = 'inline-flex items-center gap-1.5 px-3 py-1 bg-red-100 text-red-600 font-black text-xs rounded-xl';
+                    badge.innerHTML = '<i data-lucide="power-off" class="w-3.5 h-3.5"></i> Desativado na Loja';
+                    if (window.lucide) lucide.createIcons();
+                }
             }
         }
 
@@ -3374,9 +3401,12 @@ document.addEventListener('DOMContentLoaded', function() {
             const isActive = (state.config && state.config.fidelidadeAtiva !== false); // true by default
             const next = !isActive;
             try {
-                await updateDoc(doc(db, 'loja', 'config'), { fidelidadeAtiva: next });
+                await setDoc(doc(db, 'loja', 'config'), { fidelidadeAtiva: next }, { merge: true });
+                if (state.config) state.config.fidelidadeAtiva = next;
+                updateFidelidadeToggle(next);
                 toast(next ? 'Club Prime ATIVADO!' : 'Club Prime DESATIVADO!');
             } catch (e) {
+                console.error("Erro ao alternar fidelidade:", e);
                 toast('Erro ao alternar fidelidade', 'error');
             }
         };
