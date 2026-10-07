@@ -1855,51 +1855,6 @@
       if (total < 0) total = 0;
 
       const totalStr = `R$ ${total.toFixed(2).replace('.', ',')}`;
-      
-      let promoHtml = '';
-      if (state.config.promocoes && state.config.promocoes.ativa) {
-          const promo = state.config.promocoes;
-          const isSorteio = promo.tipo === 'sorteio' || (!promo.tipo && (promo.tituloSorteio || promo.premioSorteio));
-          if (isSorteio) {
-              const tit = promo.tituloSorteio || 'Sorteio de Aniversário';
-              const premio = promo.premioSorteio || promo.brinde || 'Smartphone / Celular 📱';
-              const dataSort = promo.dataSorteio || '11/10';
-              const regra = promo.regraSorteio || 'A cada açaí comprado você ganha 1 cupom para concorrer!';
-              promoHtml = `
-              <div class="mt-4 relative overflow-hidden rounded-2xl bg-gradient-to-r from-amber-500 via-orange-500 to-yellow-600 text-white p-4 shadow-lg shadow-amber-500/20">
-                <div class="flex items-center gap-3">
-                  <div class="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center shrink-0 border border-white/30 text-xl">
-                    🎟️
-                  </div>
-                  <div class="flex-1 min-w-0">
-                    <div class="flex items-center gap-1.5 flex-wrap">
-                      <span class="bg-black/20 text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full">${window.escapeHTML(tit)}</span>
-                      <span class="text-[10px] font-bold opacity-90">🗓️ ${window.escapeHTML(dataSort)}</span>
-                    </div>
-                    <p class="text-xs font-black leading-tight mt-1">Prêmio: ${window.escapeHTML(premio)}</p>
-                    <p class="text-[10px] font-medium opacity-95 mt-0.5 leading-snug">${window.escapeHTML(regra)}</p>
-                  </div>
-                </div>
-              </div>`;
-          } else {
-              promoHtml = `
-              <div class="mt-4 relative overflow-hidden rounded-2xl">
-                <div class="absolute inset-0 bg-gradient-to-br from-orange-500 via-red-500 to-rose-600"></div>
-                <div class="absolute inset-0 opacity-10" style="background-image: radial-gradient(circle at 2px 2px, white 1px, transparent 0); background-size: 16px 16px;"></div>
-                <div class="absolute -top-4 -right-4 w-20 h-20 bg-yellow-300 rounded-full opacity-20 blur-xl"></div>
-                <div class="relative z-10 p-4 flex items-center gap-3">
-                  <div class="w-9 h-9 bg-white/20 rounded-xl flex items-center justify-center shrink-0 border border-white/30">
-                    <i data-lucide="zap" class="w-4 h-4 text-yellow-200"></i>
-                  </div>
-                  <div class="flex-1 min-w-0">
-                    <p class="text-[9px] font-black text-white/70 uppercase tracking-widest flex items-center gap-1">🔥 Promoção Ativa</p>
-                    <p class="text-xs text-white font-semibold leading-snug mt-0.5">Acumule <strong class="font-black">R$ ${(promo.valor||0).toFixed(2).replace('.', ',')}</strong> e ganhe: <strong class="font-black uppercase">${window.escapeHTML(promo.brinde||'')}</strong></p>
-                  </div>
-                  <span class="text-2xl leading-none select-none">🎁</span>
-                </div>
-              </div>`;
-          }
-      }
 
       const totalContainerHtml = `
           ${cupomDiscountHtml}
@@ -1908,7 +1863,6 @@
               <span class="text-xs font-black text-slate-400 uppercase tracking-widest">Total Final</span>
               <span id="cart-total-value" class="font-display font-black text-xl text-brand-600">${totalStr}</span>
           </div>
-          ${promoHtml}
       `;
 
       const totalEl = document.getElementById('cart-total');
@@ -2995,8 +2949,10 @@
             const isFidAtiva = state.config && state.config.fidelidadeAtiva !== false && !ocultarPontos;
 
             const card = document.getElementById('loyalty-card');
-            const hasPromo = !!(state.config && state.config.promocoes && state.config.promocoes.ativa);
-            const hasAny = (isFidAtiva && (ptAcai > 0 || ptSorvete > 0)) || hasPromo;
+            const promo = state.config && state.config.promocoes;
+            const isSorteio = promo && (promo.tipo === 'sorteio' || (!promo.tipo && (promo.tituloSorteio || promo.premioSorteio)));
+            const hasPromoCumulativa = !!(promo && promo.ativa && !isSorteio);
+            const hasAny = (isFidAtiva && (ptAcai > 0 || ptSorvete > 0)) || hasPromoCumulativa;
 
             if (!hasAny) {
                 window.renderLoyaltyStatus();
@@ -3098,48 +3054,34 @@
                 }
             }
 
-            // Promoção card (Sorteio vs Cumulativo)
-            if (hasPromo) {
-                const promo = state.config.promocoes;
-                const isSorteio = promo.tipo === 'sorteio' || (!promo.tipo && (promo.tituloSorteio || promo.premioSorteio));
+            // Promoção card cumulativo (se ativa)
+            if (hasPromoCumulativa) {
+                const promoMeta = parseFloat(promo.valor) || 100;
+                const isPrizePromo = valorPromo >= promoMeta;
+                const pctPromo = Math.min(100, Math.round((valorPromo / promoMeta) * 100));
                 
-                if (isSorteio) {
-                    html += `<div class="p-4 bg-gradient-to-br from-amber-50 to-orange-100 border border-amber-200 rounded-2xl animate-slide-up overflow-hidden max-w-full box-border shadow-sm">
-                      <div class="flex items-center gap-2 mb-1">
-                        <span class="text-xl">🎟️</span>
-                        <h4 class="text-xs font-black text-amber-900 uppercase tracking-widest break-words">${window.escapeHTML(promo.tituloSorteio || 'Sorteio de Aniversário')}</h4>
+                if (isPrizePromo) {
+                    html += `<div class="p-4 bg-gradient-to-br from-red-500 to-red-700 border border-red-400 rounded-2xl shadow-xl shadow-red-500/20 animate-pulse-slow overflow-hidden max-w-full box-border">
+                      <div class="flex items-center gap-2 mb-1 justify-center">
+                        <span class="text-xl">🎁</span>
+                        <h4 class="text-sm font-black text-white uppercase tracking-widest text-center">PRÊMIO LIBERADO — PROMOÇÃO!</h4>
                       </div>
-                      <p class="text-xs text-amber-950 font-black break-words">Prêmio: ${window.escapeHTML(promo.premioSorteio || promo.brinde || 'Smartphone / Celular 📱')}</p>
-                      <p class="text-[10px] text-amber-800 font-medium mt-1 leading-tight">🗓️ Sorteio no dia <strong>${window.escapeHTML(promo.dataSorteio || '11 de Outubro')}</strong>. Seu pedido garante seu cupom! 🎉</p>
+                      <p class="text-xs text-red-100 font-bold text-center">Mostre no balcão para ganhar seu brinde: ${window.escapeHTML(promo.brinde)}! 🎉</p>
                     </div>`;
                 } else {
-                    const promoMeta = parseFloat(promo.valor) || 100;
-                    const isPrizePromo = valorPromo >= promoMeta;
-                    const pctPromo = Math.min(100, Math.round((valorPromo / promoMeta) * 100));
-                    
-                    if (isPrizePromo) {
-                        html += `<div class="p-4 bg-gradient-to-br from-red-500 to-red-700 border border-red-400 rounded-2xl shadow-xl shadow-red-500/20 animate-pulse-slow overflow-hidden max-w-full box-border">
-                          <div class="flex items-center gap-2 mb-1 justify-center">
-                            <span class="text-xl">🎁</span>
-                            <h4 class="text-sm font-black text-white uppercase tracking-widest text-center">PRÊMIO LIBERADO — PROMOÇÃO!</h4>
-                          </div>
-                          <p class="text-xs text-red-100 font-bold text-center">Mostre no balcão para ganhar seu brinde: ${window.escapeHTML(promo.brinde)}! 🎉</p>
-                        </div>`;
-                    } else {
-                        const valorPromoFmt = valorPromo.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
-                        const promoMetaFmt = promoMeta.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
-                        const faltaFmt = Math.max(0, promoMeta - valorPromo).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
-                        html += `<div class="p-4 bg-gradient-to-br from-red-50 to-red-100 border border-red-200 rounded-2xl animate-slide-up overflow-hidden max-w-full box-border shadow-sm">
-                          <div class="flex items-center justify-between mb-2">
-                            <h4 class="text-xs font-black text-red-900 flex items-center gap-1.5 min-w-0 break-words">🎁 Promoção: ${window.escapeHTML(promo.brinde)}</h4>
-                            <span class="text-[10px] font-black text-red-600 bg-white px-2 py-0.5 rounded-md shadow-sm shrink-0">${valorPromoFmt} / ${promoMetaFmt}</span>
-                          </div>
-                          <div class="w-full bg-red-200/60 rounded-full h-2.5 mb-2 overflow-hidden">
-                            <div class="bg-red-500 h-full rounded-full transition-all duration-500" style="width:${pctPromo}%"></div>
-                          </div>
-                          <p class="text-[10px] text-red-700 font-medium leading-tight">Você já gastou <strong>${valorPromoFmt}</strong>. Faltam apenas <strong class="text-red-600">${faltaFmt}</strong> para ganhar seu brinde! 🎁</p>
-                        </div>`;
-                    }
+                    const valorPromoFmt = valorPromo.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+                    const promoMetaFmt = promoMeta.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+                    const faltaFmt = Math.max(0, promoMeta - valorPromo).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+                    html += `<div class="p-4 bg-gradient-to-br from-red-50 to-red-100 border border-red-200 rounded-2xl animate-slide-up overflow-hidden max-w-full box-border shadow-sm">
+                      <div class="flex items-center justify-between mb-2">
+                        <h4 class="text-xs font-black text-red-900 flex items-center gap-1.5 min-w-0 break-words">🎁 Promoção: ${window.escapeHTML(promo.brinde)}</h4>
+                        <span class="text-[10px] font-black text-red-600 bg-white px-2 py-0.5 rounded-md shadow-sm shrink-0">${valorPromoFmt} / ${promoMetaFmt}</span>
+                      </div>
+                      <div class="w-full bg-red-200/60 rounded-full h-2.5 mb-2 overflow-hidden">
+                        <div class="bg-red-500 h-full rounded-full transition-all duration-500" style="width:${pctPromo}%"></div>
+                      </div>
+                      <p class="text-[10px] text-red-700 font-medium leading-tight">Você já gastou <strong>${valorPromoFmt}</strong>. Faltam apenas <strong class="text-red-600">${faltaFmt}</strong> para ganhar seu brinde! 🎁</p>
+                    </div>`;
                 }
             }
 
