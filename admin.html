@@ -726,6 +726,89 @@ document.addEventListener('DOMContentLoaded', function() {
                         </div>
                     </div>
 
+                    <!-- Horário de Funcionamento -->
+                    <div class="pt-6 border-t border-slate-50">
+                        <div class="flex items-center justify-between mb-4">
+                            <div>
+                                <h4 class="font-display font-bold text-lg flex items-center gap-2 text-slate-800 italic">
+                                    <i data-lucide="clock" class="w-5 h-5 text-brand-600"></i> Horário de Funcionamento
+                                </h4>
+                                <p class="text-xs text-slate-400 font-medium mt-0.5">Defina os horários de abertura e fechamento para o aviso automático e bloqueio de pedidos fora do expediente</p>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-6">
+                            <div>
+                                <label class="text-[10px] font-black uppercase tracking-widest text-slate-400 block mb-3 ml-2">
+                                    Hora de Abertura (Geral / Semanal)
+                                </label>
+                                <input type="time" id="conf-hora-abertura"
+                                    class="w-full p-5 bg-slate-50 border-2 border-transparent focus:border-brand-500 rounded-2xl outline-none font-bold text-slate-800">
+                            </div>
+                            <div>
+                                <label class="text-[10px] font-black uppercase tracking-widest text-slate-400 block mb-3 ml-2">
+                                    Hora de Fechamento
+                                </label>
+                                <input type="time" id="conf-hora-fechamento"
+                                    class="w-full p-5 bg-slate-50 border-2 border-transparent focus:border-brand-500 rounded-2xl outline-none font-bold text-slate-800">
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-6">
+                            <div>
+                                <label class="text-[10px] font-black uppercase tracking-widest text-slate-400 block mb-3 ml-2">
+                                    Hora de Abertura Especial (Sáb/Dom)
+                                </label>
+                                <input type="time" id="conf-hora-abertura-fds" placeholder="15:00"
+                                    class="w-full p-5 bg-slate-50 border-2 border-transparent focus:border-brand-500 rounded-2xl outline-none font-bold text-slate-800">
+                                <span class="text-[10px] text-slate-400 ml-2 block mt-1">Opcional. Se vazio, usa a hora geral de abertura.</span>
+                            </div>
+                            <div>
+                                <label class="text-[10px] font-black uppercase tracking-widest text-slate-400 block mb-3 ml-2">
+                                    Texto Informativo para os Clientes
+                                </label>
+                                <input type="text" id="conf-horario-texto" placeholder="Ex: Qua a Sex: 17h às 21h50 | Sáb e Dom: 15h às 21h50"
+                                    class="w-full p-5 bg-slate-50 border-2 border-transparent focus:border-brand-500 rounded-2xl outline-none font-bold text-slate-800 placeholder:text-slate-300">
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="text-[10px] font-black uppercase tracking-widest text-slate-400 block mb-3 ml-2">
+                                Dias de Funcionamento da Loja
+                            </label>
+                            <div class="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-7 gap-3" id="conf-dias-container">
+                                <label class="flex flex-col items-center justify-center p-3.5 rounded-2xl border-2 border-slate-100 bg-slate-50 cursor-pointer hover:bg-slate-100 transition-colors">
+                                    <input type="checkbox" name="conf-dias" value="0" class="rounded text-brand-600 focus:ring-brand-500 mb-1">
+                                    <span class="text-xs font-black text-slate-700">Dom</span>
+                                </label>
+                                <label class="flex flex-col items-center justify-center p-3.5 rounded-2xl border-2 border-slate-100 bg-slate-50 cursor-pointer hover:bg-slate-100 transition-colors">
+                                    <input type="checkbox" name="conf-dias" value="1" class="rounded text-brand-600 focus:ring-brand-500 mb-1">
+                                    <span class="text-xs font-black text-slate-700">Seg</span>
+                                </label>
+                                <label class="flex flex-col items-center justify-center p-3.5 rounded-2xl border-2 border-slate-100 bg-slate-50 cursor-pointer hover:bg-slate-100 transition-colors">
+                                    <input type="checkbox" name="conf-dias" value="2" class="rounded text-brand-600 focus:ring-brand-500 mb-1">
+                                    <span class="text-xs font-black text-slate-700">Ter</span>
+                                </label>
+                                <label class="flex flex-col items-center justify-center p-3.5 rounded-2xl border-2 border-slate-100 bg-slate-50 cursor-pointer hover:bg-slate-100 transition-colors">
+                                    <input type="checkbox" name="conf-dias" value="3" class="rounded text-brand-600 focus:ring-brand-500 mb-1">
+                                    <span class="text-xs font-black text-slate-700">Qua</span>
+                                </label>
+                                <label class="flex flex-col items-center justify-center p-3.5 rounded-2xl border-2 border-slate-100 bg-slate-50 cursor-pointer hover:bg-slate-100 transition-colors">
+                                    <input type="checkbox" name="conf-dias" value="4" class="rounded text-brand-600 focus:ring-brand-500 mb-1">
+                                    <span class="text-xs font-black text-slate-700">Qui</span>
+                                </label>
+                                <label class="flex flex-col items-center justify-center p-3.5 rounded-2xl border-2 border-slate-100 bg-slate-50 cursor-pointer hover:bg-slate-100 transition-colors">
+                                    <input type="checkbox" name="conf-dias" value="5" class="rounded text-brand-600 focus:ring-brand-500 mb-1">
+                                    <span class="text-xs font-black text-slate-700">Sex</span>
+                                </label>
+                                <label class="flex flex-col items-center justify-center p-3.5 rounded-2xl border-2 border-slate-100 bg-slate-50 cursor-pointer hover:bg-slate-100 transition-colors">
+                                    <input type="checkbox" name="conf-dias" value="6" class="rounded text-brand-600 focus:ring-brand-500 mb-1">
+                                    <span class="text-xs font-black text-slate-700">Sáb</span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
                     <div class="pt-6 border-t border-slate-50">
                         <h4 class="font-display font-bold text-lg mb-6 flex items-center gap-2 text-slate-700 italic"><i
                                 data-lucide="credit-card" class="w-5 h-5"></i> Recebimento PIX</h4>
@@ -2658,6 +2741,25 @@ document.addEventListener('DOMContentLoaded', function() {
             document.getElementById('conf-pix-name').value = state.config.pixName || '';
             document.getElementById('conf-wait-time').value = state.config.waitTime || '';
             
+            if (document.getElementById('conf-hora-abertura')) {
+                document.getElementById('conf-hora-abertura').value = state.config.horaAbertura || '17:00';
+            }
+            if (document.getElementById('conf-hora-fechamento')) {
+                document.getElementById('conf-hora-fechamento').value = state.config.horaFechamento || '21:50';
+            }
+            if (document.getElementById('conf-hora-abertura-fds')) {
+                document.getElementById('conf-hora-abertura-fds').value = state.config.horaAberturaFimSemana || '15:00';
+            }
+            if (document.getElementById('conf-horario-texto')) {
+                document.getElementById('conf-horario-texto').value = state.config.horarioTexto || 'Qua a Sex: 17h às 21h50 | Sáb e Dom: 15h às 21h50';
+            }
+            const savedDays = Array.isArray(state.config.diasAbertura) && state.config.diasAbertura.length > 0
+                ? state.config.diasAbertura.map(Number)
+                : [0, 3, 4, 5, 6];
+            document.querySelectorAll('input[name="conf-dias"]').forEach(cb => {
+                cb.checked = savedDays.includes(parseInt(cb.value, 10));
+            });
+
             const deliveryCheckbox = document.getElementById('conf-delivery-ativo');
             if (deliveryCheckbox) {
                 const isDelivAtivo = state.config.deliveryAtivo === true;
@@ -3123,12 +3225,22 @@ document.addEventListener('DOMContentLoaded', function() {
         };
 
         window.saveAllConfig = async () => {
+            const selectedDays = [];
+            document.querySelectorAll('input[name="conf-dias"]:checked').forEach(cb => {
+                selectedDays.push(parseInt(cb.value, 10));
+            });
+
             const data = {
                 phone: document.getElementById('conf-phone').value,
                 storeName: document.getElementById('conf-name').value,
                 pixKey: document.getElementById('conf-pix-key').value,
                 pixName: document.getElementById('conf-pix-name').value,
                 waitTime: document.getElementById('conf-wait-time').value,
+                horaAbertura: document.getElementById('conf-hora-abertura') ? document.getElementById('conf-hora-abertura').value : '17:00',
+                horaFechamento: document.getElementById('conf-hora-fechamento') ? document.getElementById('conf-hora-fechamento').value : '21:50',
+                horaAberturaFimSemana: document.getElementById('conf-hora-abertura-fds') ? document.getElementById('conf-hora-abertura-fds').value : '',
+                horarioTexto: document.getElementById('conf-horario-texto') ? document.getElementById('conf-horario-texto').value : '',
+                diasAbertura: selectedDays,
                 deliveryAtivo: document.getElementById('conf-delivery-ativo') ? document.getElementById('conf-delivery-ativo').checked : false,
                 bairrosEntrega: getBairrosConfig(),
                 themeFestaJunina: document.getElementById('conf-theme-festajunina') ? document.getElementById('conf-theme-festajunina').checked : false,

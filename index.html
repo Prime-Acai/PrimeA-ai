@@ -46,6 +46,7 @@
   </script>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://unpkg.com/lucide@latest"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
   <link
     href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Outfit:wght@400;500;700&display=swap"
     rel="stylesheet">
@@ -677,6 +678,31 @@
     <!-- CONTEÚDO -->
     <main class="px-5 pt-6 w-full max-w-lg space-y-6 flex-1">
 
+      <!-- Banner de Aviso: Loja Fechada -->
+      <div id="store-closed-banner" class="hidden bg-gradient-to-r from-red-600 via-rose-600 to-red-700 text-white p-4 sm:p-5 rounded-[2rem] shadow-xl shadow-red-900/20 mb-6 border border-red-500/30">
+        <div class="flex items-start sm:items-center gap-3.5">
+          <div class="w-11 h-11 rounded-2xl bg-white/20 backdrop-blur-md flex items-center justify-center shrink-0 text-white shadow-inner">
+            <i data-lucide="clock-alert" class="w-6 h-6"></i>
+          </div>
+          <div class="flex-1 min-w-0">
+            <div class="flex items-center gap-2 flex-wrap">
+              <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-white/20 text-white text-[10px] font-black uppercase tracking-widest backdrop-blur-sm border border-white/20">
+                <span class="w-1.5 h-1.5 rounded-full bg-red-200 animate-ping"></span>
+                Fechado
+              </span>
+              <h3 class="font-display font-black text-base sm:text-lg text-white tracking-tight">Loja Fechada no momento</h3>
+            </div>
+            <p id="store-closed-banner-desc" class="text-xs text-red-100 font-medium mt-1 leading-snug">
+              Não estamos aceitando novos pedidos no momento fora do expediente.
+            </p>
+            <div class="mt-2.5 flex items-center gap-2 text-[11px] font-bold text-red-100/90 bg-black/15 w-fit px-3 py-1.5 rounded-xl border border-white/10">
+              <i data-lucide="calendar-clock" class="w-3.5 h-3.5 text-yellow-300 shrink-0"></i>
+              <span id="store-closed-banner-schedule">Qua a Sex: 17h às 21h50 • Sáb e Dom: 15h às 21h50</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <!-- Banner de Destaque -->
       <div id="banner-principal" class="relative w-full rounded-[2rem] overflow-hidden shadow-xl shadow-blue-900/20 mb-6 banner-principal">
         <span class="decor-festajunina" style="top: -15px; left: -10px; font-size: clamp(1.8rem, 5vw, 3.5rem); transform: rotate(-20deg);">👒</span>
@@ -870,27 +896,38 @@
     <!-- Conteúdo dos Steps -->
     <div class="flex-1 overflow-y-auto p-6 space-y-6 bg-slate-50/50 no-scrollbar">
 
+      <!-- Aviso de Loja Fechada no Carrinho/Checkout -->
+      <div id="drawer-closed-alert" class="hidden p-4 rounded-2xl bg-gradient-to-br from-red-50 to-rose-50 border-2 border-red-200 text-red-900 shadow-sm">
+        <div class="flex items-start gap-3">
+          <div class="w-9 h-9 rounded-xl bg-red-100 border border-red-200 flex items-center justify-center shrink-0 text-red-600 mt-0.5 shadow-sm">
+            <i data-lucide="lock" class="w-4 h-4"></i>
+          </div>
+          <div class="flex-1 min-w-0">
+            <div class="flex items-center gap-2">
+              <span class="w-2 h-2 rounded-full bg-red-500 animate-pulse"></span>
+              <h4 class="font-black text-xs uppercase tracking-wider text-red-700">Loja Fechada no momento</h4>
+            </div>
+            <p id="drawer-closed-info" class="text-xs text-red-800 font-medium mt-1 leading-snug">
+              Nosso atendimento está encerrado e novos envios estão bloqueados fora do expediente.
+            </p>
+            <div id="drawer-closed-schedule" class="text-[11px] text-red-700 font-bold mt-2 flex items-center gap-1.5 bg-red-100/60 px-2.5 py-1 rounded-lg border border-red-200">
+              <i data-lucide="clock" class="w-3.5 h-3.5 shrink-0 text-red-600"></i>
+              <span>Horário: Qua a Sex: 17h às 21h50 • Sáb e Dom: 15h às 21h50</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Mensagem de Aniversário / Sorteio (Visível em todo o checkout até o pagamento) -->
+      <div id="checkout-promo-card" class="hidden"></div>
+
       <!-- STEP 1: RESUMO -->
       <div id="checkout-step-1" class="checkout-step step-ativo space-y-4">
         <!-- Lista de copos montados -->
         <div id="cart-items" class="space-y-4"></div>
 
-        <!-- Status do Cartão Fidelidade -->
-        <div id="loyalty-card" class="mt-3 p-4 bg-gradient-to-br from-brand-50 to-brand-100 border border-brand-200 rounded-2xl animate-slide-up overflow-hidden max-w-full box-border shadow-sm">
-          <div class="flex items-center justify-between mb-2">
-            <h4 class="text-xs font-black text-brand-900 uppercase tracking-widest flex items-center gap-1.5">
-              <i data-lucide="award" class="w-4 h-4 text-brand-600"></i> Cartão Fidelidade
-            </h4>
-            <span id="loyalty-count" class="text-xs font-bold text-brand-600 bg-white px-2 py-0.5 rounded-md shadow-sm">0/10</span>
-          </div>
-          <p id="loyalty-desc" class="text-[10px] text-brand-700 font-medium mb-2 leading-tight">Complete seus pedidos para ganhar um prêmio especial na sua próxima compra!</p>
-          <div class="w-full bg-brand-200/60 rounded-full h-2.5 mb-3 overflow-hidden">
-            <div id="loyalty-progress-bar" class="bg-brand-600 h-full rounded-full transition-all duration-500" style="width: 0%;"></div>
-          </div>
-          <div class="w-full overflow-hidden" id="loyalty-dots">
-             <!-- dots generated via js -->
-          </div>
-        </div>
+        <!-- Status do Cartão Fidelidade Ocultado no Checkout conforme solicitação -->
+        <div id="loyalty-card" class="hidden display-none"></div>
       </div>
 
       <!-- STEP 2: ENTREGA / RETIRADA -->
@@ -1041,45 +1078,103 @@
             <option value="Cartão">Cartão na Retirada</option>
           </select>
 
-          <!-- Bloco do Pix -->
+          <!-- Bloco do Pix Redesenhado -->
           <div id="pix-area"
-            class="hidden bg-brand-50 p-5 rounded-3xl border border-brand-100 text-center animate-slide-up">
+            class="hidden bg-gradient-to-b from-brand-50/80 to-white p-5 rounded-3xl border border-brand-200/80 text-center animate-slide-up shadow-sm">
             
             <!-- ALERTA DE COMPROVANTE OBRIGATÓRIO -->
             <div class="mb-4 p-3.5 bg-amber-500/15 border-2 border-amber-500/50 rounded-2xl flex items-center gap-3 text-left shadow-sm">
-              <div class="w-8 h-8 rounded-xl bg-amber-500/20 text-amber-700 flex items-center justify-center shrink-0"><i data-lucide="alert-triangle" class="w-5 h-5"></i></div>
+              <div class="w-9 h-9 rounded-xl bg-amber-500/20 text-amber-700 flex items-center justify-center shrink-0">
+                <i data-lucide="alert-triangle" class="w-5 h-5"></i>
+              </div>
               <div class="min-w-0">
                 <p class="text-[11px] font-black text-amber-950 uppercase tracking-wider leading-tight">Envio de Comprovante Obrigatório</p>
-                <p class="text-[10px] font-bold text-amber-900 leading-snug mt-0.5">É <strong>obrigatório enviar o comprovante do Pix no WhatsApp</strong> para que seu pedido seja confirmado e preparado!</p>
+                <p class="text-[10px] font-bold text-amber-900 leading-snug mt-0.5">
+                  É <strong>obrigatório enviar o comprovante do Pix no WhatsApp</strong> para que seu pedido seja confirmado e preparado!
+                </p>
               </div>
             </div>
 
-            <p class="text-[10px] font-black text-brand-900 uppercase mb-1 tracking-widest">Titular: Paulo Cunha da Silva</p>
-            <p class="text-[10px] font-black text-brand-900 uppercase mb-3 tracking-widest">Chave Pix</p>
-            <div class="flex gap-2 mb-3">
-              <input id="pix-key" readonly
-                class="flex-1 text-[10px] text-center p-3 rounded-xl bg-white border border-brand-100 text-slate-500 outline-none font-mono">
-              <button onclick="window.copyPix()"
-                class="px-5 bg-brand-600 text-white rounded-xl font-black text-xs uppercase tracking-widest shadow-lg shadow-brand-500/20 active:scale-95 transition-all outline-none">COPIAR</button>
+            <!-- Dados da Cobrança Pix -->
+            <div class="bg-white p-3.5 rounded-2xl border border-brand-100 shadow-sm mb-4 flex items-center justify-between">
+              <div class="text-left">
+                <span class="text-[9px] font-black text-slate-400 uppercase tracking-widest block">Total a Pagar</span>
+                <span id="pix-total-display" class="text-xl font-display font-black text-emerald-600">R$ 0,00</span>
+              </div>
+              <div class="text-right">
+                <span class="text-[9px] font-black text-slate-400 uppercase tracking-widest block">Beneficiário</span>
+                <span id="pix-name-display" class="text-xs font-bold text-slate-700">Paulo Cunha da Silva</span>
+              </div>
             </div>
-            <p class="text-[10px] text-slate-500 font-medium mb-4">Copie a chave, realize o Pix e clique em <strong class="text-green-600">"Já Paguei!"</strong>. Envie o comprovante na conversa.</p>
+
+            <!-- QR Code Card -->
+            <div class="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm flex flex-col items-center justify-center mb-4">
+              <div id="pix-qrcode-container" class="flex items-center justify-center min-h-[190px] min-w-[190px] bg-white p-2 rounded-xl"></div>
+              <p class="text-[10px] text-slate-500 font-bold mt-2 flex items-center gap-1.5">
+                <i data-lucide="scan" class="w-3.5 h-3.5 text-brand-600"></i> Aponte a câmera do seu banco para pagar
+              </p>
+            </div>
+
+            <!-- Botão Copiar Código Pix Copia e Cola -->
+            <div class="space-y-2 mb-4">
+              <button type="button" onclick="window.copyPixCode()" id="btn-copy-pix-code"
+                class="w-full py-3.5 px-4 bg-brand-600 hover:bg-brand-700 text-white font-black text-xs uppercase tracking-wider rounded-2xl shadow-lg shadow-brand-500/20 active:scale-95 transition-all flex items-center justify-center gap-2">
+                <i data-lucide="copy" class="w-4 h-4"></i>
+                <span>Copiar Código Pix (Copia e Cola)</span>
+              </button>
+              
+              <div class="relative">
+                <input id="pix-code-input" readonly
+                  class="w-full text-[10px] font-mono p-3 pr-20 bg-slate-50 border border-slate-200 rounded-xl text-slate-600 outline-none truncate" />
+                <button type="button" onclick="window.copyPixCode()"
+                  class="absolute right-1.5 top-1.5 bottom-1.5 px-3 bg-brand-50 text-brand-700 hover:bg-brand-100 font-black text-[10px] rounded-lg transition-all uppercase">
+                  Copiar
+                </button>
+              </div>
+            </div>
+
+            <!-- Chave Simples Alternativa -->
+            <div class="p-3 bg-white rounded-xl border border-slate-100 flex items-center justify-between text-left mb-4">
+              <div>
+                <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Chave Pix</p>
+                <p id="pix-key-display" class="text-xs font-mono font-bold text-slate-800">89988171689</p>
+              </div>
+              <button type="button" onclick="window.copyPixKeyOnly()"
+                class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-[10px] font-bold active:scale-95 transition-all flex items-center gap-1">
+                <i data-lucide="copy" class="w-3 h-3"></i> Copiar Chave
+              </button>
+            </div>
+
+            <p class="text-[10px] text-slate-500 font-medium mb-3">
+              Copie o código, realize o Pix no seu banco e clique abaixo para <strong>enviar o pedido com comprovante</strong>.
+            </p>
 
             <!-- ⏱ CRONÔMETRO PIX -->
-            <div id="pix-timer-container" class="hidden">
-              <div class="bg-white rounded-2xl p-4 border border-brand-200 mb-3">
-                <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">⏱ Tempo para pagar o Pix</p>
-                <div id="pix-timer-display" class="text-4xl font-black text-brand-600 font-mono tabular-nums leading-none mb-1">05:00</div>
-                <p id="pix-timer-sub" class="text-[9px] text-slate-400 font-medium">Pague antes que o tempo acabe</p>
+            <div id="pix-timer-container" class="space-y-3">
+              <div class="bg-white rounded-2xl p-3 border border-brand-200 flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                  <div class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></div>
+                  <p class="text-[10px] font-black text-slate-500 uppercase tracking-wider">Tempo para pagar:</p>
+                </div>
+                <div id="pix-timer-display" class="text-xl font-black text-brand-600 font-mono tabular-nums leading-none">05:00</div>
               </div>
+
+              <!-- Botão Confirmar Pagamento e Enviar WhatsApp -->
               <button id="btn-pix-confirm" onclick="window.confirmPixPayment()"
-                class="w-full py-3.5 bg-green-500 hover:bg-green-600 text-white rounded-2xl font-black text-xs uppercase tracking-widest shadow-lg shadow-green-500/20 active:scale-95 transition-all flex items-center justify-center gap-2 mb-2">
-                <i data-lucide="check-circle-2" class="w-5 h-5"></i>
-                Já Paguei! Mandar Comprovante no Zap
+                class="w-full py-4 bg-emerald-600 hover:bg-emerald-700 text-white rounded-2xl font-black text-xs uppercase tracking-wider shadow-lg shadow-emerald-500/25 active:scale-95 transition-all flex items-center justify-center gap-2">
+                <i data-lucide="message-circle" class="w-5 h-5"></i>
+                <span>Já Paguei! Enviar Pedido no WhatsApp</span>
               </button>
+              <p class="text-[9px] text-slate-400 font-semibold">Anexe o print ou comprovante na conversa que será aberta</p>
+
               <div id="pix-expired-msg" class="hidden mt-2 p-4 bg-red-50 rounded-2xl border border-red-200 text-left">
-                <p class="text-sm font-black text-red-600 mb-1 flex items-center gap-2"><i data-lucide="x-circle" class="w-4 h-4 shrink-0"></i>Pedido Cancelado</p>
-                <p class="text-[10px] text-red-500 font-medium mb-3">O tempo para pagar o Pix expirou. Por favor, inicie um novo pedido.</p>
-                <button onclick="window.resetPixTimer()" class="text-[10px] font-black text-brand-600 bg-brand-50 px-3 py-1.5 rounded-lg border border-brand-200 active:scale-95 transition-all">Tentar Novamente</button>
+                <p class="text-sm font-black text-red-600 mb-1 flex items-center gap-2">
+                  <i data-lucide="x-circle" class="w-4 h-4 shrink-0"></i>Pedido Expirado
+                </p>
+                <p class="text-[10px] text-red-500 font-medium mb-3">O tempo para pagar o Pix expirou. Clique abaixo para reiniciar.</p>
+                <button onclick="window.resetPixTimer()" class="text-[10px] font-black text-brand-600 bg-brand-50 px-3 py-1.5 rounded-lg border border-brand-200 active:scale-95 transition-all">
+                  Reiniciar Tempo Pix
+                </button>
               </div>
             </div>
           </div>
@@ -1197,6 +1292,29 @@
         <button onclick="window.setStoreStatus('auto')"
           class="w-full py-4 bg-slate-50 text-slate-600 border-2 border-slate-100 rounded-xl font-bold hover:bg-slate-100 transition-colors text-xs">Automático
           (Seguir Horários)</button>
+
+        <!-- Configuração Rápida de Horário de Funcionamento -->
+        <div class="pt-3 border-t border-slate-100 text-left space-y-2.5">
+          <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Horário de Funcionamento (Automático)</p>
+          <div class="grid grid-cols-2 gap-2">
+            <div>
+              <label class="text-[9px] font-bold text-slate-500 block mb-1">Abertura</label>
+              <input type="time" id="modal-conf-hora-abertura" class="w-full p-2.5 bg-slate-50 rounded-xl font-bold text-xs border border-slate-200">
+            </div>
+            <div>
+              <label class="text-[9px] font-bold text-slate-500 block mb-1">Fechamento</label>
+              <input type="time" id="modal-conf-hora-fechamento" class="w-full p-2.5 bg-slate-50 rounded-xl font-bold text-xs border border-slate-200">
+            </div>
+          </div>
+          <div>
+            <label class="text-[9px] font-bold text-slate-500 block mb-1">Texto informativo ao cliente</label>
+            <input type="text" id="modal-conf-horario-texto" placeholder="Qua a Sex: 17h às 21h50 | Sáb e Dom: 15h às 21h50" class="w-full p-2.5 bg-slate-50 rounded-xl font-bold text-xs border border-slate-200">
+          </div>
+          <button onclick="window.saveOperatingHoursModal()" class="w-full py-2.5 bg-brand-600 hover:bg-brand-700 text-white rounded-xl font-bold text-xs shadow-md transition-colors flex items-center justify-center gap-1.5">
+            <i data-lucide="clock" class="w-3.5 h-3.5"></i>
+            <span>Salvar Horários de Atendimento</span>
+          </button>
+        </div>
 
         <button onclick="window.adminLogout()"
           class="w-full py-3 mt-4 bg-slate-100 text-slate-500 rounded-xl font-bold text-xs hover:bg-slate-200 transition-colors">Sair
@@ -1339,6 +1457,11 @@
         phone: "5579996040320",
         statusMode: "auto",
         waitTime: "15-30",
+        horaAbertura: "17:00",
+        horaFechamento: "21:50",
+        horaAberturaFimSemana: "15:00",
+        horarioTexto: "Qua a Sex: 17h às 21h50 • Sáb e Dom: 15h às 21h50",
+        diasAbertura: [0, 3, 4, 5, 6],
         openingHours: { start: 16, end: 23 },
         accompaniments: { frutas: [], adicionais: [], coberturas: [] }, // Initialize with empty arrays
         pixKey: "89988171689",
@@ -1619,6 +1742,10 @@
             // Remove classe temporária do html (já promovida para o body)
             document.documentElement.classList.remove('theme-festajunina-pending');
 
+            window.renderCheckoutPromoCard();
+            if (document.getElementById('payment-method')?.value === 'Pix') {
+              window.renderPixInfo();
+            }
             window.updateUI();
           }
         }, (err) => console.error("Erro no snapshot de config:", err));
@@ -1655,8 +1782,43 @@
         window.toast("Admin Conectado!", "success");
         document.getElementById('admin-login-view').classList.add('hidden');
         document.getElementById('admin-controls-view').classList.remove('hidden');
+
+        // Preenche campos de horário com os valores atuais
+        const inpHoraAb = document.getElementById('modal-conf-hora-abertura');
+        const inpHoraFech = document.getElementById('modal-conf-hora-fechamento');
+        const inpHoraTxt = document.getElementById('modal-conf-horario-texto');
+        if (inpHoraAb) inpHoraAb.value = state.config.horaAbertura || '17:00';
+        if (inpHoraFech) inpHoraFech.value = state.config.horaFechamento || '21:50';
+        if (inpHoraTxt) inpHoraTxt.value = state.config.horarioTexto || '';
       } else {
         window.toast("Senha incorreta", "error");
+      }
+    };
+
+    window.saveOperatingHoursModal = async () => {
+      if (!isAdminLoggedIn) return window.toast("Faça login novamente", "error");
+      const hAbertura = document.getElementById('modal-conf-hora-abertura')?.value || '';
+      const hFechamento = document.getElementById('modal-conf-hora-fechamento')?.value || '';
+      const hTexto = document.getElementById('modal-conf-horario-texto')?.value || '';
+
+      const updateData = {
+        horaAbertura: hAbertura || '17:00',
+        horaFechamento: hFechamento || '21:50',
+        horarioTexto: hTexto
+      };
+
+      try {
+        if (db) {
+          await db.doc('loja/config').set(updateData, { merge: true });
+        }
+        state.config = { ...state.config, ...updateData };
+        window.updateUI();
+        window.toast("Horários salvos com sucesso!");
+      } catch (e) {
+        console.error("Erro ao salvar horários:", e);
+        state.config = { ...state.config, ...updateData };
+        window.updateUI();
+        window.toast("Salvo localmente!", "warning");
       }
     };
 
@@ -1720,6 +1882,7 @@
       const back = document.getElementById('cart-backdrop');
       if (show) {
         window.goToCheckoutStep(1);
+        window.renderCheckoutPromoCard();
         window.renderCart();
         back.classList.remove('invisible', 'opacity-0');
         drawer.classList.remove('translate-x-full');
@@ -1878,6 +2041,10 @@
       }
 
       window.renderLoyaltyStatus();
+      window.renderCheckoutPromoCard();
+      if (document.getElementById('payment-method')?.value === 'Pix') {
+        window.renderPixInfo();
+      }
       window.updateStepUI();
       window.validateCheckout();
       window.refreshIcons();
@@ -1890,12 +2057,13 @@
         return;
       }
 
+      if (!window.isStoreOpen()) {
+        return window.toast('Loja Fechada no momento. Novos envios não são permitidos fora do expediente.', 'error');
+      }
+
       if (step === 2) {
         if (!state.cart || state.cart.length === 0) {
           return window.toast('Sua sacola está vazia! Adicione itens primeiro.', 'error');
-        }
-        if (!window.isStoreOpen()) {
-          return window.toast('A loja está fechada no momento.', 'error');
         }
         state.checkoutStep = 2;
         window.updateStepUI();
@@ -2056,6 +2224,10 @@
       const bStep1 = document.getElementById('btn-step1-advance');
       if (bStep1) bStep1.disabled = isCartEmpty;
 
+      window.renderCheckoutPromoCard();
+      if (step === 3 && (document.getElementById('payment-method')?.value === 'Pix' || !document.getElementById('payment-method')?.value)) {
+        window.renderPixInfo();
+      }
       window.validateCheckout();
       window.refreshIcons();
     };
@@ -2086,8 +2258,7 @@
       if (method === 'Pix') {
         if (pixArea) {
           pixArea.classList.remove('hidden', 'display-none');
-          const keyEl = document.getElementById('pix-key');
-          if (keyEl) keyEl.value = state.config.pixKey;
+          window.renderPixInfo();
         }
         window.startPixTimer();
       } else {
@@ -2099,79 +2270,256 @@
       window.validateCheckout();
     };
 
+    // --- CARTÃO FIDELIDADE NO CHECKOUT REMOVIDO ---
     window.renderLoyaltyStatus = () => {
       const card = document.getElementById('loyalty-card');
-      if (!card) return;
-      if (state.config && state.config.fidelidadeAtiva === false) {
-        card.classList.add('display-none');
+      if (card) {
+        card.classList.add('hidden', 'display-none');
+        card.innerHTML = '';
+      }
+    };
+
+    // --- MENSAGEM DE ANIVERSÁRIO / SORTEIO (EXIBIDA EM TODO O CHECKOUT ATÉ O PAGAMENTO) ---
+    window.renderCheckoutPromoCard = () => {
+      const container = document.getElementById('checkout-promo-card');
+      if (!container) return;
+
+      const promo = state.config && state.config.promocoes;
+      if (!promo || promo.ativa === false) {
+        container.classList.add('hidden');
+        container.innerHTML = '';
         return;
       }
-      card.classList.remove('display-none', 'hidden');
 
-      const phoneInput = document.getElementById('client-phone');
-      const phone = (phoneInput && phoneInput.value.trim()) ? phoneInput.value.trim() : '';
-      if (phone.length >= 14) {
-        window.checkUserFidelidade(phone);
-        return;
-      }
+      const tit = promo.tituloSorteio || promo.titulo || '🎉 ANIVERSÁRIO DE 1 ANO - GRANDE SORTEIO! DIA 11 O SITE ESTARÁ FECHADO! PEDIDOS SOMENTE NO LOCAL PARA PREENCHER OS CUPONS.';
+      const premio = promo.premioSorteio || promo.brinde || 'Celular Na Caixa';
+      const dataSort = promo.dataSorteio || '12 de Outubro';
+      const msgRegra = promo.mensagemSorteio || promo.regraSorteio || 'Seu pedido garante seu cupom!';
 
-      const meta = state.pontosMeta || 10;
-      card.className = 'mt-3 p-4 bg-gradient-to-br from-brand-50 to-brand-100 border border-brand-200 rounded-2xl animate-slide-up overflow-hidden max-w-full box-border shadow-sm';
-
-      let dotsContent = '';
-      if (meta <= 10) {
-        dotsContent = '<div class="grid grid-cols-5 gap-1.5 w-full">';
-        for (let i = 1; i <= meta; i++) {
-          const isPrize = (i === meta);
-          dotsContent += `
-            <div class="h-8 rounded-xl border border-brand-200 bg-white/95 flex flex-col items-center justify-center text-[10px] font-black text-brand-600 shadow-sm transition-all">
-              <span>${isPrize ? '🎁' : i}</span>
-            </div>`;
-        }
-        dotsContent += '</div>';
-      } else {
-        const q1 = Math.round(meta * 0.25);
-        const q2 = Math.round(meta * 0.5);
-        const q3 = Math.round(meta * 0.75);
-        const milestones = [
-          { pts: q1, icon: '⭐', label: `${q1} pts` },
-          { pts: q2, icon: '⭐', label: `${q2} pts` },
-          { pts: q3, icon: '⭐', label: `${q3} pts` },
-          { pts: meta, icon: '🏆', label: `${meta} pts` }
-        ];
-        dotsContent = '<div class="grid grid-cols-2 gap-2 w-full">';
-        milestones.forEach((m, idx) => {
-          const isLast = idx === milestones.length - 1;
-          dotsContent += `
-            <div class="flex items-center gap-2 p-2 rounded-xl bg-white/95 border border-brand-200 shadow-sm overflow-hidden">
-              <span class="text-sm shrink-0">${m.icon}</span>
-              <div class="min-w-0">
-                <p class="text-[10px] font-black text-brand-900 truncate">${m.label}</p>
-                <p class="text-[8px] font-bold ${isLast ? 'text-amber-600' : 'text-brand-500'} uppercase">${isLast ? 'Prêmio Final' : 'Meta Parcial'}</p>
-              </div>
-            </div>`;
-        });
-        dotsContent += '</div>';
-      }
-
-      card.innerHTML = `
-        <div class="flex items-center justify-between mb-2">
-          <h4 class="text-xs font-black text-brand-900 uppercase tracking-widest flex items-center gap-1.5">
-            <i data-lucide="award" class="w-4 h-4 text-brand-600"></i> Cartão Fidelidade
-          </h4>
-          <span id="loyalty-count" class="text-xs font-bold text-brand-600 bg-white px-2 py-0.5 rounded-md shadow-sm">0/${meta} pts</span>
-        </div>
-        <p id="loyalty-desc" class="text-[10px] text-brand-700 font-medium mb-2 leading-tight">
-          Junte <strong>${meta} pontos</strong> para ganhar seu prêmio especial! Informe seu WhatsApp para pontuar.
-        </p>
-        <div class="w-full bg-brand-200/60 rounded-full h-2.5 mb-2.5 overflow-hidden">
-          <div id="loyalty-progress-bar" class="bg-brand-600 h-full rounded-full transition-all duration-500" style="width: 0%;"></div>
-        </div>
-        <div id="loyalty-dots" class="w-full overflow-hidden">
-          ${dotsContent}
+      container.className = 'p-4 rounded-2xl bg-[#FFFDF7] border-2 border-amber-300/80 shadow-sm animate-slide-up text-amber-950 mb-1';
+      container.innerHTML = `
+        <div class="flex items-start gap-2.5">
+          <span class="text-2xl select-none shrink-0 leading-none">🎟️</span>
+          <div class="min-w-0 flex-1">
+            <h4 class="font-black text-xs text-amber-950 uppercase leading-snug tracking-tight">
+              ${window.escapeHTML(tit)}
+            </h4>
+            <p class="text-xs font-black text-amber-900 mt-1.5 leading-snug">
+              <span class="font-bold text-amber-800">Prêmio:</span> ${window.escapeHTML(premio)}
+            </p>
+            <p class="text-[11px] font-semibold text-amber-800/90 mt-1.5 flex items-center gap-1.5 leading-snug">
+              <span class="select-none">🗓️</span>
+              <span>Sorteio no dia <strong class="text-amber-950">${window.escapeHTML(dataSort)}</strong>. ${window.escapeHTML(msgRegra)}</span>
+            </p>
+          </div>
         </div>
       `;
+      container.classList.remove('hidden');
+    };
+
+    // --- GERADOR DE PAYLOAD PIX BR CODE (PADRÃO BANCO CENTRAL DO BRASIL - EMVCo) ---
+    window.generatePixPayload = ({ key, name, city, amount, txid = '***' }) => {
+      if (!key) return '';
+      const cleanKey = key.trim();
+      const cleanName = (name || 'PAULO CUNHA DA SILVA')
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .replace(/[^a-zA-Z0-9 ]/g, '')
+        .trim()
+        .substring(0, 25)
+        .toUpperCase() || 'PAULO CUNHA DA SILVA';
+      const cleanCity = (city || 'BRASIL')
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .replace(/[^a-zA-Z0-9 ]/g, '')
+        .trim()
+        .substring(0, 15)
+        .toUpperCase() || 'BRASIL';
+
+      function formatField(id, val) {
+        const len = val.length.toString().padStart(2, '0');
+        return `${id}${len}${val}`;
+      }
+
+      // GUI + Chave Pix (ID 26)
+      const gui = formatField('00', 'br.gov.bcb.pix');
+      const keyField = formatField('01', cleanKey);
+      const accountInfo = formatField('26', gui + keyField);
+
+      // Valor (ID 54)
+      let amountField = '';
+      const numAmt = parseFloat(amount) || 0;
+      if (numAmt > 0) {
+        amountField = formatField('54', numAmt.toFixed(2));
+      }
+
+      // Additional Data / TxID (ID 62)
+      const cleanTxid = (txid || '***').substring(0, 25);
+      const txField = formatField('05', cleanTxid);
+      const additionalData = formatField('62', txField);
+
+      const payloadWithoutCRC = 
+        formatField('00', '01') +
+        formatField('01', '11') +
+        accountInfo +
+        formatField('52', '0000') +
+        formatField('53', '986') +
+        amountField +
+        formatField('58', 'BR') +
+        formatField('59', cleanName) +
+        formatField('60', cleanCity) +
+        additionalData +
+        '6304';
+
+      // CRC16-CCITT (0xFFFF, 0x1021)
+      let crc = 0xFFFF;
+      for (let i = 0; i < payloadWithoutCRC.length; i++) {
+        crc ^= (payloadWithoutCRC.charCodeAt(i) << 8);
+        for (let j = 0; j < 8; j++) {
+          if ((crc & 0x8000) !== 0) {
+            crc = ((crc << 1) ^ 0x1021) & 0xFFFF;
+          } else {
+            crc = (crc << 1) & 0xFFFF;
+          }
+        }
+      }
+      const crcHex = crc.toString(16).toUpperCase().padStart(4, '0');
+      return payloadWithoutCRC + crcHex;
+    };
+
+    // --- RENDERIZAÇÃO E ATUALIZAÇÃO DO PIX NO CHECKOUT ---
+    window.renderPixInfo = () => {
+      const pixArea = document.getElementById('pix-area');
+      if (!pixArea) return;
+
+      const subTotalVal = state.cart.reduce((acc, i) => acc + ((parseFloat(i.price) || 0) * i.qty), 0);
+      const discountVal = state.appliedCupom ? (parseFloat(state.appliedCupom.valor) || 0) : 0;
+      
+      let deliveryFee = 0;
+      if (state.config && state.config.deliveryAtivo === true && state.deliveryType === 'Entrega') {
+        const selEl = document.getElementById('delivery-bairro-select');
+        const selBairroNome = selEl ? selEl.value : '';
+        const bairros = (state.config.bairrosEntrega || DEFAULT_BAIRROS_ENTREGA).filter(b => b.ativo !== false);
+        const foundB = bairros.find(b => b.nome === selBairroNome);
+        if (foundB) deliveryFee = parseFloat(foundB.taxa) || 0;
+      }
+
+      const totalVal = Math.max(0, subTotalVal - discountVal + deliveryFee);
+      const totalFormatted = `R$ ${totalVal.toFixed(2).replace('.', ',')}`;
+
+      const pixKey = (state.config && state.config.pixKey) ? state.config.pixKey : "89988171689";
+      const pixName = (state.config && state.config.pixName) ? state.config.pixName : "Paulo Cunha da Silva";
+
+      const pixPayload = window.generatePixPayload({
+        key: pixKey,
+        name: pixName,
+        city: 'BRASIL',
+        amount: totalVal,
+        txid: '***'
+      });
+
+      window.currentPixPayload = pixPayload;
+
+      const totalEl = document.getElementById('pix-total-display');
+      if (totalEl) totalEl.innerText = totalFormatted;
+
+      const nameEl = document.getElementById('pix-name-display');
+      if (nameEl) nameEl.innerText = pixName;
+
+      const keyDisplayEl = document.getElementById('pix-key-display');
+      if (keyDisplayEl) keyDisplayEl.innerText = pixKey;
+
+      const codeInput = document.getElementById('pix-code-input');
+      if (codeInput) codeInput.value = pixPayload;
+
+      const qrContainer = document.getElementById('pix-qrcode-container');
+      if (qrContainer) {
+        qrContainer.innerHTML = '';
+        let rendered = false;
+        if (typeof QRCode !== 'undefined') {
+          try {
+            new QRCode(qrContainer, {
+              text: pixPayload,
+              width: 180,
+              height: 180,
+              colorDark: "#0f172a",
+              colorLight: "#ffffff",
+              correctLevel: QRCode.CorrectLevel.M
+            });
+            rendered = true;
+          } catch (e) {
+            console.warn('QRCode lib erro:', e);
+          }
+        }
+        if (!rendered) {
+          const img = document.createElement('img');
+          img.src = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&margin=8&data=${encodeURIComponent(pixPayload)}`;
+          img.alt = "QR Code Pix";
+          img.className = "w-44 h-44 rounded-xl shadow-sm border border-slate-100";
+          qrContainer.appendChild(img);
+        }
+      }
       window.refreshIcons();
+    };
+
+    // --- COPIAR CÓDIGO PIX (COPIA E COLA) ---
+    window.copyPixCode = async () => {
+      const code = window.currentPixPayload || (document.getElementById('pix-code-input') ? document.getElementById('pix-code-input').value : '');
+      if (!code) return;
+
+      try {
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          await navigator.clipboard.writeText(code);
+        } else {
+          const input = document.getElementById('pix-code-input');
+          if (input) {
+            input.select();
+            document.execCommand('copy');
+          }
+        }
+        const btn = document.getElementById('btn-copy-pix-code');
+        if (btn) {
+          const origText = btn.innerHTML;
+          btn.innerHTML = `<i data-lucide="check" class="w-4 h-4 text-emerald-300"></i><span>Código Copiado!</span>`;
+          btn.classList.add('bg-emerald-600');
+          btn.classList.remove('bg-brand-600');
+          setTimeout(() => {
+            btn.innerHTML = origText;
+            btn.classList.remove('bg-emerald-600');
+            btn.classList.add('bg-brand-600');
+            window.refreshIcons();
+          }, 2500);
+        }
+        window.toast('Código Pix Copia e Cola copiado! Abra o app do seu banco para pagar.', 'success');
+      } catch (err) {
+        const input = document.getElementById('pix-code-input');
+        if (input) {
+          input.select();
+          document.execCommand('copy');
+        }
+        window.toast('Código Pix copiado!', 'success');
+      }
+      window.refreshIcons();
+    };
+
+    // --- COPIAR CHAVE PIX SIMPLES ---
+    window.copyPixKeyOnly = async () => {
+      const key = (state.config && state.config.pixKey) ? state.config.pixKey : "89988171689";
+      try {
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          await navigator.clipboard.writeText(key);
+        } else {
+          const temp = document.createElement('input');
+          temp.value = key;
+          document.body.appendChild(temp);
+          temp.select();
+          document.execCommand('copy');
+          document.body.removeChild(temp);
+        }
+        window.toast('Chave Pix copiada com sucesso!', 'success');
+      } catch (e) {
+        window.toast('Chave Pix copiada!');
+      }
     };
 
     window.updateDeliveryUI = () => {
@@ -2255,12 +2603,7 @@
     };
 
     window.copyPix = () => {
-      const k = document.getElementById('pix-key');
-      if (k) {
-        k.select();
-        document.execCommand('copy');
-        window.toast("Chave Copiada!");
-      }
+      window.copyPixCode();
     };
 
     // --- LÓGICA COPO PERSONALIZADO ---
@@ -2660,33 +3003,103 @@
       window.refreshIcons();
     };
 
+    window.parseTimeToMinutes = (timeStr) => {
+      if (!timeStr || typeof timeStr !== 'string') return null;
+      const parts = timeStr.trim().split(':');
+      if (parts.length < 2) return null;
+      const h = parseInt(parts[0], 10);
+      const m = parseInt(parts[1], 10);
+      if (isNaN(h) || isNaN(m)) return null;
+      return h * 60 + m;
+    };
+
+    window.getScheduleText = () => {
+      if (state.config.horarioTexto && state.config.horarioTexto.trim() !== '') {
+        return state.config.horarioTexto;
+      }
+      if (state.config.horaAbertura && state.config.horaFechamento) {
+        return `Funcionamento das ${state.config.horaAbertura} às ${state.config.horaFechamento}`;
+      }
+      return "Qua a Sex: 17h às 21h50 • Sáb e Dom: 15h às 21h50";
+    };
+
     window.isStoreOpen = () => {
-      // Se o status manual for 'open' ou 'closed', respeita a decisão do admin
+      // 1. Decisão manual do administrador prevalece sobre horário automático
       if (state.config.statusMode === 'open') return true;
       if (state.config.statusMode === 'closed') return false;
 
-      // LÓGICA DO HORÁRIO AUTOMÁTICO
+      // 2. Horário automático
       const now = new Date();
       const day = now.getDay(); // 0 = Domingo, 1 = Segunda, ..., 6 = Sábado
-      const minutes = now.getHours() * 60 + now.getMinutes(); // Hora atual em minutos (Ex: 17:30 = 1050)
+      const currentMinutes = now.getHours() * 60 + now.getMinutes();
 
-      const schedule = {
-        0: { start: 900, end: 1310 },  // Dom: 15:00 até 21:50
-        1: null,                       // Seg: Fechado
-        2: null,                       // Ter: Fechado
-        3: { start: 1020, end: 1310 }, // Qua: 17:00 até 21:50
-        4: { start: 1020, end: 1310 }, // Qui: 17:00 até 21:50
-        5: { start: 1020, end: 1310 }, // Sex: 17:00 até 21:50
-        6: { start: 900, end: 1310 }   // Sáb: 15:00 até 21:50
-      };
+      // Dias de funcionamento permitidos (padrão: 0=Dom, 3=Qua, 4=Qui, 5=Sex, 6=Sáb)
+      const defaultDays = [0, 3, 4, 5, 6];
+      const openDays = Array.isArray(state.config.diasAbertura) && state.config.diasAbertura.length > 0
+        ? state.config.diasAbertura.map(Number)
+        : defaultDays;
 
-      const today = schedule[day];
-      if (!today) return false;
-      return minutes >= today.start && minutes < today.end;
+      if (!openDays.includes(day)) {
+        return false;
+      }
+
+      // Horários de abertura e fechamento
+      const isWeekend = (day === 0 || day === 6);
+      let startMinutes = null;
+      let endMinutes = null;
+
+      if (isWeekend && state.config.horaAberturaFimSemana) {
+        startMinutes = window.parseTimeToMinutes(state.config.horaAberturaFimSemana);
+      }
+      if (startMinutes === null && state.config.horaAbertura) {
+        startMinutes = window.parseTimeToMinutes(state.config.horaAbertura);
+      }
+      if (endMinutes === null && state.config.horaFechamento) {
+        endMinutes = window.parseTimeToMinutes(state.config.horaFechamento);
+      }
+
+      // Se nenhum horário configurado, usa padrão original da loja
+      if (startMinutes === null || endMinutes === null) {
+        if (isWeekend) {
+          startMinutes = 900;  // 15:00
+          endMinutes = 1310;   // 21:50
+        } else {
+          startMinutes = 1020; // 17:00
+          endMinutes = 1310;   // 21:50
+        }
+      }
+
+      // Caso a loja feche após a meia-noite (ex: 18:00 às 01:00)
+      if (endMinutes < startMinutes) {
+        return currentMinutes >= startMinutes || currentMinutes < endMinutes;
+      }
+
+      return currentMinutes >= startMinutes && currentMinutes < endMinutes;
     };
 
     window.updateUI = () => {
       const isOpen = window.isStoreOpen();
+      const schedText = window.getScheduleText();
+
+      // Banner no topo da página
+      const storeClosedBanner = document.getElementById('store-closed-banner');
+      if (storeClosedBanner) {
+        storeClosedBanner.classList.toggle('hidden', isOpen);
+        const schedSpan = document.getElementById('store-closed-banner-schedule');
+        if (schedSpan) schedSpan.innerText = schedText;
+      }
+
+      // Alerta no carrinho/checkout
+      const drawerClosedAlert = document.getElementById('drawer-closed-alert');
+      if (drawerClosedAlert) {
+        drawerClosedAlert.classList.toggle('hidden', isOpen);
+        const schedEl = document.getElementById('drawer-closed-schedule');
+        if (schedEl) {
+          const spanInner = schedEl.querySelector('span');
+          if (spanInner) spanInner.innerText = 'Horário: ' + schedText;
+          else schedEl.innerText = 'Horário: ' + schedText;
+        }
+      }
 
       const indicator = document.getElementById('status-indicator');
       const badge = document.getElementById('status-badge');
@@ -2703,9 +3116,9 @@
           dotInner.className = "w-1.5 h-1.5 rounded-full bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.6)]";
           text.innerText = "Aberto Agora";
         } else {
-          badge.className = "mt-1 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border border-red-100 bg-red-50/30 backdrop-blur-sm text-red-500 opacity-80";
-          dotInner.className = "w-1.5 h-1.5 rounded-full bg-red-400";
-          text.innerText = "Fechado";
+          badge.className = "mt-1 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border border-red-200 bg-red-50/80 backdrop-blur-sm text-red-600 shadow-sm shadow-red-900/5";
+          dotInner.className = "w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse";
+          text.innerText = "Loja Fechada";
         }
       }
 
@@ -2721,6 +3134,7 @@
       }
 
       window.validateCheckout();
+      window.refreshIcons();
     };
 
     window.setupPhoneMask = () => {
@@ -2825,7 +3239,7 @@
 
       let btnText = "Finalizar no WhatsApp";
       if (!isOpen) { 
-        btnText = "Loja Fechada"; 
+        btnText = "Loja Fechada no momento"; 
       }
       else if (state.cart.length === 0) { 
         btnText = "Sacola Vazia"; 
@@ -2845,8 +3259,44 @@
       const isCartEmpty = !state.cart || state.cart.length === 0;
       const fBtn1 = document.getElementById('footer-btn-step-1');
       const bStep1 = document.getElementById('btn-step1-advance');
-      if (fBtn1) fBtn1.disabled = isCartEmpty || !isOpen;
-      if (bStep1) bStep1.disabled = isCartEmpty || !isOpen;
+      if (fBtn1) {
+        fBtn1.disabled = isCartEmpty || !isOpen;
+        const span = fBtn1.querySelector('span');
+        if (span) span.innerText = !isOpen ? "Loja Fechada no momento" : (isCartEmpty ? "Sacola Vazia" : "Avançar para Retirada");
+      }
+      if (bStep1) {
+        bStep1.disabled = isCartEmpty || !isOpen;
+        const span = bStep1.querySelector('span');
+        if (span) span.innerText = !isOpen ? "Loja Fechada no momento" : (isCartEmpty ? "Sacola Vazia" : "Avançar para Retirada");
+      }
+
+      // Sincroniza botões de avanço do Step 2
+      const fBtn2 = document.getElementById('footer-btn-step-2');
+      const bStep2 = document.getElementById('btn-step2-advance');
+      if (fBtn2) {
+        fBtn2.disabled = !isOpen;
+        const span = fBtn2.querySelector('span');
+        if (span) span.innerText = !isOpen ? "Loja Fechada no momento" : "Avançar para Pagamento";
+      }
+      if (bStep2) {
+        bStep2.disabled = !isOpen;
+        const span = bStep2.querySelector('span');
+        if (span) span.innerText = !isOpen ? "Loja Fechada no momento" : "Avançar para Pagamento";
+      }
+
+      // Sincroniza botão de confirmação Pix no Step 3
+      const btnPixConfirm = document.getElementById('btn-pix-confirm');
+      if (btnPixConfirm) {
+        if (!isOpen) {
+          btnPixConfirm.disabled = true;
+          const span = btnPixConfirm.querySelector('span');
+          if (span) span.innerText = "Loja Fechada no momento";
+        } else {
+          btnPixConfirm.disabled = false;
+          const span = btnPixConfirm.querySelector('span');
+          if (span) span.innerText = "Já Paguei! Enviar Pedido no WhatsApp";
+        }
+      }
 
       window.refreshIcons();
     };
@@ -2954,15 +3404,11 @@
             const hasPromoCumulativa = !!(promo && promo.ativa && !isSorteio);
             const hasAny = (isFidAtiva && (ptAcai > 0 || ptSorvete > 0)) || hasPromoCumulativa;
 
-            if (!hasAny) {
-                window.renderLoyaltyStatus();
-                return;
+            if (card) {
+                card.classList.add('hidden', 'display-none');
+                card.innerHTML = '';
             }
-
-            card.classList.remove('hidden', 'display-none');
-            card.className = 'mt-3 space-y-3 overflow-hidden max-w-full box-border';
-
-            let html = '';
+            return;
 
             // Açaí card (só se fidelidade não estiver ocultada)
             if (isFidAtiva && (ptAcai > 0 || ptSorvete === 0)) {
@@ -3093,6 +3539,9 @@
     };
 
     window.sendOrder = async () => {
+      if (!window.isStoreOpen()) {
+        return window.toast('Loja Fechada no momento. Não é possível enviar pedidos fora do expediente.', 'error');
+      }
       if (!state.cart || state.cart.length === 0) return window.toast('Adicione itens ao carrinho primeiro.', 'error');
       const name = document.getElementById('client-name').value.trim();
       const phone = document.getElementById('client-phone').value.trim();
@@ -3397,6 +3846,9 @@
     };
 
     window.confirmPixPayment = () => {
+      if (!window.isStoreOpen()) {
+        return window.toast('Loja Fechada no momento. Não é possível enviar pedidos fora do expediente.', 'error');
+      }
       clearInterval(pixTimerInterval);
       pixTimerExpired = false;
       state.paymentVerified = true;
@@ -3772,6 +4224,11 @@
       if (_origUpdateUI) _origUpdateUI.apply(this, arguments);
       atualizarBotaoBolao();
     };
+
+    // Verificação periódica automática de horário a cada 30 segundos
+    setInterval(() => {
+      window.updateUI();
+    }, 30000);
 
   </script>
 
